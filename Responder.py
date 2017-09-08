@@ -23,32 +23,32 @@ class Responder:
 		msg.append(*msgArgs)
 		self.superColliderClient.send(msg)
 
-	# msg[0] is the serialized string of the melodic input to be transformed. 
+	# stuff[0] is the serialized string of the melodic input to be transformed. 
 	def delayResponder(self, addr, tags, stuff, source):
-		hitList = stringToHitList(msg[0])
+		hitList = stringToHitList(stuff[0])
 		noteList = noteListToHitList(hitList)
 
 		#calculate the musical material to send back
 
-		sendOSCMessage("/playResponse", hitListToString(noteListToHitList(noteList)))
+		self.sendOSCMessage("/playResponse", hitListToString(noteListToHitList(noteList)))
 
 	# msg[0] is the serialized string of the melodic input to be transformed.
 	def bufferShufflerResponder(self, addr, tags, stuff, source):
-		hitList = stringToHitList(msg[0])
+		hitList = stringToHitList(stuff[0])
 		noteList = noteListToHitList(hitList)
 
 		#calculate the musical material to send back
 
-		sendOSCMessage("/playResponse", hitListToString(noteListToHitList(noteList)))
+		self.sendOSCMessage("/playResponse", hitListToString(noteListToHitList(noteList)))
 
 	# msg[0] is the serialized string of the melodic input to be transformed.
 	def counterpointTrasnformationResponder(self, addr, tags, stuff, source):
-		hitList = stringToHitList(msg[0])
+		hitList = stringToHitList(stuff[0])
 		noteList = noteListToHitList(hitList)
 
 		#calculate the musical material to send back
 
-		sendOSCMessage("/playResponse", hitListToString(noteListToHitList(noteList)))
+		self.sendOSCMessage("/playResponse", hitListToString(noteListToHitList(noteList)))
 
 
 

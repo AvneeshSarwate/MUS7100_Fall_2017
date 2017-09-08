@@ -1,6 +1,5 @@
 (
-
-var recordBuffer, launchpad, tempoClock, hitListToString, eventListenerTask, eventDetectors, eventDetectionEndpoints, eventSourceExtractors, pythonPort, stringToHitList, midiOut;
+var recordBuffer, launchpad, tempoClock, hitListToString, eventListenerTask, eventDetectors, eventDetectionEndpoints, eventSourceExtractors, pythonPort, stringToHitList, midiOut, noteCounter, delayDetector, holdDetector, delayExtractor, holdExtractor, delayDetectorState, lastSilence;
 
 recordBuffer = List.new;
 launchPad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
@@ -10,20 +9,54 @@ pythonPort = NetAddr("127.0.0.1", 7100);
 midiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
 
 
+//event detection related variables and parameters
+noteCounter = Dictionary.new; //note -> [numDown, initialDownTimestamp]
+lastSilence = -1; //the timestamp of the latest noteOff message that resulted in no notes being on
+holdType = \note; //either \note or \silence
+holdLength = 4; //number of seconds to hold note
 
 
+
+holdDetector = {
+    var noteHold = tempoClock.beats - noteCounter.values.collect({|val| val[1]}).minItem;
+    var silenceTime = tempoClock.beats - lastSilence;
+    var hitDetected = false;
+    switch(holdType,
+        \note, {if(noteHold > holdLength, {hitDetected = true})},
+        \silence, {if(silenceTime > holdLength, {hitDetected = true})}
+    );
+    hitDetected;
+}
+
+holdExtractor = {|historyBuf|
+    var currentTime = tempoClock.beats;
+    var totalHistorySize = historyBuf.size;
+    var foundNotes = Set.newFrom(noteCounter.keys);
+    var extractedHits = List.new;
+
+}
 
 //Listen to MIDI coming in, record it to a buffer
 MIDIFunc.noteOn({|vel, note, chan, port|
     recordBuffer.add([tempoClock.beats, , note, vel, chan, "on"]);
+
+    if(noteCounter.keys.includes(note),
+        {noteCounter[note][0] = noteCounter[note][0]+1},
+        {noteCounter[note] = [1, tempoClock.beats]}
+    );
 }, nil, nil, launchpad.uid);
 
 MIDIFunc.noteOff({|vel, note, chan, port|
     recordBuffer.add([tempoClock.beats, , note, vel, chan, "off"]);
+
+    if(noteCounter.keys.includes[note], {
+        if(noteCounter[note][0] == 1,
+            {noteCounter.removeAt(note)},
+            {noteCounter[note][0] = noteCounter[note][0] - 1;}
+        );
+    });
+    if(noteCounter.size == 0, {lastSilence =
 }, nil, nil, launchpad.uid);
-
-
-
 
 
 //helper functions for serializing strings
@@ -54,7 +87,7 @@ eventListenerTask = Task({
                 //TODO: eventSourceExtractors will be responsible for removing "hanging notes" from extracted history
             })
         });
-        0.05.wait;
+        0.02.wait;
     }.loop;
 });
 
@@ -122,8 +155,21 @@ OSCFunc.new({|msg, time, addr, recvPort|
 
 )
 
-    a = [1, 2, 3,4,5]
-    a[1..4]++[7]
 
 
-(1..10).do({|a1, a2, a3| [a1, a2, a3].postln})
+
+
+
+
+
+
+
+
+(
+
+var dic = Dictionary.new;
+dic[5] = "yo";
+dic.keys.includes(5)
+)
+
+
