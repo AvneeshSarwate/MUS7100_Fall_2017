@@ -1,6 +1,13 @@
 import OSC
 import threading
 
+TIME = 0
+MIDI_NOTE = 1
+ON_VEL = 2
+MIDI_CHAN = 3
+DUR = 4
+
+
 class Responder:
     def __init__(self):
         self.superColliderServer = OSC.OSCServer(('127.0.0.1', 7100))
@@ -45,6 +52,7 @@ class Responder:
         noteList = noteListToHitList(hitList)
 
         # calculate the musical material to send back
+        newNoteList = shuffleBuffers(self.paramValues['BUF_STRING'], self.paramValues['NUM_BUF'], noteList)
 
         self.sendOSCMessage("/playResponse", hitListToString(noteListToHitList(noteList)))
 
@@ -67,16 +75,19 @@ class Responder:
     '''
         Setter functions for live coded parameters
     '''
+
     def setNumBuf(self, value):
-        print(self.paramValues['NUM_BUF'])
+        if isinstance(value, (int, long)):
+            if value < 27 and value > 0:
+                self.paramValues['NUM_BUF'] = value
+            else:
+                print("NUM_BUF must be an integer between 1-26.")
+        else:
+            print("NUM_BUF must be an integer between 1-26.")
 
-        self.paramValues['NUM_BUF'] = value
+        print("NUM_BUF = " + str(self.paramValues['NUM_BUF']))
 
-        print(self.paramValues['NUM_BUF'])
-
-        self.sendOSCMessage("/receiveParam", 'NUM_BUF' + '~' + str(value))
-
-
+        self.sendOSCMessage("/numBuf", str(value))
 
 
 def stringToHitList(loopString):
@@ -140,3 +151,74 @@ def noteListToHitList(noteList):
     intermediateHitList.append([timeAfterLastHit, 0, 0, 0, 'timeAfterLastHit'])
 
     return intermediateHitList
+
+
+'''
+    shuffleBuffers
+    inputs:
+        bufferString (string): pattern for rearrangement of buffers
+        noteList (list of list[time, midiNote, onVelocity, midiChan, duration]): notes to be manipulated
+    output:
+        newNoteList = buffer shuffled note list
+'''
+
+
+def shuffleBuffers(bufferString, numBuffers, noteList):
+    print("SHUFFLE")
+
+    # Validate bufferString
+    if validateBufferString(bufferString):
+        # Form buffers (edit durations)
+        buffers = formBuffers(numBuffers, noteList)
+
+        # Rearrange buffers to bufferString (edit timestamps (and possibly durations))
+        newNoteList = rearrangeBuffers(bufferString, buffers)
+        return newNoteList
+    else:
+        newNoteList = noteList
+        return newNoteList
+
+
+'''
+    validateBufferString
+    inputs:
+        bufferString (string): pattern for rearrangement of buffers
+        
+        A letter corresponds to a buffer (e.g. 'A' is the first, 'B' the second...).
+        "+" extends the previously specified buffer for the length of a buffer. 
+        "-" rests (i.e. creates silence) for the length of a buffer. 
+    output:
+        valid (boolean)
+'''
+
+
+def validateBufferString(bufferString):
+    print("VALIDATE")
+    return True
+
+'''
+    formBuffers
+    inputs:
+        numBuffers (integer): number of buffers to divide noteList into
+        noteList (list of list[time, midiNote, onVelocity, midiChan, duration]): notes to be manipulated
+    outputs:
+        buffers (list of noteLists): buffers of notes
+'''
+
+
+def formBuffers(numBuffers, noteList):
+    print("MAKE BUFFERS")
+
+
+'''
+    rearrangeBuffers
+    inputs:
+        bufferString (string): pattern for rearrangement of buffers
+        buffers (list of noteLists): buffers of notes
+    output:
+        newNoteList (noteList): shuffled notes to send to SC
+'''
+
+
+def rearrangeBuffers(bufferString, buffers):
+    print("REARRANGE BUFFERS")
