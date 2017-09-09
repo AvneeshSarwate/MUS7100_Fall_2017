@@ -1,5 +1,5 @@
 (
-var recordBuffer, launchpad, tempoClock, hitListToString, eventListenerTask, eventDetectors, eventDetectionEndpoints, eventSourceExtractors, pythonPort, stringToHitList, midiOut, noteCounter, delayDetector, holdDetector, delayExtractor, holdExtractor, delayDetectorState, lastSilence, responseIndex, extractLength, cleanBuffer, createRecordedTask, holdType, holdLength;
+var recordBuffer, launchpad, tempoClock, hitListToString, eventListenerTask, eventDetectors, eventDetectionEndpoints, eventSourceExtractors, pythonPort, stringToHitList, midiOut, noteCounter, delayDetector, holdDetector, delayExtractor, holdExtractor, delayDetectorState, lastSilence, responseIndex, extractLength, cleanBuffer, createRecordedTask, holdType, holdLength, currentlyHolding;
 
 MIDIClient.init;
 MIDIIn.connectAll;
@@ -20,6 +20,7 @@ holdType = \note; //either \note or \silence
 holdLength = 1.5; //number of seconds to hold note
 extractLength = 4;
 responseIndex = 1;
+currentlyHolding = List.newFrom([0, false, false]);
 
 holdDetector = {
     var earliestHeldNote = noteCounter.values.collect({|val| val[1]}).minItem;
@@ -41,17 +42,17 @@ holdExtractor = {|historyBuf|
     var foundNotes = Set.newFrom(noteCounter.keys);
     var extractedHits = List.new;
     var ind = totalHistorySize - 1;
-    var hit = historyBuf[ind];
-    ["HOLD EXTRACTOR", historyBuf.size, ind, hit[0], extractLength > (currentTime - hit[0])].postln;
-    while({extractLength > (currentTime - hit[0])}, {
-        ["EXTRACT", ind, historyBuf].postln;
+    //["HOLD EXTRACTOR", historyBuf.size, ind, historyBuf[ind][0], (extractLength+holdLength) > (currentTime - historyBuf[ind][0])].postln;
+    while({(ind > -1).if({((extractLength+holdLength) > (currentTime - historyBuf[ind][0]))}, false)}, {
+        //["EXTRACT", ind, historyBuf].postln;
         if(foundNotes.includes(historyBuf[ind][1]) && (historyBuf[ind][4] == "on"),
             {foundNotes.remove(historyBuf[ind][1])},
             {extractedHits.insert(0, historyBuf[ind])},
         );
         ind = ind-1;
-        hit = historyBuf[ind];
     });
+    //"POSTLOOP".postln;
+    extractedHits;
 };
 
 eventDetectors = List.newFrom([0, holdDetector, holdDetector]);
@@ -108,12 +109,14 @@ eventListenerTask = Task({
 
             },
             {
-                if(eventDetectors[responseIndex].(),{
+                if(eventDetectors[responseIndex].() && currentlyHolding[responseIndex].not,{
                     var endpoint = eventDetectionEndpoints[responseIndex];
                     var hitListString = hitListToString.(eventSourceExtractors[responseIndex].(recordBuffer));
-                    pythonPort.sendOSC(endpoint, hitListString);
+                    pythonPort.sendMsg(endpoint, hitListString);
                     [endpoint, hitListString].postln;
                     //TODO: eventSourceExtractors will be responsible for removing "hanging notes" from extracted history
+                    //TODO: resolve whether currentlyHolding stores state per response or globally
+                    currentlyHolding[responseIndex] = true;
                 })
             }
         );
