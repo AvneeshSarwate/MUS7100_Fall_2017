@@ -20,7 +20,7 @@ holdType = \note; //either \note or \silence
 holdLength = 1.5; //number of seconds to hold note
 extractLength = 4;
 responseIndex = 1;
-currentlyHolding = List.newFrom([0, false, false]);
+currentlyHolding = false;
 
 holdDetector = {
     var earliestHeldNote = noteCounter.values.collect({|val| val[1]}).minItem;
@@ -68,6 +68,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
         {noteCounter[note][0] = noteCounter[note][0]+1},
         {noteCounter[note] = [1, tempoClock.beats]}
     );
+    if(holdType == \silence, {currentlyHolding = false});
 }, nil, nil, launchpad.uid);
 
 MIDIFunc.noteOff({|vel, note, chan, port|
@@ -79,7 +80,10 @@ MIDIFunc.noteOff({|vel, note, chan, port|
             {noteCounter[note][0] = noteCounter[note][0] - 1;}
         );
     });
-    if(noteCounter.size == 0, {lastSilence = tempoClock.beats});
+    if(noteCounter.size == 0, {
+        lastSilence = tempoClock.beats;
+        if(holdType == \note, {currentlyHolding = false});
+    });
 }, nil, nil, launchpad.uid);
 
 
@@ -111,12 +115,13 @@ eventListenerTask = Task({
             {
                 if(eventDetectors[responseIndex].() && currentlyHolding[responseIndex].not,{
                     var endpoint = eventDetectionEndpoints[responseIndex];
+
+                    //TODO: eventSourceExtractors will be responsible for removing "hanging notes" from extracted history
                     var hitListString = hitListToString.(eventSourceExtractors[responseIndex].(recordBuffer));
                     pythonPort.sendMsg(endpoint, hitListString);
                     [endpoint, hitListString].postln;
-                    //TODO: eventSourceExtractors will be responsible for removing "hanging notes" from extracted history
-                    //TODO: resolve whether currentlyHolding stores state per response or globally
-                    currentlyHolding[responseIndex] = true;
+
+                    currentlyHolding = true;
                 })
             }
         );

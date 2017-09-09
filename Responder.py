@@ -14,7 +14,7 @@ class Responder:
 
 		self.superColliderServer.addMsgHandler("/delayResponder", self.delayResponder)
 		self.superColliderServer.addMsgHandler("/bufferShufflerResponder", self.bufferShufflerResponder)
-		self.superColliderServer.addMsgHandler("/bufferShufflerResponder", self.bufferShufflerResponder)
+		self.superColliderServer.addMsgHandler("/counterpointTrasnformationResponder", self.bufferShufflerResponder)
 
 
 	def sendOSCMessage(self, addr, *msgArgs):
