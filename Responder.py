@@ -25,10 +25,12 @@ class Responder:
 
         self.paramValues = {
             'NUM_BUF': 1,
+            'BUF_STRING': "",
         }
 
         self.paramSetters = {
             'NUM_BUF': self.setNumBuf,
+            'BUF_STRING': self.setBufString,
         }
 
     def sendOSCMessage(self, addr, *msgArgs):
@@ -87,7 +89,18 @@ class Responder:
 
         print("NUM_BUF = " + str(self.paramValues['NUM_BUF']))
 
-        self.sendOSCMessage("/numBuf", str(value))
+        self.sendOSCMessage("/numBuf", self.paramValues['NUM_BUF'])
+
+    def setBufString(self, value):
+        if isinstance(value, basestring):
+            if validateBufferString(value, self.paramValues['NUM_BUF']):
+                self.paramValues['BUF_STRING'] = value
+        else:
+            print("BUF_STRING must be a string.")
+
+        print("BUF_STRING = " + self.paramValues['BUF_STRING'])
+
+        self.sendOSCMessage("/bufString", self.paramValues['BUF_STRING'])
 
 
 def stringToHitList(loopString):
@@ -164,19 +177,14 @@ def noteListToHitList(noteList):
 
 
 def shuffleBuffers(bufferString, numBuffers, noteList):
-    print("SHUFFLE")
+    loweredString = bufferString.lower()
 
-    # Validate bufferString
-    if validateBufferString(bufferString):
-        # Form buffers (edit durations)
-        buffers = formBuffers(numBuffers, noteList)
+    # Form buffers (edit durations)
+    buffers = formBuffers(numBuffers, noteList)
 
-        # Rearrange buffers to bufferString (edit timestamps (and possibly durations))
-        newNoteList = rearrangeBuffers(bufferString, buffers)
-        return newNoteList
-    else:
-        newNoteList = noteList
-        return newNoteList
+    # Rearrange buffers to bufferString (edit timestamps (and possibly durations))
+    newNoteList = rearrangeBuffers(loweredString, buffers)
+    return newNoteList
 
 
 '''
@@ -192,9 +200,51 @@ def shuffleBuffers(bufferString, numBuffers, noteList):
 '''
 
 
-def validateBufferString(bufferString):
-    print("VALIDATE")
+def validateBufferString(bufferString, numBuffers):
+    for i, c in enumerate(bufferString):
+        if not c == '-':
+
+            # If +, check behind for letter
+            if c == '+':
+                if not validatePlusOrigin(i, bufferString):
+                    print("A '+' must have a buffer somewhere before it.")
+                    return False
+
+            # Check if a - c
+            elif ord(c) > 122 or ord(c) < 97:
+                print(c + " is an invalid buffer string character.")
+                return False
+
+            # Check for too many letters
+            elif (ord(c) - 96) > numBuffers:
+                print(
+                    c + " is an invalid buffer character for the number of buffers you have.\nYou can currently use letters a - " + chr(
+                        numBuffers + 96) + ".")
+                return False
+
     return True
+
+
+def validatePlusOrigin(i, bufferString):
+    try:
+
+        if bufferString[0] == '+':
+            raise Exception('String starts with +.')
+
+        if i < 0:
+            raise Exception('Index "out of bounds".')
+
+        prev_char = bufferString[i - 1]
+
+        if (ord(prev_char) < 123 and ord(prev_char) > 96):
+            return True
+        elif (prev_char == '+' or prev_char == '-'):
+            return validatePlusOrigin(i - 1, bufferString)
+
+    except Exception as e:
+        print(e)
+        return False
+
 
 '''
     formBuffers
@@ -207,7 +257,63 @@ def validateBufferString(bufferString):
 
 
 def formBuffers(numBuffers, noteList):
-    print("MAKE BUFFERS")
+    buffers = []
+    for i in range(0, numBuffers):
+        buffers.append([])
+
+    start_time = noteList[0][TIME]
+    end_time = 0
+
+    # Determine the end time of the final note duration
+    for note in noteList:
+        note_end = note[TIME] + note[DUR]
+        if note_end > end_time:
+            end_time = note_end
+
+    print("Length of input: " + str(end_time - start_time))
+
+    # Divide total time into equal buffers
+    bufferLength = (end_time - start_time) / numBuffers
+
+    print("Length of buffer: " + str(bufferLength))
+
+    if bufferLength == 0:
+        buffers[0] = noteList
+        return buffers
+
+    # Divide every note across appropriate buffer with time being set to time after start of the buffer
+    for note in noteList:
+        start_of_note = note[TIME] - start_time
+        note_dur = note[DUR]
+        end_of_note = start_of_note + note_dur
+
+        buffer_index = int(start_of_note / bufferLength)
+        start_of_buffer = buffer_index * bufferLength
+        end_of_buffer = (buffer_index * bufferLength) + bufferLength
+        pos_in_buffer = start_of_note - start_of_buffer
+
+        while (end_of_note > end_of_buffer):
+            # Append as much as possible into current buffer
+            buffers[buffer_index].append(
+                [pos_in_buffer, note[MIDI_NOTE], note[ON_VEL], note[MIDI_CHAN], (bufferLength - pos_in_buffer)])
+
+            # Shift buffer
+            buffer_index += 1
+
+            # Reset buffer vals
+            start_of_buffer = buffer_index * bufferLength
+            end_of_buffer = (buffer_index * bufferLength) + bufferLength
+
+            # Use what's remaining of the note
+            start_of_note += (bufferLength - pos_in_buffer)
+            note_dur -= (bufferLength - pos_in_buffer)
+            end_of_note = start_of_note + note_dur
+            pos_in_buffer = start_of_note - start_of_buffer
+
+        # Add note to buffer
+        buffers[buffer_index].append([pos_in_buffer, note[MIDI_NOTE], note[ON_VEL], note[MIDI_CHAN], note_dur])
+
+    return buffers
 
 
 '''
@@ -221,4 +327,6 @@ def formBuffers(numBuffers, noteList):
 
 
 def rearrangeBuffers(bufferString, buffers):
-    print("REARRANGE BUFFERS")
+    newNoteList = []
+
+    # for c in bufferString:
