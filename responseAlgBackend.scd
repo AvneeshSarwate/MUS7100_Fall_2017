@@ -1,8 +1,11 @@
 (
-var recordBuffer, launchpad, tempoClock, hitListToString, eventListenerTask, eventDetectors, eventDetectionEndpoints, eventSourceExtractors, pythonPort, stringToHitList, midiOut, noteCounter, delayDetector, holdDetector, delayExtractor, holdExtractor, delayDetectorState, lastSilence;
+var recordBuffer, launchpad, tempoClock, hitListToString, eventListenerTask, eventDetectors, eventDetectionEndpoints, eventSourceExtractors, pythonPort, stringToHitList, midiOut, noteCounter, delayDetector, holdDetector, delayExtractor, holdExtractor, delayDetectorState, lastSilence, responseIndex, extractLength, cleanBuffer, createRecordedTask, holdType, holdLength;
+
+MIDIClient.init;
+MIDIIn.connectAll;
 
 recordBuffer = List.new;
-launchPad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
+launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
     && (elem.device == "Launchpad Pro")})[0];
 tempoClock = TempoClock.new(2);
 pythonPort = NetAddr("127.0.0.1", 7100);
@@ -13,9 +16,9 @@ midiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
 noteCounter = Dictionary.new; //note -> [numDown, initialDownTimestamp]
 lastSilence = -1; //the timestamp of the latest noteOff message that resulted in no notes being on
 holdType = \note; //either \note or \silence
-holdLength = 4; //number of seconds to hold note
-
-
+holdLength = 1.5; //number of seconds to hold note
+extractLength = 4;
+responseIndex = 0;
 
 holdDetector = {
     var noteHold = tempoClock.beats - noteCounter.values.collect({|val| val[1]}).minItem;
@@ -26,19 +29,32 @@ holdDetector = {
         \silence, {if(silenceTime > holdLength, {hitDetected = true})}
     );
     hitDetected;
-}
+};
 
 holdExtractor = {|historyBuf|
     var currentTime = tempoClock.beats;
     var totalHistorySize = historyBuf.size;
     var foundNotes = Set.newFrom(noteCounter.keys);
     var extractedHits = List.new;
+    var ind = totalHistorySize - 1;
 
-}
+    while({(currentTime - historyBuf[ind][0]) < holdLength}, {
+        if(foundNotes.includes(historyBuf[ind][1]) && (historyBuf[4] == "on"),
+            {foundNotes.remove(historyBuf[ind][1])},
+            {extractedHits.insert(0, historyBuf[ind])},
+        );
+        ind = ind-1;
+    });
+};
+
+eventDetectors = List.newFrom([0, holdDetector, holdDetector]);
+eventSourceExtractors = List.newFrom([0, holdExtractor, holdExtractor]);
+eventDetectionEndpoints = List.newFrom([0, "/bufferShufflerResponder", "/counterpointTrasnformationResponder"]);
+
 
 //Listen to MIDI coming in, record it to a buffer
 MIDIFunc.noteOn({|vel, note, chan, port|
-    recordBuffer.add([tempoClock.beats, , note, vel, chan, "on"]);
+    recordBuffer.add([tempoClock.beats, note, vel, chan, "on"]);
 
     if(noteCounter.keys.includes(note),
         {noteCounter[note][0] = noteCounter[note][0]+1},
@@ -47,7 +63,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
 }, nil, nil, launchpad.uid);
 
 MIDIFunc.noteOff({|vel, note, chan, port|
-    recordBuffer.add([tempoClock.beats, , note, vel, chan, "off"]);
+    recordBuffer.add([tempoClock.beats, note, vel, chan, "off"]);
 
     if(noteCounter.keys.includes[note], {
         if(noteCounter[note][0] == 1,
@@ -55,7 +71,7 @@ MIDIFunc.noteOff({|vel, note, chan, port|
             {noteCounter[note][0] = noteCounter[note][0] - 1;}
         );
     });
-    if(noteCounter.size == 0, {lastSilence =
+    if(noteCounter.size == 0, {lastSilence = tempoClock.beats});
 }, nil, nil, launchpad.uid);
 
 
@@ -66,7 +82,7 @@ hitListToString = {|hitBuf|
     hitBuf.collect({|item| item.join(",")}).join("-");
 };
 
-stringToBuf = {|melString|
+stringToHitList = {|melString|
     var buf = melString.split($-).collect({|hitString|
         var sp = hitString.split($,);
         [sp[0].asFloat, sp[1].asInt, sp[2].asInt, sp[3].asInt, sp[4]]
@@ -77,16 +93,21 @@ stringToBuf = {|melString|
 
 
 
-
 //Poll and detect "events" and send relevant musical history to specified event endpoint
 eventListenerTask = Task({
     {
-        eventDetectors.do({|detector, ind|
-            if(detector.(recordBuffer), {
-                pythonPort.sendOSC(eventDetectionEndpoints[ind], hitListToString.(eventSourceExtractors[ind].(recordBuffer)));
-                //TODO: eventSourceExtractors will be responsible for removing "hanging notes" from extracted history
-            })
-        });
+        if(responseIndex == 0,
+            {
+
+            },
+            {
+                if(eventDetectors[responseIndex],{
+                    pythonPort.sendOSC(eventDetectionEndpoints[responseIndex],
+                        hitListToString.(eventSourceExtractors[responseIndex].(recordBuffer)));
+                    //TODO: eventSourceExtractors will be responsible for removing "hanging notes" from extracted history
+                })
+            }
+        );
         0.02.wait;
     }.loop;
 });
@@ -113,7 +134,7 @@ cleanBuffer = {|oldRecBuf, startBeat, endBeat|
     hangingNotes.do({|elem| recBuf.add([endBeat-0.01, elem[0], 0, elem[1], "off"])});
 
 
-    timeAfterLastHit = (recBuf[recBuf.size-1][0].ceil - recBuf[recBuf.size-1][0])
+    timeAfterLastHit = (recBuf[recBuf.size-1][0].ceil - recBuf[recBuf.size-1][0]);
 
     (recBuf.size-1..1).do({|i| recBuf[i][0] = recBuf[i][0] - recBuf[i-1][0]});
     recBuf[0][0] = recBuf[0][0] - startBeat;
