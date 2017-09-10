@@ -18,10 +18,10 @@ midiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
 //event detection related variables and parameters
 noteCounter = Dictionary.new; //note -> [numDown, initialDownTimestamp]
 lastSilence = -1; //the timestamp of the latest noteOff message that resulted in no notes being on
-holdType = \note; //either \note or \silence
+holdType = \silence; //either \note or \silence
 holdLength = 1.5; //number of seconds to hold note
 extractLength = 4;
-responseIndex = 1;
+responseIndex = 0;
 currentlyHolding = false;
 
 holdDetector = {
@@ -58,9 +58,9 @@ holdExtractor = {|historyBuf|
     extractedHits;
 };
 
-eventDetectors = List.newFrom([0, holdDetector, holdDetector]);
-eventSourceExtractors = List.newFrom([0, holdExtractor, holdExtractor]);
-eventDetectionEndpoints = List.newFrom([0, "/bufferShufflerResponder", "/counterpointTrasnformationResponder"]);
+eventDetectors = List.newFrom([holdDetector, holdDetector, holdDetector]);
+eventSourceExtractors = List.newFrom([holdExtractor, holdExtractor, holdExtractor]);
+eventDetectionEndpoints = List.newFrom(["/delayResponder", "/bufferShufflerResponder", "/counterpointTrasnformationResponder"]);
 
 
 //Listen to MIDI coming in, record it to a buffer
@@ -111,7 +111,7 @@ stringToHitList = {|melString|
 //Poll and detect "events" and send relevant musical history to specified event endpoint
 eventListenerTask = Task({
     {
-        if(responseIndex == 0,
+        if(responseIndex == 0, //TODO - change this back to 0 after testing (change to 3 for testing)
             {
 
             },
@@ -193,9 +193,16 @@ createRecordedTask = {|oldRecBuf|
 
 //msg[1] is response melody string
 OSCFunc.new({|msg, time, addr, recvPort|
-    var hitList = stringToHitList.(msg[1].asString);
-    var responseTask = createRecordedTask.(cleanBuffer.(hitList, 0, hitList.wrapAt(-1)[0].ceil));
+    var hitList, responseTask, prepList;
+    "GOT RESPONSE".postln;
+    hitList = stringToHitList.(msg[1].asString);
+    "PARSED HIT LIST".postln;
+    prepList = cleanBuffer.(hitList, 0, hitList.wrapAt(-1)[0].ceil);
+    "PREPARED HIT LIST".postln;
+    responseTask = createRecordedTask.(prepList);
+    "CREATED TASK".postln;
     responseTask.play;
+    "PLAYING TASK".postln;
 
 }, "/playResponse");
 
