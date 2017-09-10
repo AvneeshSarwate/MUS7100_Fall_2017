@@ -4,6 +4,8 @@ var recordBuffer, launchpad, tempoClock, hitListToString, eventListenerTask, eve
 MIDIClient.init;
 MIDIIn.connectAll;
 
+~debug = true;
+
 recordBuffer = List.new;
 ~recordBuffer = recordBuffer;
 launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
@@ -25,14 +27,15 @@ currentlyHolding = false;
 holdDetector = {
     var earliestHeldNote = noteCounter.values.collect({|val| val[1]}).minItem;
     var noteHold = tempoClock.beats - earliestHeldNote.isNil.if(0, earliestHeldNote);
-    var silenceTime = tempoClock.beats - lastSilence;
+    var silenceTime = if((lastSilence > 0) && (noteCounter.size == 0) , tempoClock.beats - lastSilence, -1);
     var hitDetected = false;
-    if(earliestHeldNote.isNil.not, {
-        switch(holdType,
-            \note, {if(noteHold > holdLength, {hitDetected = true})},
-            \silence, {if(silenceTime > holdLength, {hitDetected = true})}
-        );
-    });
+    //if(earliestHeldNote.isNil.not, {
+    switch(holdType,
+        \note, {if((noteHold > holdLength) && earliestHeldNote.isNil.not, {hitDetected = true})},
+        \silence, {if(silenceTime > holdLength, {hitDetected = true});}
+    );
+    //});
+    //[(lastSilence > 0) && (noteCounter.size == 0), silenceTime > holdLength, hitDetected].postln;
     hitDetected;
 };
 
@@ -42,16 +45,16 @@ holdExtractor = {|historyBuf|
     var foundNotes = Set.newFrom(noteCounter.keys);
     var extractedHits = List.new;
     var ind = totalHistorySize - 1;
-    //["HOLD EXTRACTOR", historyBuf.size, ind, historyBuf[ind][0], (extractLength+holdLength) > (currentTime - historyBuf[ind][0])].postln;
+    ["HOLD EXTRACTOR", historyBuf.size, ind, historyBuf[ind][0], (extractLength+holdLength) > (currentTime - historyBuf[ind][0])].postln;
     while({(ind > -1).if({((extractLength+holdLength) > (currentTime - historyBuf[ind][0]))}, false)}, {
-        //["EXTRACT", ind, historyBuf].postln;
+        ["EXTRACT", ind, historyBuf].postln;
         if(foundNotes.includes(historyBuf[ind][1]) && (historyBuf[ind][4] == "on"),
             {foundNotes.remove(historyBuf[ind][1])},
             {extractedHits.insert(0, historyBuf[ind])},
         );
         ind = ind-1;
     });
-    //"POSTLOOP".postln;
+    ["POSTEXTRACT", extractedHits.size].postln;
     extractedHits;
 };
 
@@ -113,13 +116,19 @@ eventListenerTask = Task({
 
             },
             {
-                if(eventDetectors[responseIndex].() && currentlyHolding[responseIndex].not,{
-                    var endpoint = eventDetectionEndpoints[responseIndex];
+                if(eventDetectors[responseIndex].() && currentlyHolding.not,{
+                    var endpoint, extractedHits, hitListString;
 
+                    endpoint = eventDetectionEndpoints[responseIndex];
+                    "BREAK HERE 1".postln;
                     //TODO: eventSourceExtractors will be responsible for removing "hanging notes" from extracted history
-                    var hitListString = hitListToString.(eventSourceExtractors[responseIndex].(recordBuffer));
-                    pythonPort.sendMsg(endpoint, hitListString);
-                    [endpoint, hitListString].postln;
+                    extractedHits = eventSourceExtractors[responseIndex].(recordBuffer);
+                    if(extractedHits.size > 0, {
+                        hitListString = hitListToString.(extractedHits);
+                        "BREAK HERE 2".postln;
+                        pythonPort.sendMsg(endpoint, hitListString);
+                        [endpoint, hitListString].postln;
+                    });
 
                     currentlyHolding = true;
                 })
