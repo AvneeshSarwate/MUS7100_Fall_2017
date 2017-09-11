@@ -6,7 +6,7 @@ MIDIIn.connectAll;
 "Hit".postln;
 
 ~debug = true;
-useLoopMidi = false;
+useLoopMidi = true;
 
 recordBuffer = List.new;
 ~recordBuffer = recordBuffer;
@@ -31,7 +31,7 @@ lastSilence = -1; //the timestamp of the latest noteOff message that resulted in
 holdType = \silence; //either \note or \silence
 holdLength = 1.5; //number of seconds to hold note
 extractLength = 4;
-responseIndex = 0;
+~responseIndex = 1;
 currentlyHolding = false;
 
 holdDetector = {
@@ -121,18 +121,18 @@ stringToHitList = {|melString|
 //Poll and detect "events" and send relevant musical history to specified event endpoint
 eventListenerTask = Task({
     {
-        if(responseIndex == 3, //TODO - change this back to 0 after testing (change to 3 for testing)
+        if(~responseIndex == 3, //TODO - change this back to 0 after testing (change to 3 for testing)
             {
 
             },
             {
-                if(eventDetectors[responseIndex].() && currentlyHolding.not,{
+                if(eventDetectors[~responseIndex].() && currentlyHolding.not,{
                     var endpoint, extractedHits, hitListString;
 
-                    endpoint = eventDetectionEndpoints[responseIndex];
+                    endpoint = eventDetectionEndpoints[~responseIndex];
                     "BREAK HERE 1".postln;
                     //TODO: eventSourceExtractors will be responsible for removing "hanging notes" from extracted history
-                    extractedHits = eventSourceExtractors[responseIndex].(recordBuffer);
+                    extractedHits = eventSourceExtractors[~responseIndex].(recordBuffer);
                     if(extractedHits.size > 0, {
                         hitListString = hitListToString.(extractedHits);
                         "BREAK HERE 2".postln;

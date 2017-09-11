@@ -53,10 +53,12 @@ class Responder:
         hitList = stringToHitList(stuff[0])
         noteList = hitListToNoteList(hitList)
 
+        print noteList
         # calculate the musical material to send back
         newNoteList = shuffleBufferSlices(self.paramValues['SHUFFLE_STR'], self.paramValues['NUM_SLICES'], noteList)
+        print newNoteList
 
-        self.sendOSCMessage("/playResponse", hitListToString(noteListToHitList(noteList)))
+        self.sendOSCMessage("/playResponse", hitListToString(noteListToHitList(newNoteList)))
 
     # msg[0] is the serialized string of the melodic input to be transformed.
     def counterpointTransformationResponder(self, addr, tags, stuff, source):
@@ -93,7 +95,7 @@ class Responder:
 
     def setShuffleStr(self, value):
         if isinstance(value, basestring):
-            if validateShuffleStr(value, self.paramValues['NUM_BUF']):
+            if validateShuffleStr(value, self.paramValues['NUM_SLICES']):
                 self.paramValues['SHUFFLE_STR'] = value
         else:
             print("SHUFFLE_STR must be a string.")
