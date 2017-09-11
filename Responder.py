@@ -44,7 +44,7 @@ class Responder:
         # calculate the musical material to send back
 
         self.sendOSCMessage("/playResponse", stuff[0])
-        print "response sent"
+        print stuff[0]
         hitList = stringToHitList(stuff[0])
         noteList = noteListToHitList(hitList)
 
@@ -113,9 +113,9 @@ def stringToHitList(loopString):
 
 
 # hitlist is of form [[timestamp, midiNote, velocity, channel on/off]]
-def hitListToString(hitList, button, startBeat, playing=0):
+def hitListToString(hitList):
     hitToStringList = lambda h: ['%f' % h[0]] + map(str, h[1:])
-    return str(button) + " " + "-".join(map(lambda h: ",".join(hitToStringList(h)), hitList)) + " " + str(playing)
+    return "-".join(map(lambda h: ",".join(hitToStringList(h)), hitList))
 
 
 # converts hitList to a list of (timeStamp, midiNote, velocity, channel, duration)
