@@ -180,10 +180,12 @@ def shuffleBuffers(bufferString, numBuffers, noteList):
     loweredString = bufferString.lower()
 
     # Form buffers (edit durations)
-    buffers = formBuffers(numBuffers, noteList)
+    buffer_response = formBuffers(numBuffers, noteList)
+    buffers = buffer_response['buffers']
+    bufferLength = buffer_response['bufferLength']
 
     # Rearrange buffers to bufferString (edit timestamps (and possibly durations))
-    newNoteList = rearrangeBuffers(loweredString, buffers)
+    newNoteList = rearrangeBuffers(loweredString, bufferLength, buffers)
     return newNoteList
 
 
@@ -210,7 +212,7 @@ def validateBufferString(bufferString, numBuffers):
                     print("A '+' must have a buffer somewhere before it.")
                     return False
 
-            # Check if a - c
+            # Check if outside a - z
             elif ord(c) > 122 or ord(c) < 97:
                 print(c + " is an invalid buffer string character.")
                 return False
@@ -236,7 +238,7 @@ def validatePlusOrigin(i, bufferString):
 
         prev_char = bufferString[i - 1]
 
-        if (ord(prev_char) < 123 and ord(prev_char) > 96):
+        if isLowercaseLetter(prev_char):
             return True
         elif (prev_char == '+' or prev_char == '-'):
             return validatePlusOrigin(i - 1, bufferString)
@@ -253,6 +255,7 @@ def validatePlusOrigin(i, bufferString):
         noteList (list of list[time, midiNote, onVelocity, midiChan, duration]): notes to be manipulated
     outputs:
         buffers (list of noteLists): buffers of notes
+        bufferLength (float): bufferLength for rearranging
 '''
 
 
@@ -313,7 +316,11 @@ def formBuffers(numBuffers, noteList):
         # Add note to buffer
         buffers[buffer_index].append([pos_in_buffer, note[MIDI_NOTE], note[ON_VEL], note[MIDI_CHAN], note_dur])
 
-    return buffers
+    # Sort buffers by timestamp
+    for i, buffer in enumerate(buffers):
+        buffers[i] = sorted(buffer, key=lambda x: x[TIME])
+
+    return {'buffers': buffers, 'bufferLength': bufferLength}
 
 
 '''
@@ -326,7 +333,43 @@ def formBuffers(numBuffers, noteList):
 '''
 
 
-def rearrangeBuffers(bufferString, buffers):
+def rearrangeBuffers(bufferString, bufferLength, buffers):
     newNoteList = []
+    i = 0
+    pos_in_buffers = 0
 
-    # for c in bufferString:
+    while i < len(bufferString):
+        if bufferString[i] == '-':
+            pos_in_buffers += 1
+            i += 1
+
+        elif isLowercaseLetter(bufferString[i]):
+            next_letter_index = getNextLetterIndex(i, bufferString)
+            if next_letter_index < 0:
+                next_letter_index = len(bufferString)
+
+            stretch = next_letter_index - i
+
+
+
+def getPlusOrigin(i, bufferString):
+    if isLowercaseLetter(bufferString[i]):
+        return i
+    else:
+        return getPlusOrigin(i - 1, bufferString)
+
+
+def isLowercaseLetter(ascii_val):
+    if (ord(ascii_val) < 123 and ord(ascii_val) > 96):
+        return True
+    else:
+        return False
+
+
+def getNextLetterIndex(i, bufferString):
+    if i > len(bufferString) - 1:
+        return -1
+    elif isLowercaseLetter(bufferString[i + 1]):
+        return i + 1
+    else:
+        return getNextLetterIndex(i + 1, bufferString)
