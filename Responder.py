@@ -349,7 +349,67 @@ def rearrangeBuffers(bufferString, bufferLength, buffers):
                 next_letter_index = len(bufferString)
 
             stretch = next_letter_index - i
+            buffer = buffers[bufferIndexFromLetter(bufferString[i])]
+            stretched = [[(note[TIME] * stretch) + (bufferLength * pos_in_buffers)] + note[1:4] + [note[DUR] * stretch]
+                         for note in buffer]
+            for note in stretched:
+                newNoteList.append(note)
 
+            pos_in_buffers += 1
+
+            j = i + 1
+            while j < next_letter_index:
+                if bufferString[j] == '+':
+                    pos_in_buffers += 1
+                    j += 1
+
+                else:
+                    startRestTime = bufferLength * pos_in_buffers
+                    endRestTime = startRestTime + bufferLength
+
+                    startIntersect = getIntersectingNotes(newNoteList, startRestTime)
+                    startEdits = [note[:4] + [startRestTime - note[TIME]] for note in startIntersect]
+
+                    endIntersect = getIntersectingNotes(newNoteList, endRestTime)
+                    endEdits = [[endRestTime] + note[1:4] + [(note[TIME] + note[DUR]) - endRestTime] for note in
+                                startIntersect]
+
+                    nonAffectedNotes = getNotIntersectingNotes(newNoteList, startRestTime, endRestTime)
+
+                    for note in startEdits:
+                        nonAffectedNotes.append(note)
+
+                    for note in endEdits:
+                        nonAffectedNotes.append(note)
+
+                    newNoteList = nonAffectedNotes
+
+                    pos_in_buffers += 1
+                    j += 1
+
+            i = j
+
+    return newNoteList
+
+
+def getIntersectingNotes(noteList, intersectTime):
+    def pullNotes(note):
+        noteStart = note[TIME]
+        noteEnd = note[TIME] + note[DUR]
+        if intersectTime > noteStart and intersectTime < noteEnd:
+            return note
+
+    return filter(pullNotes, noteList)
+
+
+def getNotIntersectingNotes(noteList, startRestTime, endRestTime):
+    def pullNotes(note):
+        noteStart = note[TIME]
+        noteEnd = note[TIME] + note[DUR]
+        if noteEnd < startRestTime or noteStart > endRestTime:
+            return note
+
+    return filter(pullNotes, noteList)
 
 
 def getPlusOrigin(i, bufferString):
@@ -367,9 +427,13 @@ def isLowercaseLetter(ascii_val):
 
 
 def getNextLetterIndex(i, bufferString):
-    if i > len(bufferString) - 1:
+    if i == len(bufferString) - 1:
         return -1
     elif isLowercaseLetter(bufferString[i + 1]):
         return i + 1
     else:
         return getNextLetterIndex(i + 1, bufferString)
+
+
+def bufferIndexFromLetter(c):
+    return ord(c) - 97
