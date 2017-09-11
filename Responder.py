@@ -24,13 +24,13 @@ class Responder:
                                                self.counterpointTransformationResponder)
 
         self.paramValues = {
-            'NUM_BUF': 1,
-            'BUF_STRING': "",
+            'NUM_SLICES': 1,
+            'SHUFFLE_STR': "",
         }
 
         self.paramSetters = {
-            'NUM_BUF': self.setNumBuf,
-            'BUF_STRING': self.setBufString,
+            'NUM_SLICES': self.setNumSlices,
+            'SHUFFLE_STR': self.setShuffleStr,
         }
 
     def sendOSCMessage(self, addr, *msgArgs):
@@ -54,7 +54,7 @@ class Responder:
         noteList = hitListToNoteList(hitList)
 
         # calculate the musical material to send back
-        newNoteList = shuffleBuffers(self.paramValues['BUF_STRING'], self.paramValues['NUM_BUF'], noteList)
+        newNoteList = shuffleBufferSlices(self.paramValues['SHUFFLE_STR'], self.paramValues['NUM_SLICES'], noteList)
 
         self.sendOSCMessage("/playResponse", hitListToString(noteListToHitList(noteList)))
 
@@ -78,29 +78,29 @@ class Responder:
         Setter functions for live coded parameters
     '''
 
-    def setNumBuf(self, value):
+    def setNumSlices(self, value):
         if isinstance(value, (int, long)):
             if value < 27 and value > 0:
-                self.paramValues['NUM_BUF'] = value
+                self.paramValues['NUM_SLICES'] = value
             else:
-                print("NUM_BUF must be an integer between 1-26.")
+                print("NUM_SLICES must be an integer between 1-26.")
         else:
-            print("NUM_BUF must be an integer between 1-26.")
+            print("NUM_SLICES must be an integer between 1-26.")
 
-        print("NUM_BUF = " + str(self.paramValues['NUM_BUF']))
+        print("NUM_SLICES = " + str(self.paramValues['NUM_SLICES']))
 
-        self.sendOSCMessage("/numBuf", self.paramValues['NUM_BUF'])
+        self.sendOSCMessage("/numSlices", self.paramValues['NUM_SLICES'])
 
-    def setBufString(self, value):
+    def setShuffleStr(self, value):
         if isinstance(value, basestring):
-            if validateBufferString(value, self.paramValues['NUM_BUF']):
-                self.paramValues['BUF_STRING'] = value
+            if validateShuffleStr(value, self.paramValues['NUM_BUF']):
+                self.paramValues['SHUFFLE_STR'] = value
         else:
-            print("BUF_STRING must be a string.")
+            print("SHUFFLE_STR must be a string.")
 
-        print("BUF_STRING = " + self.paramValues['BUF_STRING'])
+        print("SHUFFLE_STR = " + self.paramValues['SHUFFLE_STR'])
 
-        self.sendOSCMessage("/bufString", self.paramValues['BUF_STRING'])
+        self.sendOSCMessage("/shuffleStr", self.paramValues['SHUFFLE_STR'])
 
 
 def stringToHitList(loopString):
@@ -167,81 +167,81 @@ def noteListToHitList(noteList):
 
 
 '''
-    shuffleBuffers
+    shuffleBufferSlices
     inputs:
-        bufferString (string): pattern for rearrangement of buffers
+        shuffleString (string): pattern for rearrangement of buffer slices
         noteList (list of list[time, midiNote, onVelocity, midiChan, duration]): notes to be manipulated
     output:
-        newNoteList = buffer shuffled note list
+        newNoteList = shuffled note list
 '''
 
 
-def shuffleBuffers(bufferString, numBuffers, noteList):
-    loweredString = bufferString.lower()
+def shuffleBufferSlices(shuffleString, numSlices, noteList):
+    loweredString = shuffleString.lower()
 
-    # Form buffers (edit durations)
-    buffer_response = formBuffers(numBuffers, noteList)
-    buffers = buffer_response['buffers']
-    bufferLength = buffer_response['bufferLength']
+    # Form slices (edit durations)
+    sliceResponse = formSlices(numSlices, noteList)
+    slices = sliceResponse['slices']
+    sliceLength = sliceResponse['sliceLength']
 
-    # Rearrange buffers to bufferString (edit timestamps (and possibly durations))
-    newNoteList = rearrangeBuffers(loweredString, bufferLength, buffers)
+    # Rearrange slices to shuffleString (edit timestamps (and possibly durations))
+    newNoteList = rearrangeSlices(loweredString, sliceLength, slices)
     return newNoteList
 
 
 '''
-    validateBufferString
+    validateShuffleStr
     inputs:
-        bufferString (string): pattern for rearrangement of buffers
+        shuffleStr (string): pattern for rearrangement of buffer slices
         
-        A letter corresponds to a buffer (e.g. 'A' is the first, 'B' the second...).
-        "+" extends the previously specified buffer for the length of a buffer. 
-        "-" rests (i.e. creates silence) for the length of a buffer. 
+        A letter corresponds to a slice (e.g. 'A' is the first, 'B' the second...).
+        "+" extends the previously specified slice for the length of a slice. 
+        "-" rests (i.e. creates silence) for the length of a slice. 
     output:
         valid (boolean)
 '''
 
 
-def validateBufferString(bufferString, numBuffers):
-    for i, c in enumerate(bufferString):
+def validateShuffleStr(shuffleStr, numSlices):
+    for i, c in enumerate(shuffleStr):
         if not c == '-':
 
             # If +, check behind for letter
             if c == '+':
-                if not validatePlusOrigin(i, bufferString):
-                    print("A '+' must have a buffer somewhere before it.")
+                if not validatePlusOrigin(i, shuffleStr):
+                    print("A '+' must have a slice somewhere before it.")
                     return False
 
             # Check if outside a - z
             elif ord(c) > 122 or ord(c) < 97:
-                print(c + " is an invalid buffer string character.")
+                print(c + " is an invalid slice string character.")
                 return False
 
             # Check for too many letters
-            elif (ord(c) - 96) > numBuffers:
+            elif (ord(c) - 96) > numSlices:
                 print(
-                    c + " is an invalid buffer character for the number of buffers you have.\nYou can currently use letters a - " + chr(
-                        numBuffers + 96) + ".")
+                    c + " is an invalid buffer slice character for the number of slices you have.\nYou can currently use letters a - " + chr(
+                        numSlices + 96) + ".")
                 return False
 
     return True
 
 
-def validatePlusOrigin(i, bufferString):
+def validatePlusOrigin(i, shuffleStr):
     try:
 
-        if bufferString[0] == '+':
+        if shuffleStr[0] == '+':
             raise Exception('String starts with +.')
 
         if i < 0:
             raise Exception('Index "out of bounds".')
 
-        prev_char = bufferString[i - 1]
+        prev_char = shuffleStr[i - 1]
 
         if isLowercaseLetter(prev_char):
             return True
         elif (prev_char == '+' or prev_char == '-'):
-            return validatePlusOrigin(i - 1, bufferString)
+            return validatePlusOrigin(i - 1, shuffleStr)
 
     except Exception as e:
         print(e)
@@ -249,123 +249,124 @@ def validatePlusOrigin(i, bufferString):
 
 
 '''
-    formBuffers
+    formSlices
     inputs:
-        numBuffers (integer): number of buffers to divide noteList into
+        numSlices (integer): number of slices to divide noteList into
         noteList (list of list[time, midiNote, onVelocity, midiChan, duration]): notes to be manipulated
     outputs:
-        buffers (list of noteLists): buffers of notes
-        bufferLength (float): bufferLength for rearranging
+        slices (list of noteLists): slices of notes
+        sliceLength (float): sliceLength for rearranging
 '''
 
 
-def formBuffers(numBuffers, noteList):
-    buffers = []
-    for i in range(0, numBuffers):
-        buffers.append([])
+def formSlices(numSlices, noteList):
+    slices = []
+    for i in range(0, numSlices):
+        slices.append([])
 
-    start_time = noteList[0][TIME]
-    end_time = 0
+    startTime = noteList[0][TIME]
+    endTime = 0
 
     # Determine the end time of the final note duration
     for note in noteList:
-        note_end = note[TIME] + note[DUR]
-        if note_end > end_time:
-            end_time = note_end
+        noteEnd = note[TIME] + note[DUR]
+        if noteEnd > endTime:
+            endTime = noteEnd
 
-    print("Length of input: " + str(end_time - start_time))
+    print("Length of input: " + str(endTime - startTime))
 
-    # Divide total time into equal buffers
-    bufferLength = (end_time - start_time) / numBuffers
+    # Divide total time into equal slices
+    sliceLength = (endTime - startTime) / numSlices
 
-    print("Length of buffer: " + str(bufferLength))
+    print("Length of slice: " + str(sliceLength))
 
-    if bufferLength == 0:
-        buffers[0] = noteList
-        return buffers
+    if sliceLength == 0:
+        slices[0] = noteList
+        return slices
 
-    # Divide every note across appropriate buffer with time being set to time after start of the buffer
+    # Divide every note across appropriate slice with time being set to time after start of the slice
     for note in noteList:
-        start_of_note = note[TIME] - start_time
-        note_dur = note[DUR]
-        end_of_note = start_of_note + note_dur
+        startOfNote = note[TIME] - startTime
+        noteDur = note[DUR]
+        endOfNote = startOfNote + noteDur
 
-        buffer_index = int(start_of_note / bufferLength)
-        start_of_buffer = buffer_index * bufferLength
-        end_of_buffer = (buffer_index * bufferLength) + bufferLength
-        pos_in_buffer = start_of_note - start_of_buffer
+        sliceIndex = int(startOfNote / sliceLength)
+        startOfSlice = sliceIndex * sliceLength
+        endOfSlice = (sliceIndex * sliceLength) + sliceLength
+        posInSlice = startOfNote - startOfSlice
 
-        while (end_of_note > end_of_buffer):
-            # Append as much as possible into current buffer
-            buffers[buffer_index].append(
-                [pos_in_buffer, note[MIDI_NOTE], note[ON_VEL], note[MIDI_CHAN], (bufferLength - pos_in_buffer)])
+        while (endOfNote > endOfSlice):
+            # Append as much as possible into current slice
+            slices[sliceIndex].append(
+                [posInSlice, note[MIDI_NOTE], note[ON_VEL], note[MIDI_CHAN], (sliceLength - posInSlice)])
 
-            # Shift buffer
-            buffer_index += 1
+            # Shift slice
+            sliceIndex += 1
 
-            # Reset buffer vals
-            start_of_buffer = buffer_index * bufferLength
-            end_of_buffer = (buffer_index * bufferLength) + bufferLength
+            # Reset slice vals
+            startOfSlice = sliceIndex * sliceLength
+            endOfSlice = (sliceIndex * sliceLength) + sliceLength
 
             # Use what's remaining of the note
-            start_of_note += (bufferLength - pos_in_buffer)
-            note_dur -= (bufferLength - pos_in_buffer)
-            end_of_note = start_of_note + note_dur
-            pos_in_buffer = start_of_note - start_of_buffer
+            startOfNote += (sliceLength - posInSlice)
+            noteDur -= (sliceLength - posInSlice)
+            endOfNote = startOfNote + noteDur
+            posInSlice = startOfNote - startOfSlice
 
-        # Add note to buffer
-        buffers[buffer_index].append([pos_in_buffer, note[MIDI_NOTE], note[ON_VEL], note[MIDI_CHAN], note_dur])
+        # Add note to slice
+        slices[sliceIndex].append([posInSlice, note[MIDI_NOTE], note[ON_VEL], note[MIDI_CHAN], noteDur])
 
-    # Sort buffers by timestamp
-    for i, buffer in enumerate(buffers):
-        buffers[i] = sorted(buffer, key=lambda x: x[TIME])
+    # Sort slices by timestamp
+    for i, slice in enumerate(slices):
+        slices[i] = sorted(slice, key=lambda x: x[TIME])
 
-    return {'buffers': buffers, 'bufferLength': bufferLength}
+    return {'slices': slices, 'sliceLength': sliceLength}
 
 
 '''
-    rearrangeBuffers
+    rearrangeSlices
     inputs:
-        bufferString (string): pattern for rearrangement of buffers
-        buffers (list of noteLists): buffers of notes
+        shuffleStr (string): pattern for rearrangement of slices
+        sliceLength: time in seconds of a slice
+        slices (list of noteLists): slices of notes
     output:
         newNoteList (noteList): shuffled notes to send to SC
 '''
 
 
-def rearrangeBuffers(bufferString, bufferLength, buffers):
+def rearrangeSlices(shuffleStr, sliceLength, slices):
     newNoteList = []
     i = 0
-    pos_in_buffers = 0
+    posInSlices = 0
 
-    while i < len(bufferString):
-        if bufferString[i] == '-':
-            pos_in_buffers += 1
+    while i < len(shuffleStr):
+        if shuffleStr[i] == '-':
+            posInSlices += 1
             i += 1
 
-        elif isLowercaseLetter(bufferString[i]):
-            next_letter_index = getNextLetterIndex(i, bufferString)
-            if next_letter_index < 0:
-                next_letter_index = len(bufferString)
+        elif isLowercaseLetter(shuffleStr[i]):
+            nextLetterIndex = getNextLetterIndex(i, shuffleStr)
+            if nextLetterIndex < 0:
+                nextLetterIndex = len(shuffleStr)
 
-            stretch = next_letter_index - i
-            buffer = buffers[bufferIndexFromLetter(bufferString[i])]
-            stretched = [[(note[TIME] * stretch) + (bufferLength * pos_in_buffers)] + note[1:4] + [note[DUR] * stretch]
-                         for note in buffer]
+            stretch = nextLetterIndex - i
+            slice = slices[sliceIndexFromLetter(shuffleStr[i])]
+            stretched = [[(note[TIME] * stretch) + (sliceLength * posInSlices)] + note[1:4] + [note[DUR] * stretch]
+                         for note in slice]
             for note in stretched:
                 newNoteList.append(note)
 
-            pos_in_buffers += 1
+            posInSlices += 1
 
             j = i + 1
-            while j < next_letter_index:
-                if bufferString[j] == '+':
-                    pos_in_buffers += 1
+            while j < nextLetterIndex:
+                if shuffleStr[j] == '+':
+                    posInSlices += 1
                     j += 1
 
                 else:
-                    startRestTime = bufferLength * pos_in_buffers
-                    endRestTime = startRestTime + bufferLength
+                    startRestTime = sliceLength * posInSlices
+                    endRestTime = startRestTime + sliceLength
 
                     startIntersect = getIntersectingNotes(newNoteList, startRestTime)
                     startEdits = [note[:4] + [startRestTime - note[TIME]] for note in startIntersect]
@@ -384,7 +385,7 @@ def rearrangeBuffers(bufferString, bufferLength, buffers):
 
                     newNoteList = nonAffectedNotes
 
-                    pos_in_buffers += 1
+                    posInSlices += 1
                     j += 1
 
             i = j
@@ -412,11 +413,11 @@ def getNotIntersectingNotes(noteList, startRestTime, endRestTime):
     return filter(pullNotes, noteList)
 
 
-def getPlusOrigin(i, bufferString):
-    if isLowercaseLetter(bufferString[i]):
+def getPlusOrigin(i, shuffleStr):
+    if isLowercaseLetter(shuffleStr[i]):
         return i
     else:
-        return getPlusOrigin(i - 1, bufferString)
+        return getPlusOrigin(i - 1, shuffleStr)
 
 
 def isLowercaseLetter(ascii_val):
@@ -426,14 +427,14 @@ def isLowercaseLetter(ascii_val):
         return False
 
 
-def getNextLetterIndex(i, bufferString):
-    if i == len(bufferString) - 1:
+def getNextLetterIndex(i, shuffleStr):
+    if i == len(shuffleStr) - 1:
         return -1
-    elif isLowercaseLetter(bufferString[i + 1]):
+    elif isLowercaseLetter(shuffleStr[i + 1]):
         return i + 1
     else:
-        return getNextLetterIndex(i + 1, bufferString)
+        return getNextLetterIndex(i + 1, shuffleStr)
 
 
-def bufferIndexFromLetter(c):
+def sliceIndexFromLetter(c):
     return ord(c) - 97
