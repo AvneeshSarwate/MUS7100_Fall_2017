@@ -1,20 +1,28 @@
 (
-var recordBuffer, launchpad, tempoClock, hitListToString, eventListenerTask, eventDetectors, eventDetectionEndpoints, eventSourceExtractors, pythonPort, stringToHitList, midiOut, noteCounter, delayDetector, holdDetector, delayExtractor, holdExtractor, delayDetectorState, lastSilence, responseIndex, extractLength, cleanBuffer, createRecordedTask, holdType, holdLength, currentlyHolding, useMax;
+var recordBuffer, launchpad, tempoClock, hitListToString, eventListenerTask, eventDetectors, eventDetectionEndpoints, eventSourceExtractors, pythonPort, stringToHitList, midiOut, noteCounter, delayDetector, holdDetector, delayExtractor, holdExtractor, delayDetectorState, lastSilence, responseIndex, extractLength, cleanBuffer, createRecordedTask, holdType, holdLength, currentlyHolding, useLoopMidi;
 
 MIDIClient.init;
 MIDIIn.connectAll;
+"Hit".postln;
 
 ~debug = true;
+useLoopMidi = true;
 
 recordBuffer = List.new;
 ~recordBuffer = recordBuffer;
-launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
-    && (elem.device == "Launchpad Pro")})[0];
-tempoClock = TempoClock.new(2);
+if(useLoopMidi,
+{
+	launchpad = MIDIClient.sources.select({|elem| (elem.name == "MIDIIN2 (2- Launchpad Pro)")
+	&& (elem.device == "MIDIIN2 (2- Launchpad Pro)")})[0];},
+{
+	launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
+	&& (elem.device == "Launchpad Pro")})[0];
+});
+tempoClock = TempoClock.new(1);
 pythonPort = NetAddr("127.0.0.1", 7100);
 
-useMax = true;
-if(useMax, {midiOut = MIDIOut.newByName("to Max 1", "to Max 1")}, {midiOut = MIDIOut.newByName("IAC Driver", "Bus 2")});
+
+if(useLoopMidi, {midiOut = MIDIOut.newByName("LoopMIDI 1", "LoopMIDI 1")}, {midiOut = MIDIOut.newByName("IAC Driver", "Bus 2")});
 
 
 //event detection related variables and parameters
@@ -49,7 +57,6 @@ holdExtractor = {|historyBuf|
     var ind = totalHistorySize - 1;
     ["HOLD EXTRACTOR", historyBuf.size, ind, historyBuf[ind][0], (extractLength+holdLength) > (currentTime - historyBuf[ind][0])].postln;
     while({(ind > -1).if({((extractLength+holdLength) > (currentTime - historyBuf[ind][0]))}, false)}, {
-        ["EXTRACT", ind, historyBuf].postln;
         if(foundNotes.includes(historyBuf[ind][1]) && (historyBuf[ind][4] == "on"),
             {foundNotes.remove(historyBuf[ind][1])},
             {extractedHits.insert(0, historyBuf[ind])},
@@ -67,6 +74,7 @@ eventDetectionEndpoints = List.newFrom(["/delayResponder", "/bufferShufflerRespo
 
 //Listen to MIDI coming in, record it to a buffer
 MIDIFunc.noteOn({|vel, note, chan, port|
+	["Hit noteOn", note].postln;
     recordBuffer.add([tempoClock.beats, note, vel, chan, "on"]);
 
     if(noteCounter.keys.includes(note),
