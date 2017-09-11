@@ -46,12 +46,12 @@ class Responder:
         self.sendOSCMessage("/playResponse", stuff[0])
         print stuff[0]
         hitList = stringToHitList(stuff[0])
-        noteList = noteListToHitList(hitList)
+        noteList = hitListToNoteList(hitList)
 
     # msg[0] is the serialized string of the melodic input to be transformed.
     def bufferShufflerResponder(self, addr, tags, stuff, source):
         hitList = stringToHitList(stuff[0])
-        noteList = noteListToHitList(hitList)
+        noteList = hitListToNoteList(hitList)
 
         # calculate the musical material to send back
         newNoteList = shuffleBuffers(self.paramValues['BUF_STRING'], self.paramValues['NUM_BUF'], noteList)
@@ -61,7 +61,7 @@ class Responder:
     # msg[0] is the serialized string of the melodic input to be transformed.
     def counterpointTransformationResponder(self, addr, tags, stuff, source):
         hitList = stringToHitList(stuff[0])
-        noteList = noteListToHitList(hitList)
+        noteList = hitListToNoteList(hitList)
 
         # calculate the musical material to send back
 
