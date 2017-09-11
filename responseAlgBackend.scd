@@ -6,7 +6,7 @@ MIDIIn.connectAll;
 "Hit".postln;
 
 ~debug = true;
-useLoopMidi = true;
+useLoopMidi = false;
 
 recordBuffer = List.new;
 ~recordBuffer = recordBuffer;
@@ -207,9 +207,7 @@ OSCFunc.new({|msg, time, addr, recvPort|
     "GOT RESPONSE".postln;
     hitList = stringToHitList.(msg[1].asString);
     "PARSED HIT LIST".postln;
-    prepList = cleanBuffer.(hitList, 0, hitList.wrapAt(-1)[0].ceil);
-    "PREPARED HIT LIST".postln;
-    responseTask = createRecordedTask.(prepList);
+    responseTask = createRecordedTask.(hitList);
     "CREATED TASK".postln;
     responseTask.play;
     "PLAYING TASK".postln;

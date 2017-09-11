@@ -124,12 +124,22 @@ def hitListToString(hitList):
 def hitListToNoteList(hitList):
     noteToStartStop = {}
     timeSoFar = 0
-    for h in hitList[:len(hitList) - 1]:
+    numHits = len(hitList)-1 if hitList[-1][4] == 'timeAfterLastHit' else len(hitList)
+    for h in hitList[:numHits]:
         timeSoFar += h[0]
         if h[1] not in noteToStartStop:
-            noteToStartStop[h[1]] = [(timeSoFar, h[2], h[3], h[4])]  # time, velocity, midiChan, on/off
+            if h[4] == 'on':
+                noteToStartStop[h[1]] = [(h[0], h[2], h[3], h[4])] 
         else:
-            noteToStartStop[h[1]].append((timeSoFar, h[2], h[3], h[4]))
+            noteEvents = noteToStartStop[h[1]]
+            if noteEvents[-1][3] == h[4]:
+                if h[4] == 'on':
+                    noteEvents.append((h[0], h[2], h[3],'off'))
+                    noteEvents.append((h[0], h[2], h[3], h[4]))
+                if h[4] == 'off':
+                    continue
+            else:
+                noteEvents.append((h[0], h[2], h[3], h[4]))
 
     noteList = []
     # for n in noteToStartStop:
