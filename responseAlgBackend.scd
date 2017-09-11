@@ -1,5 +1,5 @@
 (
-var recordBuffer, launchpad, tempoClock, hitListToString, eventListenerTask, eventDetectors, eventDetectionEndpoints, eventSourceExtractors, pythonPort, stringToHitList, midiOut, noteCounter, delayDetector, holdDetector, delayExtractor, holdExtractor, delayDetectorState, lastSilence, responseIndex, extractLength, cleanBuffer, createRecordedTask, holdType, holdLength, currentlyHolding;
+var recordBuffer, launchpad, tempoClock, hitListToString, eventListenerTask, eventDetectors, eventDetectionEndpoints, eventSourceExtractors, pythonPort, stringToHitList, midiOut, noteCounter, delayDetector, holdDetector, delayExtractor, holdExtractor, delayDetectorState, lastSilence, responseIndex, extractLength, cleanBuffer, createRecordedTask, holdType, holdLength, currentlyHolding, useMax;
 
 MIDIClient.init;
 MIDIIn.connectAll;
@@ -12,7 +12,9 @@ launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
     && (elem.device == "Launchpad Pro")})[0];
 tempoClock = TempoClock.new(2);
 pythonPort = NetAddr("127.0.0.1", 7100);
-midiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
+
+useMax = true;
+if(useMax, {midiOut = MIDIOut.newByName("to Max 1", "to Max 1")}, {midiOut = MIDIOut.newByName("IAC Driver", "Bus 2")});
 
 
 //event detection related variables and parameters
@@ -111,7 +113,7 @@ stringToHitList = {|melString|
 //Poll and detect "events" and send relevant musical history to specified event endpoint
 eventListenerTask = Task({
     {
-        if(responseIndex == 0, //TODO - change this back to 0 after testing (change to 3 for testing)
+        if(responseIndex == 3, //TODO - change this back to 0 after testing (change to 3 for testing)
             {
 
             },
