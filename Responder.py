@@ -41,12 +41,12 @@ class Responder:
 
     # stuff[0] is the serialized string of the melodic input to be transformed.
     def delayResponder(self, addr, tags, stuff, source):
-        hitList = stringToHitList(stuff[0])
-        noteList = noteListToHitList(hitList)
-
         # calculate the musical material to send back
 
-        self.sendOSCMessage("/playResponse", hitListToString(noteListToHitList(noteList)))
+        self.sendOSCMessage("/playResponse", stuff[0])
+        print "response sent"
+        hitList = stringToHitList(stuff[0])
+        noteList = noteListToHitList(hitList)
 
     # msg[0] is the serialized string of the melodic input to be transformed.
     def bufferShufflerResponder(self, addr, tags, stuff, source):

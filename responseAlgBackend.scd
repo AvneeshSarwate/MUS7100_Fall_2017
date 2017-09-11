@@ -4,6 +4,8 @@ var recordBuffer, launchpad, tempoClock, hitListToString, eventListenerTask, eve
 MIDIClient.init;
 MIDIIn.connectAll;
 
+~debug = true;
+
 recordBuffer = List.new;
 ~recordBuffer = recordBuffer;
 launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
@@ -16,23 +18,24 @@ midiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
 //event detection related variables and parameters
 noteCounter = Dictionary.new; //note -> [numDown, initialDownTimestamp]
 lastSilence = -1; //the timestamp of the latest noteOff message that resulted in no notes being on
-holdType = \note; //either \note or \silence
+holdType = \silence; //either \note or \silence
 holdLength = 1.5; //number of seconds to hold note
 extractLength = 4;
-responseIndex = 1;
+responseIndex = 0;
 currentlyHolding = false;
 
 holdDetector = {
     var earliestHeldNote = noteCounter.values.collect({|val| val[1]}).minItem;
     var noteHold = tempoClock.beats - earliestHeldNote.isNil.if(0, earliestHeldNote);
-    var silenceTime = tempoClock.beats - lastSilence;
+    var silenceTime = if((lastSilence > 0) && (noteCounter.size == 0) , tempoClock.beats - lastSilence, -1);
     var hitDetected = false;
-    if(earliestHeldNote.isNil.not, {
-        switch(holdType,
-            \note, {if(noteHold > holdLength, {hitDetected = true})},
-            \silence, {if(silenceTime > holdLength, {hitDetected = true})}
-        );
-    });
+    //if(earliestHeldNote.isNil.not, {
+    switch(holdType,
+        \note, {if((noteHold > holdLength) && earliestHeldNote.isNil.not, {hitDetected = true})},
+        \silence, {if(silenceTime > holdLength, {hitDetected = true});}
+    );
+    //});
+    //[(lastSilence > 0) && (noteCounter.size == 0), silenceTime > holdLength, hitDetected].postln;
     hitDetected;
 };
 
@@ -42,22 +45,22 @@ holdExtractor = {|historyBuf|
     var foundNotes = Set.newFrom(noteCounter.keys);
     var extractedHits = List.new;
     var ind = totalHistorySize - 1;
-    //["HOLD EXTRACTOR", historyBuf.size, ind, historyBuf[ind][0], (extractLength+holdLength) > (currentTime - historyBuf[ind][0])].postln;
+    ["HOLD EXTRACTOR", historyBuf.size, ind, historyBuf[ind][0], (extractLength+holdLength) > (currentTime - historyBuf[ind][0])].postln;
     while({(ind > -1).if({((extractLength+holdLength) > (currentTime - historyBuf[ind][0]))}, false)}, {
-        //["EXTRACT", ind, historyBuf].postln;
+        ["EXTRACT", ind, historyBuf].postln;
         if(foundNotes.includes(historyBuf[ind][1]) && (historyBuf[ind][4] == "on"),
             {foundNotes.remove(historyBuf[ind][1])},
             {extractedHits.insert(0, historyBuf[ind])},
         );
         ind = ind-1;
     });
-    //"POSTLOOP".postln;
+    ["POSTEXTRACT", extractedHits.size].postln;
     extractedHits;
 };
 
-eventDetectors = List.newFrom([0, holdDetector, holdDetector]);
-eventSourceExtractors = List.newFrom([0, holdExtractor, holdExtractor]);
-eventDetectionEndpoints = List.newFrom([0, "/bufferShufflerResponder", "/counterpointTrasnformationResponder"]);
+eventDetectors = List.newFrom([holdDetector, holdDetector, holdDetector]);
+eventSourceExtractors = List.newFrom([holdExtractor, holdExtractor, holdExtractor]);
+eventDetectionEndpoints = List.newFrom(["/delayResponder", "/bufferShufflerResponder", "/counterpointTrasnformationResponder"]);
 
 
 //Listen to MIDI coming in, record it to a buffer
@@ -108,18 +111,24 @@ stringToHitList = {|melString|
 //Poll and detect "events" and send relevant musical history to specified event endpoint
 eventListenerTask = Task({
     {
-        if(responseIndex == 0,
+        if(responseIndex == 0, //TODO - change this back to 0 after testing (change to 3 for testing)
             {
 
             },
             {
-                if(eventDetectors[responseIndex].() && currentlyHolding[responseIndex].not,{
-                    var endpoint = eventDetectionEndpoints[responseIndex];
+                if(eventDetectors[responseIndex].() && currentlyHolding.not,{
+                    var endpoint, extractedHits, hitListString;
 
+                    endpoint = eventDetectionEndpoints[responseIndex];
+                    "BREAK HERE 1".postln;
                     //TODO: eventSourceExtractors will be responsible for removing "hanging notes" from extracted history
-                    var hitListString = hitListToString.(eventSourceExtractors[responseIndex].(recordBuffer));
-                    pythonPort.sendMsg(endpoint, hitListString);
-                    [endpoint, hitListString].postln;
+                    extractedHits = eventSourceExtractors[responseIndex].(recordBuffer);
+                    if(extractedHits.size > 0, {
+                        hitListString = hitListToString.(extractedHits);
+                        "BREAK HERE 2".postln;
+                        pythonPort.sendMsg(endpoint, hitListString);
+                        [endpoint, hitListString].postln;
+                    });
 
                     currentlyHolding = true;
                 })
@@ -184,9 +193,16 @@ createRecordedTask = {|oldRecBuf|
 
 //msg[1] is response melody string
 OSCFunc.new({|msg, time, addr, recvPort|
-    var hitList = stringToHitList.(msg[1].asString);
-    var responseTask = createRecordedTask.(cleanBuffer.(hitList, 0, hitList.wrapAt(-1)[0].ceil));
+    var hitList, responseTask, prepList;
+    "GOT RESPONSE".postln;
+    hitList = stringToHitList.(msg[1].asString);
+    "PARSED HIT LIST".postln;
+    prepList = cleanBuffer.(hitList, 0, hitList.wrapAt(-1)[0].ceil);
+    "PREPARED HIT LIST".postln;
+    responseTask = createRecordedTask.(prepList);
+    "CREATED TASK".postln;
     responseTask.play;
+    "PLAYING TASK".postln;
 
 }, "/playResponse");
 
