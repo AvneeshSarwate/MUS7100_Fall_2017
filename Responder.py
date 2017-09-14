@@ -26,11 +26,17 @@ class Responder:
         self.paramValues = {
             'NUM_SLICES': 1,
             'SHUFFLE_STR': "",
+            'HOLD_TYPE': "silence",
+            'EXTRACT_LENGTH': 2.0,
+            'HOLD_LENGTH': 0.5
         }
 
         self.paramSetters = {
             'NUM_SLICES': self.setNumSlices,
             'SHUFFLE_STR': self.setShuffleStr,
+            'HOLD_TYPE': self.setHoldType,
+            'EXTRACT_LENGTH': self.setExtractLength,
+            'HOLD_LENGTH': self.setHoldLength
         }
 
     def sendOSCMessage(self, addr, *msgArgs):
@@ -53,10 +59,8 @@ class Responder:
         hitList = stringToHitList(stuff[0])
         noteList = hitListToNoteList(hitList)
 
-        print noteList
         # calculate the musical material to send back
         newNoteList = shuffleBufferSlices(self.paramValues['SHUFFLE_STR'], self.paramValues['NUM_SLICES'], noteList)
-        print newNoteList
 
         self.sendOSCMessage("/playResponse", hitListToString(noteListToHitList(newNoteList)))
 
@@ -103,6 +107,30 @@ class Responder:
         print("SHUFFLE_STR = " + self.paramValues['SHUFFLE_STR'])
 
         self.sendOSCMessage("/shuffleStr", self.paramValues['SHUFFLE_STR'])
+
+    def setHoldType(self, value):
+        if not (value == "silence" or value == "hold"):
+            print("HOLD_TYPE must be either 'hold' or 'silence.")
+        else:
+            self.paramValues['HOLD_TYPE'] = value
+
+        print("HOLD_TYPE = " + self.paramValues['HOLD_TYPE'])
+
+        self.sendOSCMessage("/holdType", self.paramValues['HOLD_TYPE'])
+
+    def setExtractLength(self, value):
+        self.paramValues['EXTRACT_LENGTH'] = value
+
+        print("EXTRACT_LENGTH = " + self.paramValues['EXTRACT_LENGTH'])
+
+        self.sendOSCMessage("/extractLength", self.paramValues['EXTRACT_LENGTH'])
+
+    def setHoldLength(self, value):
+        self.paramValues['HOLD_LENGTH'] = value
+
+        print("HOLD_LENGTH = " + self.paramValues['HOLD_LENGTH'])
+
+        self.sendOSCMessage("/holdLength", self.paramValues['HOLD_LENGTH'])
 
 
 def stringToHitList(loopString):
