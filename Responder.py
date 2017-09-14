@@ -59,10 +59,15 @@ class Responder:
         hitList = stringToHitList(stuff[0])
         noteList = hitListToNoteList(hitList)
 
-        # calculate the musical material to send back
-        newNoteList = shuffleBufferSlices(self.paramValues['SHUFFLE_STR'], self.paramValues['NUM_SLICES'], noteList)
+        try:
+            # calculate the musical material to send back
+            newNoteList = shuffleBufferSlices(self.paramValues['SHUFFLE_STR'], self.paramValues['NUM_SLICES'], noteList)
+            self.sendOSCMessage("/playResponse", hitListToString(noteListToHitList(newNoteList)))
 
-        self.sendOSCMessage("/playResponse", hitListToString(noteListToHitList(newNoteList)))
+        except:
+            print self.paramValues['SHUFFLE_STR'], self.paramValues['NUM_SLICES'], noteList
+
+        
 
     # msg[0] is the serialized string of the melodic input to be transformed.
     def counterpointTransformationResponder(self, addr, tags, stuff, source):
@@ -109,8 +114,8 @@ class Responder:
         self.sendOSCMessage("/shuffleStr", self.paramValues['SHUFFLE_STR'])
 
     def setHoldType(self, value):
-        if not (value == "silence" or value == "hold"):
-            print("HOLD_TYPE must be either 'hold' or 'silence.")
+        if not (value == "silence" or value == "note"):
+            print("HOLD_TYPE must be either 'note' or 'silence.")
         else:
             self.paramValues['HOLD_TYPE'] = value
 
@@ -121,14 +126,14 @@ class Responder:
     def setExtractLength(self, value):
         self.paramValues['EXTRACT_LENGTH'] = value
 
-        print("EXTRACT_LENGTH = " + self.paramValues['EXTRACT_LENGTH'])
+        print("EXTRACT_LENGTH = " + str(self.paramValues['EXTRACT_LENGTH']))
 
         self.sendOSCMessage("/extractLength", self.paramValues['EXTRACT_LENGTH'])
 
     def setHoldLength(self, value):
         self.paramValues['HOLD_LENGTH'] = value
 
-        print("HOLD_LENGTH = " + self.paramValues['HOLD_LENGTH'])
+        print("HOLD_LENGTH = " + str(self.paramValues['HOLD_LENGTH']))
 
         self.sendOSCMessage("/holdLength", self.paramValues['HOLD_LENGTH'])
 
@@ -313,12 +318,12 @@ def formSlices(numSlices, noteList):
         if noteEnd > endTime:
             endTime = noteEnd
 
-    print("Length of input: " + str(endTime - startTime))
+    # print("Length of input: " + str(endTime - startTime))
 
     # Divide total time into equal slices
     sliceLength = (endTime - startTime) / numSlices
 
-    print("Length of slice: " + str(sliceLength))
+    # print("Length of slice: " + str(sliceLength))
 
     if sliceLength == 0:
         slices[0] = noteList

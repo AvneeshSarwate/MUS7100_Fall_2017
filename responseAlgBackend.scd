@@ -216,21 +216,27 @@ OSCFunc.new({|msg, time, addr, recvPort|
 
 
 OSCFunc.new({|msg, time, addr, recvPort|
-    if(msg[1].asSymbol == \hold, {holdType = \hold});
+    if(msg[1].asSymbol == \note, {holdType = \note});
     if(msg[1].asSymbol == \silence, {holdType = \silence});
+    ~holdParams = [holdType, holdLength, extractLength];
+    "GOT HOLD TYPE".postln;
 }, "/holdType");
 
 OSCFunc.new({|msg, time, addr, recvPort|
-    holdLength = msg[1].asFloat
-}, "/holdType");
+    holdLength = msg[1].asFloat;
+    ~holdParams = [holdType, holdLength, extractLength];
+    "GOT HOLD LENGTH".postln;
+}, "/holdLength");
 
 OSCFunc.new({|msg, time, addr, recvPort|
     extractLength = msg[1].asFloat;
+    ~holdParams = [holdType, holdLength, extractLength];
+    "GOT EXTRACT LENGTH".postln;
 }, "/extractLength");
 
 )
 
-
+~holdParams
 
 
 
