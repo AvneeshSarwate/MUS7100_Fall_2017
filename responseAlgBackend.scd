@@ -6,7 +6,7 @@ MIDIIn.connectAll;
 "Hit".postln;
 
 ~debug = true;
-useLoopMidi = true;
+useLoopMidi = false;
 
 recordBuffer = List.new;
 ~recordBuffer = recordBuffer;
@@ -214,6 +214,19 @@ OSCFunc.new({|msg, time, addr, recvPort|
 
 }, "/playResponse");
 
+
+OSCFunc.new({|msg, time, addr, recvPort|
+    if(msg[1].asSymbol == \hold, {holdType = \hold});
+    if(msg[1].asSymbol == \silence, {holdType = \silence});
+}, "/holdType");
+
+OSCFunc.new({|msg, time, addr, recvPort|
+    holdLength = msg[1].asFloat
+}, "/holdType");
+
+OSCFunc.new({|msg, time, addr, recvPort|
+    extractLength = msg[1].asFloat;
+}, "/extractLength");
 
 )
 
