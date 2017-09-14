@@ -25,7 +25,7 @@ class Responder:
 
         self.paramValues = {
             'NUM_SLICES': 1,
-            'SHUFFLE_STR': "",
+            'SHUFFLE_STR': "a",
             'HOLD_TYPE': "silence",
             'EXTRACT_LENGTH': 2.0,
             'HOLD_LENGTH': 0.5
