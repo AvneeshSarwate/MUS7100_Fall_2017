@@ -26,17 +26,17 @@ class Responder:
         self.paramValues = {
             'NUM_SLICES': 1,
             'SHUFFLE_STR': "",
-            'HOLD_TYPE' : "silence",
-            'EXTRACT_LENGTH' : 2.0,
-            'HOLD_LENGTH' : 0.5
+            'HOLD_TYPE': "silence",
+            'EXTRACT_LENGTH': 2.0,
+            'HOLD_LENGTH': 0.5
         }
 
         self.paramSetters = {
             'NUM_SLICES': self.setNumSlices,
             'SHUFFLE_STR': self.setShuffleStr,
-            'HOLD_TYPE' : self.setHoldType,
-            'EXTRACT_LENGTH' : self.setExtractLength,
-            'HOLD_LENGTH' : self.setHoldLength
+            'HOLD_TYPE': self.setHoldType,
+            'EXTRACT_LENGTH': self.setExtractLength,
+            'HOLD_LENGTH': self.setHoldLength
         }
 
     def sendOSCMessage(self, addr, *msgArgs):
@@ -59,10 +59,8 @@ class Responder:
         hitList = stringToHitList(stuff[0])
         noteList = hitListToNoteList(hitList)
 
-        print noteList
         # calculate the musical material to send back
         newNoteList = shuffleBufferSlices(self.paramValues['SHUFFLE_STR'], self.paramValues['NUM_SLICES'], noteList)
-        print newNoteList
 
         self.sendOSCMessage("/playResponse", hitListToString(noteListToHitList(newNoteList)))
 
