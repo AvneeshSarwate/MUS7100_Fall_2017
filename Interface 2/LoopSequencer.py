@@ -48,6 +48,12 @@ class LoopSequencer:
         self.grid = stuff[0]
         print2d(self.grid)
 
+    def setLoopLength(self, value):
+        print value
+
+    def setTempo(self, value):
+        print value
+
 
 # Pretty-print 2D grid
 def print2d(matrix):
@@ -56,6 +62,36 @@ def print2d(matrix):
     fmt = '\t'.join('{{:{}}}'.format(x) for x in lens)
     table = [fmt.format(*row) for row in s]
     print '\n'.join(table)
+
+
+def stringToGrid(string):
+    newGrid = []
+    split = string.split(',')
+
+    for i in range(0, 8):
+        newRow = []
+
+        for j in range(0, 8):
+            newRow = newRow + [int(split[i * 8 + j])]
+
+        newGrid.append(newRow)
+
+    return newGrid
+
+
+def gridToString(grid):
+    out = ""
+
+    for row in grid:
+        stringifyedRow = []
+
+        for val in row:
+            stringifyedRow.append(str(val))
+
+        out += ",".join(stringifyedRow)
+        out += ","
+
+    return out[0:-1]
 
 
 def stringToHitList(loopString):
