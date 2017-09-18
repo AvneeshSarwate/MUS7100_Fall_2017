@@ -1,4 +1,8 @@
-(var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport;
+(var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport, playColumn, masterClockOSCport, chanPerInd, lightIndex, colors1, launchpadIndex;
+
+launchpadIndex = [8, 0]; //8,0 if "first launchpad", 11,1 if 2nd
+launchpadOut = MIDIOut.new(launchpadIndex[0]);
+launchpadOut.latency = 0;
 
 cycleLight_BUTTON = 95;
 padColorState = Dictionary.new;
@@ -60,18 +64,17 @@ lightIndex = if(~lightIndexes.size == 0,
 ~lightIndex = lightIndex;
 ["LIGHT INDEX LOOP SEQUENCER", ~lightIndex, lightIndex].postln;
 
-launchpadOut = MIDIOut.new(11);
-launchPad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
-    && (elem.device == "Launchpad Pro")})[1];
+
+
+(1..99).do({|i| setLight.(i, 0)});
+
+launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
+    && (elem.device == "Launchpad Pro")})[launchpadIndex[1]];
+["LAUNCHPAD", launchpad, ].postln;
 pythonOSCport = NetAddr("localhost", 13371);
+masterClockOSCport = NetAddr("127.0.0.1", 57120);
 
 
-banks = (10,20..80);
-isPlaying = List.fill(8, {false});
-tapTempoSet_BUTTON = 5;
-tapTempoToggle_BUTTON = 6;
-record_BUTTON = 7;
-scPort = NetAddr("127.0.0.1", 57120);
 
 color1 = [39, 112, 4, 83]; //colorVal
 grid = Array.fill2D(8, 8, {false});
@@ -80,52 +83,64 @@ chanPerLoop = List.fill(8, {nil});
 beatsPerLoop = 4;
 beatNum = 0;
 
+
+
 MIDIFunc.noteOn({|vel, note, chan, port|
-    var row = (note/10).floor - 1;
+    var row = (8-(note/10).floor);
     var col = (note%10) - 1;
     grid[row][col] = grid[row][col].not;
-    setLight(note, colors1[chanPerInd[row]]);
+    setLight.(note, colors1[chanPerInd[row]]);
+
+    pythonOSCport.sendMsg("/sendLoopGrid", grid.flat.collect({|el| if(el, 1, 0)}).join(","));
 }, nil, nil, launchpad.uid);
+
+
 
 MIDIFunc.cc({|vel, note, chan, port|
     if(note > 90, {
         columnInd = note-91;
-        setLight(note, 55);
+        setLight.(note, 55);
     });
 }, nil, nil, launchpad.uid);
+
+
 
 //msg[1] is bankIndex, msg[4] is bankChan
 OSCFunc({|msg, time, addr, recvPort|
     var loopInd = msg[1].asInt;
     var chanInd = msg[4].asInt;
-    isPlaying[loopInd] = true;
-    setLight((loopInd+1)*10, color1[chanInd]);
-    chanPerLoop[loopInd] = chanInd;
-    (0..7).do({|i| grid[loopInd][i] = true});
-    (1..8).do({|i| setLight(((loopInd+1)*10)+i, color1[chanInd])});
 
-} "/saveLoop");
+    setLight.((loopInd+1)*10, color1[chanInd]);
+    chanPerInd[loopInd] = chanInd;
+
+    (0..7).do({|i| grid[loopInd][i] = true});
+    (1..8).do({|i| setLight.(((loopInd+1)*10)+i, color1[chanInd])});
+
+}, "/saveLoop");
+
 
 
 playColumn = {
 
     Task({
-        (0..7).do({|i| scPort.sendMsg("/toggleBank", i, "off")});
+        (0..7).do({|i| masterClockOSCport.sendMsg("/toggleBank", i, "off")});
 
         0.001.wait;
 
-        (0..3).do({|i| scPort.sendMsg("/turnOffChannel", i)});
+        (0..3).do({|i| masterClockOSCport.sendMsg("/turnOffChannel", i)});
 
         0.001.wait;
 
         (0..7).do({|i|
             if(grid[i][columnInd],
-                {scPort.sendMsg("/toggleBank", i, "on")});
+                {masterClockOSCport.sendMsg("/toggleBank", i, "on")});
         });
         //
     }).play;
 
-}
+};
+
+
 
 //msg[1] is a string of 0/1s in row-major order, separated by commas
 OSCFunc({|msg, time, addr, recvPort|
@@ -133,22 +148,25 @@ OSCFunc({|msg, time, addr, recvPort|
     vals.do({|v, i| grid[(i/8).floor*10][i%8] = v.asSymbol == \1});
 }, "/setGrid");
 
+
+
 //msg[1] is a string of 1/0s separated by commas, msg[2] is column ind
 OSCFunc({|msg, time, addr, recvPort|
     var vals = msg[1].asString.split($,);
     vals.do({|v, i| grid[i][msg[2].asInt] = v.asSymbol == \1});
-
 }, "/setColumn");
 
-//TODO: move variable instations to near the functions that use them
+
+
 OSCFunc({|msg, time, addr, recvPort|
-    if((beatInd % beatsPerLoop) == 0, {
+    if((beatNum % beatsPerLoop) == 0, {
         playColumn.();
         pythonOSCport.sendMsg("/columnStep", columnInd);
-        setLight(91+columnInd, 55);
+        (0..8).do({|i| setLight.(91+i, 0)});
+        setLight.(91+columnInd, 3);
         columnInd = columnInd+1;
     });
-    beatInd = beatInd + 1;
+    beatNum = beatNum + 1;
     //"LOOP SEQUENCER hit".postln;
 }, "/masterClockBeat");
 
@@ -172,23 +190,3 @@ OSCFunc({|msg, time, addr, recvPort|
 note - top row is row "0" and indexes in increasing order down
 
 */
-
-
-MIDIClient.init;
-
-a = MIDIOut.newByName("Launchpad Pro", "Standalone Port")
-
-d = MIDIClient.destinations
-d.do({|dest| dest.postln})
-
-a = MIDIClient.destinations[8]
-b = MIDIClient.destinations[11]
-
-a = MIDIOut.new(8)
-b = MIDIOut.new(11)
-
-a.noteOn(0, 55, 55)
-b.noteOn(0, 55, 66)
-MIDIClient.destinations[8]
-
-(10,20..80).includes(60)
