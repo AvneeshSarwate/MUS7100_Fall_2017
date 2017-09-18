@@ -1,4 +1,4 @@
-(var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying;
+(var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum;
 
 cycleLight_BUTTON = 95;
 padColorState = Dictionary.new;
@@ -72,11 +72,17 @@ record_BUTTON = 7;
 scPort = NetAddr("127.0.0.1", 57120);
 
 color1 = [39, 112, 4, 83]; //colorVal
+grid = Array.fill2D(8, 8, {false});
+columnInd = 0;
+chanPerLoop = List.fill(8, {nil});
+beatsPerLoop = 4;
+beatNum = 0;
 
-
-MIDIFunc.cc({|vel, note, chan, port|
-    if(banks.includes(note), { scPort.sendMsg("/padHit", (note/10)-1) });
-    if(note == record_BUTTON, { scPort.sendMsg("/recordButton", 1) });
+MIDIFunc.noteOn({|vel, note, chan, port|
+    var row = (note/10).floor - 1;
+    var col = (note%10) - 1;
+    grid[row][col] = grid[row][col].not;
+    setLight(note, colors1[chanPerInd[row]]);
 }, nil, nil, launchpad.uid);
 
 //msg[1] is bankIndex, msg[4] is bankChan
@@ -85,9 +91,41 @@ OSCFunc({|msg, time, addr, recvPort|
     var chanInd = msg[4].asInt;
     isPlaying[loopInd] = true;
     setLight((loopInd+1)*10, color1[chanInd]);
+    chanPerLoop[loopInd] = chanInd;
+    (0..7).do({|i| grid[loopInd][i] = true});
     (1..8).do({|i| setLight(((loopInd+1)*10)+i, color1[chanInd])});
 
-} "/saveLoop")
+} "/saveLoop");
+
+
+playColumn = {
+
+    Task({
+        (0..7).do({|i| scPort.sendMsg("/toggleBank", i, "off")});
+
+        0.001.wait;
+
+        (0..3).do({|i| scPort.sendMsg("/turnOffChannel", i)});
+
+        0.001.wait;
+
+        (0..7).do({|i|
+            if(grid[beatInd%8][i],
+                {scPort.sendMsg("/toggleBank", i, "on")});
+        });
+        //
+    }).play;
+
+}
+
+
+//TODO: move variable instations to near the functions that use them
+OSCFunc({|msg, time, addr, recvPort|
+    if((beatInd % beatsPerLoop) == 0, {playColumn.()})
+    beatInd = beatInd + 1;
+    "LOOP SEQUENCER hit".postln;
+}, "/masterClockBeat");
+
 
 )
 
