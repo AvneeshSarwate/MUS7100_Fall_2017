@@ -1,4 +1,4 @@
-(var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport, playColumn, masterClockOSCport, chanPerInd, lightIndex, colors1, launchpadIndex;
+(var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport, playColumn, masterClockOSCport, chanPerInd, lightIndex, launchpadIndex, controlHandler, controlHandlerWrapper;
 
 launchpadIndex = [8, 0]; //8,0 if "first launchpad", 11,1 if 2nd
 launchpadOut = MIDIOut.new(launchpadIndex[0]);
@@ -34,6 +34,7 @@ setLight = {|note, color, lightIndexOverride=false|
 cycleLight = {
     //TODO: change name of this port to something like SCOSCport
     Task({
+        ["NEW LIGHT INDEX TRIGGER FROM LOOPSEQUENCER", ~lightIndex].postln;
         masterClockOSCport.sendMsg("/lightsChange", (~lightIndex+1)%~lightIndexes.size);
         0.01.wait;
         ~lightIndex = (~lightIndex+1)%~lightIndexes.size;
@@ -47,7 +48,7 @@ OSCFunc({|msg, time, addr, recvPort|
         (0..99).do({|i| colorStateLog.add(0)});
         padColorState.keys.do({|key| setLight.(key, padColorState[key], true);
             colorStateLog[key]=padColorState[key]});
-        ["CHANGING MULTILOOP LIGHTS", msg[1], colorStateLog].postln;
+        ["CHANGING TO LOOPSEQUENCER LIGHTS", msg[1], colorStateLog].postln;
     });
 
 }, "/lightsChange");
@@ -82,6 +83,7 @@ columnInd = 0;
 chanPerLoop = List.fill(8, {nil});
 beatsPerLoop = 4;
 beatNum = 0;
+chanPerInd = List.fill(8, {-1});
 
 
 
@@ -89,21 +91,32 @@ MIDIFunc.noteOn({|vel, note, chan, port|
     var row = (8-(note/10).floor);
     var col = (note%10) - 1;
     grid[row][col] = grid[row][col].not;
-    setLight.(note, colors1[chanPerInd[row]]);
+    setLight.(note, color1[chanPerInd[row]]);
 
     pythonOSCport.sendMsg("/sendLoopGrid", grid.flat.collect({|el| if(el, 1, 0)}).join(","));
 }, nil, nil, launchpad.uid);
 
 
 
-MIDIFunc.cc({|vel, note, chan, port|
-    if(note > 90, {
-        columnInd = note-91;
+controlHandler = {|vel, note, chan, port|
+    if(note < 10, {
+        columnInd = note-1;
         setLight.(note, 55);
     });
-}, nil, nil, launchpad.uid);
+    if((note == cycleLight_BUTTON) && (vel !=0), {
+        if(~cycling, {cycleLight.()})
+    });
+};
 
-
+controlHandlerWrapper = {|vel, note, chan, port|
+    ~lock.wait;
+    if((chan == 0) && (~lightIndex == lightIndex) && (vel != 0), {
+        //["LIGHT INDEX MULTILOOP", ~lightIndex, lightIndex, SystemClock.beats].postln;
+        controlHandler.(vel, note, chan, port)
+    });
+    ~lock.signal;
+};
+MIDIFunc.cc(controlHandlerWrapper, nil, nil, launchpad.uid);
 
 //msg[1] is bankIndex, msg[4] is bankChan
 OSCFunc({|msg, time, addr, recvPort|
@@ -162,9 +175,9 @@ OSCFunc({|msg, time, addr, recvPort|
     if((beatNum % beatsPerLoop) == 0, {
         playColumn.();
         pythonOSCport.sendMsg("/columnStep", columnInd);
-        (0..8).do({|i| setLight.(91+i, 0)});
-        setLight.(91+columnInd, 3);
-        columnInd = columnInd+1;
+        (0..8).do({|i| setLight.(1+i, 0)});
+        setLight.(1+columnInd, 3);
+        columnInd = (columnInd+1) % 8;
     });
     beatNum = beatNum + 1;
     //"LOOP SEQUENCER hit".postln;
@@ -190,3 +203,5 @@ OSCFunc({|msg, time, addr, recvPort|
 note - top row is row "0" and indexes in increasing order down
 
 */
+
+~lightIndex
