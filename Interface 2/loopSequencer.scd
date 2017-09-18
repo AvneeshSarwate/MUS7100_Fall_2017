@@ -1,4 +1,4 @@
-(var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum;
+(var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport;
 
 cycleLight_BUTTON = 95;
 padColorState = Dictionary.new;
@@ -63,9 +63,11 @@ lightIndex = if(~lightIndexes.size == 0,
 launchpadOut = MIDIOut.new(11);
 launchPad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
     && (elem.device == "Launchpad Pro")})[1];
+pythonOSCport = NetAddr("localhost", 13371);
+
+
 banks = (10,20..80);
 isPlaying = List.fill(8, {false});
-
 tapTempoSet_BUTTON = 5;
 tapTempoToggle_BUTTON = 6;
 record_BUTTON = 7;
@@ -83,6 +85,13 @@ MIDIFunc.noteOn({|vel, note, chan, port|
     var col = (note%10) - 1;
     grid[row][col] = grid[row][col].not;
     setLight(note, colors1[chanPerInd[row]]);
+}, nil, nil, launchpad.uid);
+
+MIDIFunc.cc({|vel, note, chan, port|
+    if(note > 90, {
+        columnInd = note-91;
+        setLight(note, 55);
+    });
 }, nil, nil, launchpad.uid);
 
 //msg[1] is bankIndex, msg[4] is bankChan
@@ -110,7 +119,7 @@ playColumn = {
         0.001.wait;
 
         (0..7).do({|i|
-            if(grid[beatInd%8][i],
+            if(grid[i][columnInd],
                 {scPort.sendMsg("/toggleBank", i, "on")});
         });
         //
@@ -118,12 +127,29 @@ playColumn = {
 
 }
 
+//msg[1] is a string of 0/1s in row-major order, separated by commas
+OSCFunc({|msg, time, addr, recvPort|
+    var vals = msg[1].asString.split($,);
+    vals.do({|v, i| grid[(i/8).floor*10][i%8] = v.asSymbol == \1});
+}, "/setGrid");
+
+//msg[1] is a string of 1/0s separated by commas, msg[2] is column ind
+OSCFunc({|msg, time, addr, recvPort|
+    var vals = msg[1].asString.split($,);
+    vals.do({|v, i| grid[i][msg[2].asInt] = v.asSymbol == \1});
+
+}, "/setColumn");
 
 //TODO: move variable instations to near the functions that use them
 OSCFunc({|msg, time, addr, recvPort|
-    if((beatInd % beatsPerLoop) == 0, {playColumn.()})
+    if((beatInd % beatsPerLoop) == 0, {
+        playColumn.();
+        pythonOSCport.sendMsg("/columnStep", columnInd);
+        setLight(91+columnInd, 55);
+        columnInd = columnInd+1;
+    });
     beatInd = beatInd + 1;
-    "LOOP SEQUENCER hit".postln;
+    //"LOOP SEQUENCER hit".postln;
 }, "/masterClockBeat");
 
 
@@ -141,6 +167,9 @@ OSCFunc({|msg, time, addr, recvPort|
 - When a loop column is reached, it will turn off the loop, all notes on the channel, and then turn on the loop (1 ms lag between off/on).
 ----- Thus, if your initial recording is off the beat count, there will be a "skip", but it won't break.
 - algoKeys and sceneBuilder will be on the same launchpad, loopSequencer on another.
+
+
+note - top row is row "0" and indexes in increasing order down
 
 */
 
