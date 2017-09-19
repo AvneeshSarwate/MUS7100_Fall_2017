@@ -142,16 +142,18 @@ controlHandlerWrapper = {|vel, note, chan, port|
 
 //msg[1] is bankIndex (eg buttonNote in sceneBuilder), msg[4] is bankChan
 OSCFunc({|msg, time, addr, recvPort|
-    var loopInd = ((msg[1].asInt)%8) - 1;
-    var chanInd = msg[4].asInt;
+    if(msg[1].asInt > 40, { //top row in scene builder has bank indexes 41-48
+        var loopInd = ((msg[1].asInt)%8) - 1;
+        var chanInd = msg[4].asInt;
 
-    ["/saveLoop loop seq", loopInd, chanInd].postln;
+        ["/saveLoop loop seq", loopInd, chanInd].postln;
 
-    setLight.((8-loopInd)*10, color1[chanInd]);
-    chanPerRow[loopInd] = chanInd;
+        setLight.((8-loopInd)*10, color1[chanInd]);
+        chanPerRow[loopInd] = chanInd;
 
-    (0..7).do({|i| grid[loopInd][i] = true});
-    (1..8).do({|i| setLight.(((8-loopInd)*10)+i, color1[chanInd])});
+        (0..7).do({|i| grid[loopInd][i] = true});
+        (1..8).do({|i| setLight.(((8-loopInd)*10)+i, color1[chanInd])});
+    });
 
 }, "/saveLoop");
 
