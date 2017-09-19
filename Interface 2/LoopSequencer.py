@@ -18,6 +18,22 @@ class LoopSequencer:
         self.superColliderClient = OSC.OSCClient()
         self.superColliderClient.connect(('127.0.0.1', 57120))
 
+        self.intervalToSemitones = {
+            'm2': 1,
+            'M2': 2,
+            'm3': 3,
+            'M3': 4,
+            'P4': 5,
+            'A4': 6,
+            'd5': 6,
+            'P5': 7,
+            'm6': 8,
+            'M6': 9,
+            'm7': 10,
+            'M7': 11,
+            'P8': 12
+        }
+
         self.paramValues = {
             'LOOP_LENGTH': 4,
             'TEMPO': 60
@@ -28,15 +44,18 @@ class LoopSequencer:
             'TEMPO': self.setTempo
         }
 
+        self.origLoops = [[] for i in range(8)]
+        self.transformedLoops = [[] for i in range(8)]
+
         self.grid = []
 
         # Initiailize empty grid
         for i in range(8):
-            self.grid.append([0, 0, 0, 0, 0, 0, 0, 0])
-
-        print2d(self.grid)
+            self.grid.append([0 for i in range(8)])
 
         self.superColliderServer.addMsgHandler("/gridEventResponder", self.gridEventResponder)
+        self.superColliderServer.addMsgHandler("/saveLoopResponder", self.saveLoopResponder)
+        self.superColliderServer.addMsgHandler("/getLoop", self.getLoopResponder)
 
     def sendOSCMessage(self, addr, *msgArgs):
         msg = OSC.OSCMessage()
@@ -44,15 +63,166 @@ class LoopSequencer:
         msg.append(*msgArgs)
         self.superColliderClient.send(msg)
 
+    '''
+        SC handlers
+    '''
+
+    def saveLoopResponder(self, addr, tags, stuff, source):
+        loopIndex = stuff[0]
+        hitList = stringToHitList(stuff[1])
+        noteList = hitListToNoteList(hitList)
+
+        self.origLoops[loopIndex] = noteList
+        self.transformedLoops[loopIndex] = noteList
+
+    def getLoopResponder(self, addr, tags, stuff, source):
+        loopIndex = stuff[0]
+        return self.transformedLoops[loopIndex]
+
     def gridEventResponder(self, addr, tags, stuff, source):
         self.grid = stuff[0]
         print2d(self.grid)
 
+    '''
+        Grid manipulation functions
+    '''
+
+    def replaceCol(self, index, array):
+        for i, row in enumerate(self.grid):
+            row[index] = array[i]
+        print2d(self.grid)
+
+    def replaceRow(self, index, array):
+        self.grid[index] = array
+        print2d(self.grid)
+
+    def revCol(self, index):
+        col = []
+
+        for row in self.grid:
+            col.append(row[index])
+
+        col = col[::-1]
+
+        self.replaceCol(index, col)
+
+    def revRow(self, index):
+        row = self.grid[index]
+        row = row[::-1]
+
+        self.replaceRow(index, row)
+
+    def shiftGrid(self, dir, steps):
+        if dir == "up":
+            self.grid = self.grid[-(8 - steps):] + self.grid[:steps]
+
+        if dir == "down":
+            self.grid = self.grid[-steps:] + self.grid[:(8 - steps)]
+
+        if dir == "right":
+            newGrid = []
+            for row in self.grid:
+                newRow = row[-steps:] + row[:(8 - steps)]
+                newGrid.append(newRow)
+            self.grid = newGrid
+
+        if dir == "left":
+            newGrid = []
+            for row in self.grid:
+                newRow = row[-(8 - steps):] + row[:steps]
+                newGrid.append(newRow)
+            self.grid = newGrid
+
+        print2d(self.grid)
+
+    '''
+        Parameter setting
+    '''
+
+    def setParam(self, name, value):
+        if self.paramSetters.has_key(name):
+            self.paramSetters[name](value)
+        else:
+            print("Parameter " + str(name) + " not found.")
+
+    '''
+        Setters
+    '''
+
     def setLoopLength(self, value):
-        print value
+        self.paramValues['LOOP_LENGTH'] = value
 
     def setTempo(self, value):
-        print value
+        self.paramValues['TEMPO'] = value
+
+    '''
+        Loop transformation
+    '''
+
+    def transformLoop(self, loopIndex, transform, **kwargs):
+        if (kwargs.has_key('additive')):
+            if kwargs['additive']:
+                if kwargs['additive']:
+                    noteList = self.transformedLoops[loopIndex]
+                else:
+                    noteList = self.origLoops[loopIndex]
+            else:
+                noteList = self.origLoops[loopIndex]
+        else:
+            noteList = self.origLoops[loopIndex]
+
+        '''
+            rev transform
+        '''
+        if transform.lower() == 'rev':
+            endTime = noteList[-1][TIME]
+            newNoteList = [[endTime - note[TIME]] + note[1:5] for note in noteList]
+
+            self.transformedLoops[loopIndex] = sorted(newNoteList, key=lambda x: x[TIME])
+
+        '''
+            transpose transform
+        '''
+        if transform.lower() == 'transpose':
+            direction = kwargs['direction']
+            if (direction == "up"):
+                dir = 1
+            else:
+                dir = -1
+            interval = self.intervalToSemitones[kwargs['interval']]
+            if (kwargs.has_key('octaves')):
+                oct = kwargs['octaves']
+            else:
+                oct = 0
+            newNoteList = [note[:1] + [note[MIDI_NOTE] + (dir * interval) + (dir * oct * 8)] + note[2:5] for note in
+                           noteList]
+            self.transformedLoops[loopIndex] = newNoteList
+
+        '''
+            invert transform
+        '''
+        if transform.lower() == 'invert':
+            if (kwargs.has_key('inversionPoint')):
+                inversionPoint = kwargs['inversionPoint']
+            else:
+                inversionPoint = 'beg'
+
+            if inversionPoint == 'beg':
+                newNoteList = noteList[:]
+                i = 1
+                while i < len(noteList):
+                    newNoteList[i] = [noteList[i][TIME]] + [newNoteList[i - 1][MIDI_NOTE] + (noteList[i - 1][MIDI_NOTE] - noteList[i][MIDI_NOTE])] + noteList[i][2:5]
+                    i += 1
+
+            if inversionPoint == 'end':
+                newNoteList = noteList[:]
+                i = len(noteList) - 2
+                while i > -1:
+                    newNoteList[i] = [noteList[i][TIME]] + [newNoteList[i + 1][MIDI_NOTE] + (noteList[i + 1][MIDI_NOTE] - noteList[i][MIDI_NOTE])] +  noteList[i][2:5]
+                    i -= 1
+            self.transformedLoops[loopIndex] = sorted(newNoteList, key=lambda x: x[TIME])
+
+        print self.transformedLoops[loopIndex]
 
 
 # Pretty-print 2D grid
@@ -91,7 +261,7 @@ def gridToString(grid):
         out += ",".join(stringifyedRow)
         out += ","
 
-    return out[0:-1]
+    return out[:-1]
 
 
 def stringToHitList(loopString):
