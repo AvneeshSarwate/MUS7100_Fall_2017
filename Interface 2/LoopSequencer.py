@@ -22,7 +22,7 @@ class LoopSequencer:
         self.superColliderServer.addMsgHandler("/saveLoopResponder", self.saveLoopResponder)
         self.superColliderServer.addMsgHandler("/getLoop", self.getLoopResponder)
         self.superColliderServer.addMsgHandler("/loopChanged", self.loopChangedResponder)
-
+        self.superColliderServer.addMsgHandler("/columnStep", self.columnStep)
 
         self.intervalToSemitones = {
             'm2': 1,
@@ -86,6 +86,10 @@ class LoopSequencer:
     def loopChangedResponder(self, addr, tags, stuff, source):
         loopIndexChanged = stuff[0]
         self.transformLoop(loopIndexChanged, self.loopTransform)
+
+    def columnStep(self, addr, tags, stuff, source):
+        return
+        #print "caught col step"
 
     '''
         Grid manipulation functions
@@ -172,17 +176,17 @@ class LoopSequencer:
         Loop transformation
     '''
 
-    def transformLoop(self, loopIndex, transform, **kwargs):
-        if (kwargs.has_key('additive')):
-            if kwargs['additive']:
-                if kwargs['additive']:
-                    noteList = self.transformedLoops[loopIndex]
-                else:
-                    noteList = self.origLoops[loopIndex]
-            else:
-                noteList = self.origLoops[loopIndex]
-        else:
-            noteList = self.origLoops[loopIndex]
+    def transformLoop(self, loop, loopIndex, transform, **kwargs):
+        # if (kwargs.has_key('additive')):
+        #     if kwargs['additive']:
+        #         if kwargs['additive']:
+        #             noteList = self.transformedLoops[loopIndex]
+        #         else:
+        #             noteList = self.origLoops[loopIndex]
+        #     else:
+        #         noteList = self.origLoops[loopIndex]
+        # else:
+        noteList = loop
 
         '''
             rev transform
@@ -191,7 +195,7 @@ class LoopSequencer:
             endTime = noteList[-1][TIME]
             newNoteList = [[endTime - note[TIME]] + note[1:5] for note in noteList]
 
-            self.transformedLoops[loopIndex] = sorted(newNoteList, key=lambda x: x[TIME])
+            # self.transformedLoops[loopIndex] = sorted(newNoteList, key=lambda x: x[TIME])
 
         '''
             transpose transform
@@ -209,7 +213,7 @@ class LoopSequencer:
                 oct = 0
             newNoteList = [note[:1] + [note[MIDI_NOTE] + (dir * interval) + (dir * oct * 8)] + note[2:5] for note in
                            noteList]
-            self.transformedLoops[loopIndex] = newNoteList
+            # self.transformedLoops[loopIndex] = newNoteList
 
         '''
             invert transform
@@ -233,7 +237,12 @@ class LoopSequencer:
                 while i > -1:
                     newNoteList[i] = [noteList[i][TIME]] + [newNoteList[i + 1][MIDI_NOTE] + (noteList[i + 1][MIDI_NOTE] - noteList[i][MIDI_NOTE])] +  noteList[i][2:5]
                     i -= 1
-            self.transformedLoops[loopIndex] = sorted(newNoteList, key=lambda x: x[TIME])
+            newNoteList = sorted(newNoteList, key=lambda x: x[TIME])
+            # self.transformedLoops[loopIndex] = sorted(newNoteList, key=lambda x: x[TIME])
+
+        # print self.transformedLoops[loopIndex]
+
+        self.sendOSCMessage('/setBankMelody', loopIndex, hitListToString(noteListToHitList(newNoteList)))
 
     def sendGrid(self):
         self.sendOSCMessage('/sendGrid', gridToString(self.grid))
