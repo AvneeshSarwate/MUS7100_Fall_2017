@@ -56,7 +56,7 @@ class LoopSequencer:
         self.superColliderServer.addMsgHandler("/sendLoopGrid", self.gridEventResponder)
         self.superColliderServer.addMsgHandler("/saveLoopResponder", self.saveLoopResponder)
         self.superColliderServer.addMsgHandler("/getLoop", self.getLoopResponder)
-        self.superColliderServer.addMsgHandler("/getLoop", self.columnStep)
+        self.superColliderServer.addMsgHandler("/columnStep", self.columnStep)
 
     def sendOSCMessage(self, addr, *msgArgs):
         msg = OSC.OSCMessage()
@@ -85,7 +85,8 @@ class LoopSequencer:
         print2d(self.grid)
 
     def columnStep(self, addr, tags, stuff, source):
-        print "caught col step"
+        return
+        #print "caught col step"
 
 
     '''
