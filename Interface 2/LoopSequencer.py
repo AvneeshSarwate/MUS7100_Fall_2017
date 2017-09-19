@@ -53,7 +53,7 @@ class LoopSequencer:
         for i in range(8):
             self.grid.append([0 for i in range(8)])
 
-        self.superColliderServer.addMsgHandler("/gridEventResponder", self.gridEventResponder)
+        self.superColliderServer.addMsgHandler("/sendLoopGrid", self.gridEventResponder)
         self.superColliderServer.addMsgHandler("/saveLoopResponder", self.saveLoopResponder)
         self.superColliderServer.addMsgHandler("/getLoop", self.getLoopResponder)
 
@@ -80,7 +80,7 @@ class LoopSequencer:
         return self.transformedLoops[loopIndex]
 
     def gridEventResponder(self, addr, tags, stuff, source):
-        self.grid = stuff[0]
+        self.grid = stringToGrid(stuff[0])
         print2d(self.grid)
 
     '''
@@ -90,10 +90,12 @@ class LoopSequencer:
     def replaceCol(self, index, array):
         for i, row in enumerate(self.grid):
             row[index] = array[i]
+        self.sendGrid()
         print2d(self.grid)
 
     def replaceRow(self, index, array):
         self.grid[index] = array
+        self.sendGrid()
         print2d(self.grid)
 
     def revCol(self, index):
@@ -133,6 +135,7 @@ class LoopSequencer:
                 newGrid.append(newRow)
             self.grid = newGrid
 
+        self.sendGrid()
         print2d(self.grid)
 
     '''
@@ -151,9 +154,15 @@ class LoopSequencer:
 
     def setLoopLength(self, value):
         self.paramValues['LOOP_LENGTH'] = value
+        self.sendOSCMessage("/loopLength", self.paramValues['LOOP_LENGTH'])
+
+        print "Loop length in beats: " + str(self.paramValues['LOOP_LENGTH'])
 
     def setTempo(self, value):
         self.paramValues['TEMPO'] = value
+        self.sendOSCMessage("/uploadTempo", 1 / float(self.paramValues['TEMPO']), 0)
+
+        print "Tempo: " + str(self.paramValues['TEMPO'])
 
     '''
         Loop transformation
@@ -223,6 +232,9 @@ class LoopSequencer:
             self.transformedLoops[loopIndex] = sorted(newNoteList, key=lambda x: x[TIME])
 
         print self.transformedLoops[loopIndex]
+
+    def sendGrid(self):
+        self.sendOSCMessage('/sendGrid', gridToString(self.grid))
 
 
 # Pretty-print 2D grid
