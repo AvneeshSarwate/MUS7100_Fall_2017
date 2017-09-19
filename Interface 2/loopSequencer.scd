@@ -72,7 +72,7 @@ lightIndex = if(~lightIndexes.size == 0,
 launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
     && (elem.device == "Launchpad Pro")})[launchpadIndex[1]];
 ["LAUNCHPAD", launchpad, ].postln;
-pythonOSCport = NetAddr("localhost", 13371);
+pythonOSCport = NetAddr("localhost", 7100);
 masterClockOSCport = NetAddr("127.0.0.1", 57120);
 
 
@@ -187,6 +187,9 @@ OSCFunc({|msg, time, addr, recvPort|
     //"LOOP SEQUENCER hit".postln;
 }, "/masterClockBeat");
 
+OSCFunc({|msg, time, addr, recvPort|
+    beatsPerLoop = msg[1].asInt;
+}, "/loopLength");
 
 )
 
