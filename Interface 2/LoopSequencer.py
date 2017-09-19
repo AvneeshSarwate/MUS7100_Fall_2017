@@ -11,12 +11,18 @@ DUR = 4
 class LoopSequencer:
     def __init__(self):
         self.superColliderServer = OSC.OSCServer(('127.0.0.1', 7100))
-        self.serverThread = threading.Thread(target=self.superColliderServer.serve_forever)
-        self.serverThread.daemon = False
-        self.serverThread.start()
+        self.SCServerThread = threading.Thread(target=self.superColliderServer.serve_forever)
+        self.SCServerThread.daemon = False
+        self.SCServerThread.start()
 
         self.superColliderClient = OSC.OSCClient()
         self.superColliderClient.connect(('127.0.0.1', 57120))
+
+        self.superColliderServer.addMsgHandler("/sendLoopGrid", self.gridEventResponder)
+        self.superColliderServer.addMsgHandler("/saveLoopResponder", self.saveLoopResponder)
+        self.superColliderServer.addMsgHandler("/getLoop", self.getLoopResponder)
+        self.superColliderServer.addMsgHandler("/loopChanged", self.loopChangedResponder)
+
 
         self.intervalToSemitones = {
             'm2': 1,
@@ -44,18 +50,12 @@ class LoopSequencer:
             'TEMPO': self.setTempo
         }
 
-        self.origLoops = [[] for i in range(8)]
-        self.transformedLoops = [[] for i in range(8)]
-
         self.grid = []
 
         # Initiailize empty grid
         for i in range(8):
             self.grid.append([0 for i in range(8)])
 
-        self.superColliderServer.addMsgHandler("/sendLoopGrid", self.gridEventResponder)
-        self.superColliderServer.addMsgHandler("/saveLoopResponder", self.saveLoopResponder)
-        self.superColliderServer.addMsgHandler("/getLoop", self.getLoopResponder)
 
     def sendOSCMessage(self, addr, *msgArgs):
         msg = OSC.OSCMessage()
@@ -82,6 +82,10 @@ class LoopSequencer:
     def gridEventResponder(self, addr, tags, stuff, source):
         self.grid = stringToGrid(stuff[0])
         print2d(self.grid)
+
+    def loopChangedResponder(self, addr, tags, stuff, source):
+        loopIndexChanged = stuff[0]
+        self.transformLoop(loopIndexChanged, self.loopTransform)
 
     '''
         Grid manipulation functions
@@ -230,8 +234,6 @@ class LoopSequencer:
                     newNoteList[i] = [noteList[i][TIME]] + [newNoteList[i + 1][MIDI_NOTE] + (noteList[i + 1][MIDI_NOTE] - noteList[i][MIDI_NOTE])] +  noteList[i][2:5]
                     i -= 1
             self.transformedLoops[loopIndex] = sorted(newNoteList, key=lambda x: x[TIME])
-
-        print self.transformedLoops[loopIndex]
 
     def sendGrid(self):
         self.sendOSCMessage('/sendGrid', gridToString(self.grid))
