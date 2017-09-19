@@ -1,4 +1,4 @@
-(var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport, playColumn, masterClockOSCport, chanPerInd, lightIndex, launchpadIndex, controlHandler, controlHandlerWrapper;
+(var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport, playColumn, masterClockOSCport, chanPerRow, lightIndex, launchpadIndex, controlHandler, controlHandlerWrapper;
 
 launchpadIndex = [8, 0]; //8,0 if "first launchpad", 11,1 if 2nd
 launchpadOut = MIDIOut.new(launchpadIndex[0]);
@@ -83,17 +83,20 @@ columnInd = 0;
 chanPerLoop = List.fill(8, {nil});
 beatsPerLoop = 4;
 beatNum = 0;
-chanPerInd = List.fill(8, {-1});
+chanPerRow = List.fill(8, {-1});
 
 
 
 MIDIFunc.noteOn({|vel, note, chan, port|
-    var row = (8-(note/10).floor);
-    var col = (note%10) - 1;
-    grid[row][col] = grid[row][col].not;
-    setLight.(note, color1[chanPerInd[row]]);
+    if((chan == 0) && (~lightIndex == lightIndex), {
+        var row = (8-(note/10).floor);
+        var col = (note%10) - 1;
+        ["STEP SEQ PRESS", row, col, chanPerRow[row], color1[chanPerRow[row]]].postln;
+        grid[row][col] = grid[row][col].not;
+        setLight.(note, if(grid[row][col], color1[chanPerRow[row]], 0));
 
-    pythonOSCport.sendMsg("/sendLoopGrid", grid.flat.collect({|el| if(el, 1, 0)}).join(","));
+        pythonOSCport.sendMsg("/sendLoopGrid", grid.flat.collect({|el| if(el, 1, 0)}).join(","));
+    })
 }, nil, nil, launchpad.uid);
 
 
@@ -118,22 +121,23 @@ controlHandlerWrapper = {|vel, note, chan, port|
 };
 MIDIFunc.cc(controlHandlerWrapper, nil, nil, launchpad.uid);
 
-//msg[1] is bankIndex, msg[4] is bankChan
+//msg[1] is bankIndex (eg buttonNote in sceneBuilder), msg[4] is bankChan
 OSCFunc({|msg, time, addr, recvPort|
-    var loopInd = msg[1].asInt;
+    var loopInd = ((msg[1].asInt)%8) - 1;
     var chanInd = msg[4].asInt;
 
-    setLight.((loopInd+1)*10, color1[chanInd]);
-    chanPerInd[loopInd] = chanInd;
+    ["/saveLoop loop seq", loopInd, chanInd].postln;
+
+    setLight.((8-loopInd)*10, color1[chanInd]);
+    chanPerRow[loopInd] = chanInd;
 
     (0..7).do({|i| grid[loopInd][i] = true});
-    (1..8).do({|i| setLight.(((loopInd+1)*10)+i, color1[chanInd])});
+    (1..8).do({|i| setLight.(((8-loopInd)*10)+i, color1[chanInd])});
 
 }, "/saveLoop");
 
 
-
-playColumn = {
+playColumn = {|colInd|
 
     Task({
         (0..7).do({|i| masterClockOSCport.sendMsg("/toggleBank", i, "off")});
@@ -145,7 +149,7 @@ playColumn = {
         0.001.wait;
 
         (0..7).do({|i|
-            if(grid[i][columnInd],
+            if(grid[i][colInd],
                 {masterClockOSCport.sendMsg("/toggleBank", i, "on")});
         });
         //
@@ -173,7 +177,7 @@ OSCFunc({|msg, time, addr, recvPort|
 
 OSCFunc({|msg, time, addr, recvPort|
     if((beatNum % beatsPerLoop) == 0, {
-        playColumn.();
+        playColumn.(columnInd);
         pythonOSCport.sendMsg("/columnStep", columnInd);
         (0..8).do({|i| setLight.(1+i, 0)});
         setLight.(1+columnInd, 3);
