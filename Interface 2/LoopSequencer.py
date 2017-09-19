@@ -9,7 +9,8 @@ DUR = 4
 
 
 class LoopSequencer:
-    def __init__(self):
+    def __init__(self, fh2):
+        self.fh2 = fh2
         self.superColliderServer = OSC.OSCServer(('127.0.0.1', 7100))
         self.SCServerThread = threading.Thread(target=self.superColliderServer.serve_forever)
         self.SCServerThread.daemon = False
@@ -19,10 +20,10 @@ class LoopSequencer:
         self.superColliderClient.connect(('127.0.0.1', 57120))
 
         self.superColliderServer.addMsgHandler("/sendLoopGrid", self.gridEventResponder)
-        self.superColliderServer.addMsgHandler("/saveLoopResponder", self.saveLoopResponder)
+        self.superColliderServer.addMsgHandler("/columnStep", self.columnStep)
         self.superColliderServer.addMsgHandler("/getLoop", self.getLoopResponder)
         self.superColliderServer.addMsgHandler("/loopChanged", self.loopChangedResponder)
-        self.superColliderServer.addMsgHandler("/columnStep", self.columnStep)
+
 
         self.intervalToSemitones = {
             'm2': 1,
@@ -48,6 +49,17 @@ class LoopSequencer:
         self.paramSetters = {
             'LOOP_LENGTH': self.setLoopLength,
             'TEMPO': self.setTempo
+        }
+
+        self.loopTransformations = {
+            41: [],
+            42: [],
+            43: [],
+            44: [],
+            45: [],
+            46: [],
+            47: [],
+            48: []
         }
 
         self.grid = []
@@ -81,11 +93,10 @@ class LoopSequencer:
 
     def gridEventResponder(self, addr, tags, stuff, source):
         self.grid = stringToGrid(stuff[0])
-        print2d(self.grid)
 
     def loopChangedResponder(self, addr, tags, stuff, source):
         loopIndexChanged = stuff[0]
-        self.transformLoop(loopIndexChanged, self.loopTransform)
+        self.runTransformations(loopIndexChanged)
 
     def columnStep(self, addr, tags, stuff, source):
         return
@@ -176,17 +187,18 @@ class LoopSequencer:
         Loop transformation
     '''
 
-    def transformLoop(self, loop, loopIndex, transform, **kwargs):
-        # if (kwargs.has_key('additive')):
-        #     if kwargs['additive']:
-        #         if kwargs['additive']:
-        #             noteList = self.transformedLoops[loopIndex]
-        #         else:
-        #             noteList = self.origLoops[loopIndex]
-        #     else:
-        #         noteList = self.origLoops[loopIndex]
-        # else:
-        noteList = loop
+    def transformLoop(self, loopIndex, transform, send=True, noteListIn=[], **kwargs):
+        if not noteListIn:
+            if (kwargs.has_key('additive')):
+                if kwargs['additive']:
+                    if kwargs['additive']:
+                        noteList = self.runTranformations(loopIndex, send=False)
+                    else:
+                        noteList = hitListToNoteList(self.fh2.loops[loopIndex])
+                else:
+                    noteList = hitListToNoteList(self.fh2.loops[loopIndex])
+        else:
+            noteList = noteListIn
 
         '''
             rev transform
@@ -238,11 +250,38 @@ class LoopSequencer:
                     newNoteList[i] = [noteList[i][TIME]] + [newNoteList[i + 1][MIDI_NOTE] + (noteList[i + 1][MIDI_NOTE] - noteList[i][MIDI_NOTE])] +  noteList[i][2:5]
                     i -= 1
             newNoteList = sorted(newNoteList, key=lambda x: x[TIME])
-            # self.transformedLoops[loopIndex] = sorted(newNoteList, key=lambda x: x[TIME])
 
-        # print self.transformedLoops[loopIndex]
+        if send:
+            self.sendOSCMessage('/setBankMelody', loopIndex, hitListToString(noteListToHitList(newNoteList)))
 
-        self.sendOSCMessage('/setBankMelody', loopIndex, hitListToString(noteListToHitList(newNoteList)))
+        self.loopTransformations[loopIndex].append({
+            'transform': transform,
+            'kwargs': kwargs
+        })
+
+        return newNoteList
+
+    def runTransformations(self, loopIndex, send=True):
+        noteList = self.fh2.loops[loopIndex]
+
+        for i, transform in enumerate(self.loopTransformations[loopIndex]):
+            if i != len(self.loopTransformations[loopIndex]) - 1:
+                noteList = self.transformLoop(loopIndex, transform['transform'], send=False, notelist=noteList, kwargs=transform['kwargs'])
+            else:
+                noteList = self.transformLoop(loopIndex, transform['transform'], send=send, notelist=noteList, kwargs=transform['kwargs'])
+
+        return noteList
+
+    def clearTransformations(self, loopIndex, indexes=[]):
+        transforms = self.loopTransformations[loopIndex]
+
+        if not indexes:
+            self.loopTransformations[loopIndex] = []
+        else:
+            toDel = sorted(indexes, key=int, reverse=True)
+            for i in toDel:
+                del(self.loopTransformations[loopIndex][i])
+
 
     def sendGrid(self):
         self.sendOSCMessage('/sendGrid', gridToString(self.grid))
