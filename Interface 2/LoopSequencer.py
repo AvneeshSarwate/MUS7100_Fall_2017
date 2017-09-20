@@ -173,6 +173,14 @@ class LoopSequencer:
         Loop transformation
     '''
 
+    def getLoopNoteList(self, loopIndex):
+        hitlist = self.fh2.loops[loopIndex]
+        prevTime = 0
+        for hit in hitlist:
+            hit[0] = hit[0] + prevTime
+            prevTime = hit[0]
+        return hitListToNoteList(hitlist)
+
     def transformLoop(self, loopIndex, transform, send=True, noteListIn=[], **kwargs):
         if not noteListIn:
             if (kwargs.has_key('additive')):
@@ -180,11 +188,11 @@ class LoopSequencer:
                     if kwargs['additive']:
                         noteList = self.runTransformations(loopIndex, send=False)
                     else:
-                        noteList = hitListToNoteList(self.fh2.loops[loopIndex])
+                        noteList = self.getLoopNoteList(loopIndex)
                 else:
-                    noteList = hitListToNoteList(self.fh2.loops[loopIndex])
+                    noteList = self.getLoopNoteList(loopIndex)
             else:
-                noteList = hitListToNoteList(self.fh2.loops[loopIndex])
+                noteList = self.getLoopNoteList(loopIndex)
         else:
             noteList = noteListIn
 
@@ -258,7 +266,7 @@ class LoopSequencer:
         return newNoteList
 
     def runTransformations(self, loopIndex, send=True):
-        noteList = self.fh2.loops[loopIndex]
+        noteList = self.getLoopNoteList(loopIndex)
 
         for i, transform in enumerate(self.loopTransformations[loopIndex]):
             if i != len(self.loopTransformations[loopIndex]) - 1:
