@@ -202,6 +202,7 @@ class LoopSequencer:
         if transform.lower() == 'rev':
             endTime = noteList[-1][TIME]
             newNoteList = [[endTime - note[TIME]] + note[1:5] for note in noteList]
+            newNoteList = sorted(newNoteList, key=lambda x: x[TIME])
 
             # self.transformedLoops[loopIndex] = sorted(newNoteList, key=lambda x: x[TIME])
 
@@ -221,6 +222,7 @@ class LoopSequencer:
                 oct = 0
             newNoteList = [note[:1] + [note[MIDI_NOTE] + (dir * interval) + (dir * oct * 8)] + note[2:5] for note in
                            noteList]
+            newNoteList = sorted(newNoteList, key=lambda x: x[TIME])
             # self.transformedLoops[loopIndex] = newNoteList
 
         '''
