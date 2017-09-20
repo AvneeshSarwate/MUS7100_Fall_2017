@@ -21,9 +21,7 @@ class LoopSequencer:
 
         self.superColliderServer.addMsgHandler("/sendLoopGrid", self.gridEventResponder)
         self.superColliderServer.addMsgHandler("/columnStep", self.columnStep)
-        self.superColliderServer.addMsgHandler("/getLoop", self.getLoopResponder)
         self.superColliderServer.addMsgHandler("/loopChanged", self.loopChangedResponder)
-
 
         self.intervalToSemitones = {
             'm2': 1,
@@ -68,7 +66,6 @@ class LoopSequencer:
         for i in range(8):
             self.grid.append([0 for i in range(8)])
 
-
     def sendOSCMessage(self, addr, *msgArgs):
         msg = OSC.OSCMessage()
         msg.setAddress(addr)
@@ -79,28 +76,17 @@ class LoopSequencer:
         SC handlers
     '''
 
-    def saveLoopResponder(self, addr, tags, stuff, source):
-        loopIndex = stuff[0]
-        hitList = stringToHitList(stuff[1])
-        noteList = hitListToNoteList(hitList)
-
-        self.origLoops[loopIndex] = noteList
-        self.transformedLoops[loopIndex] = noteList
-
-    def getLoopResponder(self, addr, tags, stuff, source):
-        loopIndex = stuff[0]
-        return self.transformedLoops[loopIndex]
-
     def gridEventResponder(self, addr, tags, stuff, source):
         self.grid = stringToGrid(stuff[0])
 
     def loopChangedResponder(self, addr, tags, stuff, source):
+        print "got new loop message"
         loopIndexChanged = stuff[0]
         self.runTransformations(loopIndexChanged)
 
     def columnStep(self, addr, tags, stuff, source):
         return
-        #print "caught col step"
+        # print "caught col step"
 
     '''
         Grid manipulation functions
@@ -192,11 +178,13 @@ class LoopSequencer:
             if (kwargs.has_key('additive')):
                 if kwargs['additive']:
                     if kwargs['additive']:
-                        noteList = self.runTranformations(loopIndex, send=False)
+                        noteList = self.runTransformations(loopIndex, send=False)
                     else:
                         noteList = hitListToNoteList(self.fh2.loops[loopIndex])
                 else:
                     noteList = hitListToNoteList(self.fh2.loops[loopIndex])
+            else:
+                noteList = hitListToNoteList(self.fh2.loops[loopIndex])
         else:
             noteList = noteListIn
 
@@ -240,19 +228,27 @@ class LoopSequencer:
                 newNoteList = noteList[:]
                 i = 1
                 while i < len(noteList):
-                    newNoteList[i] = [noteList[i][TIME]] + [newNoteList[i - 1][MIDI_NOTE] + (noteList[i - 1][MIDI_NOTE] - noteList[i][MIDI_NOTE])] + noteList[i][2:5]
+                    newNoteList[i] = [noteList[i][TIME]] + [
+                        newNoteList[i - 1][MIDI_NOTE] + (noteList[i - 1][MIDI_NOTE] - noteList[i][MIDI_NOTE])] + \
+                                     noteList[i][2:5]
                     i += 1
 
             if inversionPoint == 'end':
                 newNoteList = noteList[:]
                 i = len(noteList) - 2
                 while i > -1:
-                    newNoteList[i] = [noteList[i][TIME]] + [newNoteList[i + 1][MIDI_NOTE] + (noteList[i + 1][MIDI_NOTE] - noteList[i][MIDI_NOTE])] +  noteList[i][2:5]
+                    newNoteList[i] = [noteList[i][TIME]] + [
+                        newNoteList[i + 1][MIDI_NOTE] + (noteList[i + 1][MIDI_NOTE] - noteList[i][MIDI_NOTE])] + \
+                                     noteList[i][2:5]
                     i -= 1
             newNoteList = sorted(newNoteList, key=lambda x: x[TIME])
 
         if send:
-            self.sendOSCMessage('/setBankMelody', loopIndex, hitListToString(noteListToHitList(newNoteList)))
+            print "sent"
+            print newNoteList
+            print loopIndex + 40
+            print hitListToString(noteListToHitList(newNoteList))
+            self.sendOSCMessage('/setBankMelody', [loopIndex + 40, hitListToString(noteListToHitList(newNoteList))])
 
         self.loopTransformations[loopIndex].append({
             'transform': transform,
@@ -266,9 +262,11 @@ class LoopSequencer:
 
         for i, transform in enumerate(self.loopTransformations[loopIndex]):
             if i != len(self.loopTransformations[loopIndex]) - 1:
-                noteList = self.transformLoop(loopIndex, transform['transform'], send=False, notelist=noteList, kwargs=transform['kwargs'])
+                noteList = self.transformLoop(loopIndex, transform['transform'], send=False, notelist=noteList,
+                                              kwargs=transform['kwargs'])
             else:
-                noteList = self.transformLoop(loopIndex, transform['transform'], send=send, notelist=noteList, kwargs=transform['kwargs'])
+                noteList = self.transformLoop(loopIndex, transform['transform'], send=send, notelist=noteList,
+                                              kwargs=transform['kwargs'])
 
         return noteList
 
@@ -280,8 +278,7 @@ class LoopSequencer:
         else:
             toDel = sorted(indexes, key=int, reverse=True)
             for i in toDel:
-                del(self.loopTransformations[loopIndex][i])
-
+                del (self.loopTransformations[loopIndex][i])
 
     def sendGrid(self):
         self.sendOSCMessage('/sendGrid', gridToString(self.grid))

@@ -6,7 +6,7 @@ launchpadIndex = [8, 0, 3]; //8,0 if "first launchpad", 11,1 if 2nd
 
 if(useLoopMidi,
 {
-	launchpadOut = MIDIOut.new(3);},
+	launchpadOut = MIDIOut.new(5);},
 {
 	launchpadOut = MIDIOut.new(launchpadIndex[0]);
 	/*launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
@@ -105,7 +105,7 @@ beatNum = 0;
 chanPerRow = List.fill(8, {-1});
 
 
-/*
+
 MIDIFunc.noteOn({|vel, note, chan, port|
     if((chan == 0) && (~lightIndex == lightIndex), {
         var row = (8-(note/10).floor);
@@ -116,7 +116,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
 
         pythonOSCport.sendMsg("/sendLoopGrid", grid.flat.collect({|el| if(el, 1, 0)}).join(","));
     })
-}, nil, nil, launchpad.uid);*/
+}, nil, nil, launchpad.uid);
 
 
 
@@ -138,7 +138,7 @@ controlHandlerWrapper = {|vel, note, chan, port|
     });
     ~lock.signal;
 };
-/*MIDIFunc.cc(controlHandlerWrapper, nil, nil, launchpad.uid);*/
+MIDIFunc.cc(controlHandlerWrapper, nil, nil, launchpad.uid);
 
 //msg[1] is bankIndex (eg buttonNote in sceneBuilder), msg[4] is bankChan
 OSCFunc({|msg, time, addr, recvPort|
