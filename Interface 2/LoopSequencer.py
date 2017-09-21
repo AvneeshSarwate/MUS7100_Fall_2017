@@ -1,5 +1,6 @@
 import OSC
 import threading
+import copy
 
 TIME = 0
 MIDI_NOTE = 1
@@ -174,7 +175,7 @@ class LoopSequencer:
     '''
 
     def getLoopNoteList(self, loopIndex):
-        hitlist = self.fh2.loops[loopIndex]
+        hitlist = copy.deepcopy(self.fh2.loops[loopIndex + 40])
         prevTime = 0
         for hit in hitlist:
             hit[0] = hit[0] + prevTime
@@ -186,7 +187,7 @@ class LoopSequencer:
             if (kwargs.has_key('additive')):
                 if kwargs['additive']:
                     if kwargs['additive']:
-                        noteList = self.runTransformations(loopIndex, send=False)
+                        noteList = self.runTransformations(loopIndex + 40, send=False)
                     else:
                         noteList = self.getLoopNoteList(loopIndex)
                 else:
@@ -258,9 +259,9 @@ class LoopSequencer:
             print newNoteList
             print loopIndex + 40
             print hitListToString(noteListToHitList(newNoteList))
-            self.sendOSCMessage('/setBankMelody', [loopIndex + 40, hitListToString(noteListToHitList(newNoteList))])
+            self.sendOSCMessage('/setBankMelody', [loopIndex + 80, hitListToString(noteListToHitList(newNoteList))])
 
-        self.loopTransformations[loopIndex].append({
+        self.loopTransformations[loopIndex + 40].append({
             'transform': transform,
             'kwargs': kwargs
         })
@@ -270,25 +271,24 @@ class LoopSequencer:
     def runTransformations(self, loopIndex, send=True):
         noteList = self.getLoopNoteList(loopIndex)
 
-        for i, transform in enumerate(self.loopTransformations[loopIndex]):
-            if i != len(self.loopTransformations[loopIndex]) - 1:
-                noteList = self.transformLoop(loopIndex, transform['transform'], send=False, notelist=noteList,
-                                              kwargs=transform['kwargs'])
-            else:
-                noteList = self.transformLoop(loopIndex, transform['transform'], send=send, notelist=noteList,
-                                              kwargs=transform['kwargs'])
+        if not self.loopTransformations[loopIndex]:
+            self.sendOSCMessage('/setBankMelody', [loopIndex + 40, hitListToString(noteListToHitList(noteList))])
+        else:
+            for i, transform in enumerate(self.loopTransformations[loopIndex]):
+                if i != len(self.loopTransformations[loopIndex]) - 1:
+                    noteList = self.transformLoop(loopIndex, transform['transform'], send=False, notelist=noteList,
+                                                  kwargs=transform['kwargs'])
+                else:
+                    noteList = self.transformLoop(loopIndex, transform['transform'], send=send, notelist=noteList,
+                                                  kwargs=transform['kwargs'])
 
         return noteList
 
-    def clearTransformations(self, loopIndex, indexes=[]):
-        transforms = self.loopTransformations[loopIndex]
+    def clearTransformations(self, loopIndex):
+        self.sendOSCMessage('/setBankMelody', [loopIndex + 80, hitListToString(noteListToHitList(self.getLoopNoteList(1)))])
 
-        if not indexes:
-            self.loopTransformations[loopIndex] = []
-        else:
-            toDel = sorted(indexes, key=int, reverse=True)
-            for i in toDel:
-                del (self.loopTransformations[loopIndex][i])
+    def sendTransformation(self, loopIndex, noteList):
+        self.sendOSCMessage('/setBankMelody', [loopIndex + 80, hitListToString(noteListToHitList(noteList))])
 
     def sendGrid(self):
         self.sendOSCMessage('/sendGrid', gridToString(self.grid))
