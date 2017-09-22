@@ -1,14 +1,14 @@
 (var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport, playColumn, masterClockOSCport, chanPerRow, lightIndex, launchpadIndex, controlHandler, controlHandlerWrapper, useLoopMidi;
 
-useLoopMidi = true;
+useLoopMidi = false;
 
 launchpadIndex = [8, 0, 3]; //8,0 if "first launchpad", 11,1 if 2nd
 
 if(useLoopMidi,
 {
-	launchpadOut = MIDIOut.new(5);},
+	launchpadOut = MIDIOut.new();},
 {
-	launchpadOut = MIDIOut.new(launchpadIndex[0]);
+	launchpadOut = MIDIOut.new(2);
 	/*launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
 	&& (elem.device == "Launchpad Pro")})[0];*/
 });
@@ -182,10 +182,19 @@ playColumn = {|colInd|
 
 //msg[1] is a string of 0/1s in row-major order, separated by commas
 OSCFunc({|msg, time, addr, recvPort|
-    var vals = msg[1].asString.split($,);
-    vals.do({|v, i| grid[(i/8).floor*10][i%8] = v.asSymbol == \1});
+	var vals;
+    vals = msg[1].asString.split($,);
+	vals.do({|v, i|
+		var col, row;
+		col = ((i/8)%8).floor;
+		row = i%8;
+		grid[((i/8)%8).floor][i%8] = v.asSymbol == \1;
+		if(v.asSymbol == \1,
+			{setLight.((8-(i/8).floor)*10 + ((row)+1), color1[chanPerRow[col]])},
+			{setLight.((8-(i/8).floor)*10 + ((row)+1), 0)});
+	});
+	"Grid changed!".postln;
 }, "/setGrid");
-
 
 
 //msg[1] is a string of 1/0s separated by commas, msg[2] is column ind

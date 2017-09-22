@@ -102,7 +102,6 @@ class FH2:
         msg.setAddress("/loopChanged")
         msg.append(bankNum)
         self.LSClient.send(msg)
-        print "sent new loop message"
 
     # stuff = [root, scaleString]
 

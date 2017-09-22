@@ -51,14 +51,14 @@ class LoopSequencer:
         }
 
         self.bankTransforms = {
-            1 : lambda noteList: noteList
-            2 : lambda noteList: noteList,
-            3 : lambda noteList: noteList,
-            4 : lambda noteList: noteList,
-            5 : lambda noteList: noteList,
-            6 : lambda noteList: noteList,
-            7 : lambda noteList: noteList,
-            8 : lambda noteList: noteList
+            1 : (lambda noteList: noteList),
+            2 : (lambda noteList: noteList),
+            3 : (lambda noteList: noteList),
+            4 : (lambda noteList: noteList),
+            5 : (lambda noteList: noteList),
+            6 : (lambda noteList: noteList),
+            7 : (lambda noteList: noteList),
+            8 : (lambda noteList: noteList)
         }
 
         self.grid = []
@@ -81,9 +81,8 @@ class LoopSequencer:
         self.grid = stringToGrid(stuff[0])
 
     def loopChangedResponder(self, addr, tags, stuff, source):
-        print("Loop index changed (from fh2)" + str(stuff[0]))
         loopIndexChanged = stuff[0]
-        self.bankTransforms[loopIndexChanged - 80](getLoopNoteList(loopIndexChanged - 80))
+        self.bankTransforms[loopIndexChanged - 40](self.getLoopNoteList(loopIndexChanged - 40))
 
     def columnStep(self, addr, tags, stuff, source):
         return
@@ -182,13 +181,16 @@ class LoopSequencer:
         return hitListToNoteList(hitlist)
 
     def setBankTransform(self, loopIndex, transform, **kwargs):
-        self.bankTransforms[loopIndex] = lambda noteList: self.transformLoop(loopIndex, transform, send=True, noteList=noteList, kwargs)
+        self.bankTransforms[loopIndex] = (lambda noteList: self.transformLoop(loopIndex, transform, send=True, noteList=noteList, **kwargs))
+        self.bankTransforms[loopIndex](self.getLoopNoteList(loopIndex))
 
     def transformLoop(self, loopIndex, transform, send=False, noteListIn=[], **kwargs):
         if not noteListIn:
             noteList = self.getLoopNoteList(loopIndex)
         else:
             noteList = noteListIn
+
+        print "transforming"
 
         '''
             rev transform
@@ -250,10 +252,13 @@ class LoopSequencer:
         return newNoteList
 
     def clearTransformations(self, loopIndex):
+        self.bankTransforms[loopIndex] = (lambda noteList: noteList)
         self.sendOSCMessage('/setBankMelody', [loopIndex + 80, hitListToString(noteListToHitList(self.getLoopNoteList(loopIndex)))])
 
     def sendGrid(self):
-        self.sendOSCMessage('/sendGrid', gridToString(self.grid))
+        str = gridToString(self.grid)
+        print str
+        self.sendOSCMessage('/setGrid', str)
 
 
 # Pretty-print 2D grid
