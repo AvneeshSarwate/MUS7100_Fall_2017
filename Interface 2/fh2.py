@@ -2,7 +2,7 @@ import OSC
 import threading
 import random
 import copy
-# import phrase
+import phrase
 import pickle
 import itertools
 
@@ -261,22 +261,22 @@ class FH2:
         msg.append(self.hitListToString(newMel, 'fillerStuff', 'fillerStuff'))
         self.superColliderClient.send(msg)
 
-    # def rootScale(self, chan=0, root=0, scale='minor'):
-    #     msg = OSC.OSCMessage()
-    #     msg.setAddress('/rootScale')
-    #     msg.append(root)
-    #     keyval = scale
-    #     if scale in phrase.modes.keys():
-    #         keyval = ",".join(map(str, phrase.modes[scale]))
-    #     else:
-    #         keyval = scale.split(',')
-    #         keyval = map(lambda a: int(a.strip()), keyval)
-    #         if len(keyval) == 0:
-    #             raise StopIteration("malformed scale string")
-    #         keyval = ','.join(str(keyval))
-    #     msg.append(keyval)
-    #     msg.append(chan)
-    #     self.superColliderClient.send(msg)
+    def rootScale(self, chan=0, root=0, scale='minor'):
+        msg = OSC.OSCMessage()
+        msg.setAddress('/rootScale')
+        msg.append(root)
+        keyval = scale
+        if scale in phrase.modes.keys():
+            keyval = ",".join(map(str, phrase.modes[scale]))
+        else:
+            keyval = scale.split(',')
+            keyval = map(lambda a: int(a.strip()), keyval)
+            if len(keyval) == 0:
+                raise StopIteration("malformed scale string")
+            keyval = ','.join(str(keyval))
+        msg.append(keyval)
+        msg.append(chan)
+        self.superColliderClient.send(msg)
 
     def stopChannel(self, chanInd):
         msg = OSC.OSCMessage()
