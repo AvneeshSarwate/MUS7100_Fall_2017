@@ -29,6 +29,8 @@ function bang(){
 	copyMatrix.dstdimstart = old_dstdimstart;
 	copyMatrix.dstdimend = old_dstdimend;
 	copyMatrix.usedstdim = 0;
+	post(ind, stepWidth, (ind+1)*stepWidth);
+	post();
 	outlet(0, "jit_matrix", copyMatrix.name);
 	ind = (ind+1)%numSteps;
 }

@@ -23,8 +23,6 @@ function map(arr, func){
 function bang(){
 	copyMatrix.frommatrix(whiteMatrix);
 	drawCurve();
-	post(" SHOULD OUTPUT MATRIX", xDim, yDim);
-	post();
 	outlet(0, "jit_matrix", copyMatrix.name);
 }
 
