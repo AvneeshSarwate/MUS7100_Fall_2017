@@ -13,6 +13,7 @@ var numSteps = numBeats * stepsPerBeat;
 var stepWidth = Math.floor(xDim/numSteps);
 var yRange = yDim - lineThickness;
 var curveVals = [];
+var scaleVal = 1;
 
 function map(arr, func){
   var newArr = [];
@@ -32,10 +33,25 @@ function step(stepPos){
 
 function setCurve(){
 	curveVals = [arguments][0];
+	scaleVal = getScaleValue(curveVals);
+	post("Scale val", scaleVal);
+	post();
 	drawCurve();
 }
 
+function getMaxOfArray(numArray) {
+  return Math.max.apply(null, numArray);
+}
 
+function getMinOfArray(numArray) {
+  return Math.min.apply(null, numArray);
+}
+
+function getScaleValue(numArray){
+	var high = getMaxOfArray(numArray);
+	var low = getMinOfArray(numArray);
+	return Math.max(Math.abs(high), Math.abs(low));
+}
 
 function drawCurve() {
 	copyMatrix.frommatrix(whiteMatrix);
@@ -44,7 +60,7 @@ function drawCurve() {
 	copyMatrix.usedstdim = 1;
 	for(var i = 0; i < curveVals.length; i++){
 		var pointRectLeft  = i*stepWidth;
-		var pointRectBottom = (curveVals[i] + 1) / 2 * yRange;
+		var pointRectBottom = ((curveVals[i]/64) + 1) / 2 * yRange;
 		var v1 = Math.max(0, yDim - pointRectBottom);
 		var v2 = Math.min(yDim, yDim - (pointRectBottom+lineThickness));
 		copyMatrix.dstdimstart = [i, v1];
