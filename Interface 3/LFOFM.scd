@@ -62,6 +62,8 @@ channelMap = Dictionary.new;
 ~chanDebugMap = Dictionary.new;
 //msg[1] is cc ind and/or waveKey, msg[2] is calcString, msg[3] is "OSC" or "midi",
 //msg[4] is "max" or "sc" port, msg[5] is OSC addr, msg [6...] is meta info for OSC waves
+//msg[5] is visIndex (which max display channel to display the wave on)
+//msg[6] is the visString - the label of what parameter name is mapped to that CC
 startWave = {|msg, time, addr, recvPort|
     var waveTask = Task({
         var func = createCalcFunc.(msg[2].asString);
@@ -90,9 +92,10 @@ startWave = {|msg, time, addr, recvPort|
     var waveBufferTask = Task({
         var func = createCalcFunc.(msg[2].asString);
         {
-            var waveBuffer = (0,0.025..16).collect({|time| (func.(time)+64}); //step size is hardcoded both here and drawCurve.js/maxpat
+            var waveBuffer = (0,0.025..16).collect({|time| func.(time)+64}); //step size is hardcoded both here and drawCurve.js/maxpat
             ["VALUES", waveBuffer].postln;
-            maxOSCport.sendRaw((["/curveValues"]++waveBuffer).asArray.asRawOSC);
+            maxOSCport.sendRaw((["/curveValues/"++msg[5].asString]++waveBuffer).asArray.asRawOSC);
+            maxOSCport.sendRaw((["/paramName/"++msg[5].asString, msg[6].asString]).asArray.asRawOSC);
             16.wait
         }.loop;
 
