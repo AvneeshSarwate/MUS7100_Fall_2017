@@ -60,6 +60,7 @@ function drawCurve() {
 	copyMatrix.usedstdim = 1;
 	for(var i = 0; i < curveVals.length; i++){
 		var pointRectLeft  = i*stepWidth;
+		//normalization assumes wave is coming in as +- 64 (midi wave)
 		var pointRectBottom = ((curveVals[i]/64) + 1) / 2 * yRange;
 		var v1 = Math.max(0, yDim - pointRectBottom);
 		var v2 = Math.min(yDim, yDim - (pointRectBottom+lineThickness));

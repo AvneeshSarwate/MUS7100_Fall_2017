@@ -14,6 +14,13 @@ class WavePlayer:
 		self.superColliderClient = OSC.OSCClient()
 		self.superColliderClient.connect( ('127.0.0.1', 57120) ) 
 
+	#num is the BPM
+	def setTempo(self, num):
+		msg = OSC.OSCMessage()
+		msg.setAddress("/uploadTempo")
+		msg.append(60.0/num)
+		self.superColliderClient.send(msg)
+
 
 	def plotWave(self, wave, start, end):
 		msg = OSC.OSCMessage()
