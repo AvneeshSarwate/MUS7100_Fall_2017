@@ -8,7 +8,7 @@ if(useLoopMidi,
 {
 	launchpadOut = MIDIOut.new();},
 {
-	launchpadOut = MIDIOut.new(2);
+	launchpadOut = MIDIOut.new(8);
 	/*launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
 	&& (elem.device == "Launchpad Pro")})[0];*/
 });
