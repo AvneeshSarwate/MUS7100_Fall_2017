@@ -94,6 +94,7 @@ startWave = {|msg, time, addr, recvPort|
     var waveBufferTask = Task({
         var func = createCalcFunc.(msg[2].asString);
         {
+            //TODO - have this send "next" 16 beats worth of data, not just 0-16
             var waveBuffer = (0,0.025..16).collect({|time| func.(time)}); //step size is hardcoded both here and drawCurve.js/maxpat
             ["VALUES","/curveValues/"++msg[4].asString, "/paramName/"++msg[4].asString, waveBuffer].postln;
             maxOSCport.sendRaw((["/curveValues/"++msg[4].asString]++waveBuffer).asArray.asRawOSC);
