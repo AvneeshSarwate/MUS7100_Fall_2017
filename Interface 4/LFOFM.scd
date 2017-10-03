@@ -1,5 +1,5 @@
 (
-var midiOut, channelMap, startWaveHandler, stopWaveHandler, startWave, stopWave, masterTempoClock, maxOSCport, scPort, lemurOSCport, lemurFunc;
+var midiOut, channelMap, startWaveHandler, stopWaveHandler, startWave, stopWave, masterTempoClock, maxOSCport, scPort, lemurOSCport, lemurFunc, noteMidiOut, wallStates;
 var sinwav = {|fr,ph,am,sh, time| (sin((pi*fr*time)+ph)*am)+sh};
 var coswav = {|fr,ph,am,sh, time| (cos((pi*fr*time)+ph)*am)+sh};
 
@@ -39,6 +39,7 @@ OSCFunc.new({|msg, time, addr, recvPort|
 
 
 midiOut = MIDIOut.newByName("IAC Driver", "Bus 3");
+noteMidiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
 midiOut.latency = 0;
 
 maxOSCport = NetAddr("localhost", 5432);
@@ -93,7 +94,8 @@ startWave = {|msg, time, addr, recvPort|
     var waveBufferTask = Task({
         var func = createCalcFunc.(msg[2].asString);
         {
-            var waveBuffer = (0,0.025..16).collect({|time| func.(time)}); //step size is hardcoded both here and drawCurve.js/maxpat
+            var timeNow = masterTempoClock.beats;
+            var waveBuffer = (timeNow,(timeNow+0.025)..(timeNow+16)).collect({|time| func.(time)}); //step size is hardcoded both here and drawCurve.js/maxpat
             ["VALUES","/curveValues/"++msg[4].asString, "/paramName/"++msg[4].asString, waveBuffer].postln;
             maxOSCport.sendRaw((["/curveValues/"++msg[4].asString]++waveBuffer).asArray.asRawOSC);
             maxOSCport.sendRaw((["/paramName/"++msg[4].asString, msg[5].asString]).asArray.asRawOSC);
@@ -158,9 +160,27 @@ OSCFunc.new({|msg, time, addr, recvPort|
 }, "/setLemur");
 
 
+~collisionHandler = {|msg, time, addr, recvPort|
+	// msg[1] ballIndex
+    // msg[2] is wallIndex
+	// msg[3] is start/end collision
+    var ballToNote = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76];
+    if((msg[3].asString == "on") && wallState[msg[2].asInt],
+        {noteMidiOut.noteOn(msg[2].asInt, ballToNote[msg[1].asInt], 64)});
+
+}
+
+OSCFunc.new(~collisionHandler, "/collision");
+
+wallStates = [true, true, true, true];
+OSCFunc.new({|msg, time, addr, recvPort|
+	// msg[1] wall index
+	// msg[2] state
+    wallState[msg[1].asInt] = msg[2].asInt == 1;
+}, "/wallState");
+
 
 )
-
 
 (
 v = 81;
