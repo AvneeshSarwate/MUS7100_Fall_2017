@@ -1,5 +1,5 @@
 (
-var midiOut, channelMap, startWaveHandler, stopWaveHandler, startWave, stopWave, masterTempoClock, maxOSCport, scPort, lemurOSCport, lemurFunc, noteMidiOut, wallStates;
+var midiOut, channelMap, startWaveHandler, stopWaveHandler, startWave, stopWave, masterTempoClock, maxOSCport, scPort, lemurOSCport, lemurFunc, noteMidiOut, wallStates, ballToNote;
 var sinwav = {|fr,ph,am,sh, time| (sin((pi*fr*time)+ph)*am)+sh};
 var coswav = {|fr,ph,am,sh, time| (cos((pi*fr*time)+ph)*am)+sh};
 
@@ -133,7 +133,7 @@ stopWaveHandler = OSCFunc(stopWave, "/stopWave");
 
 
 
-lemurOSCport = NetAddr("192.168.0.109", 8000);
+lemurOSCport = NetAddr("192.168.0.126", 8000);
 
 lemurFunc = {|calcFunc, attr|
 	var lemurTask = Task({
@@ -160,15 +160,18 @@ OSCFunc.new({|msg, time, addr, recvPort|
 }, "/setLemur");
 
 
+ballToNote = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76];
+
 ~collisionHandler = {|msg, time, addr, recvPort|
 	// msg[1] ballIndex
     // msg[2] is wallIndex
 	// msg[3] is start/end collision
-    var ballToNote = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76];
-    if((msg[3].asString == "on") && wallState[msg[2].asInt],
-        {noteMidiOut.noteOn(msg[2].asInt, ballToNote[msg[1].asInt], 64)});
 
-}
+    if((msg[3].asString == "start") && wallStates[msg[2].asInt],
+        {noteMidiOut.noteOn(msg[2].asInt, ballToNote.wrapAt(msg[1].asInt), 64)});
+    ["COLLIDE", msg, (msg[3].asString == "on") && wallStates[msg[2].asInt]].postln;
+
+};
 
 OSCFunc.new(~collisionHandler, "/collision");
 
@@ -176,9 +179,14 @@ wallStates = [true, true, true, true];
 OSCFunc.new({|msg, time, addr, recvPort|
 	// msg[1] wall index
 	// msg[2] state
-    wallState[msg[1].asInt] = msg[2].asInt == 1;
+    wallStates[msg[1].asInt] = msg[2].asInt == 1;
 }, "/wallState");
 
+OSCFunc.new({|msg, time, addr, recvPort|
+	// msg[1..] is list of notes for the chord
+    ballToNote = msg[1..];
+    ["ballToNote", msg, ballToNote].postln;
+}, "/ballChord");
 
 )
 
