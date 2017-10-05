@@ -133,7 +133,7 @@ stopWaveHandler = OSCFunc(stopWave, "/stopWave");
 
 
 
-lemurOSCport = NetAddr("192.168.0.126", 8000);
+lemurOSCport = NetAddr("169.254.233.11", 8000);
 
 lemurFunc = {|calcFunc, attr|
 	var lemurTask = Task({
@@ -162,14 +162,32 @@ OSCFunc.new({|msg, time, addr, recvPort|
 
 ballToNote = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76];
 
+~quantizeBallBeats = true;
+~ballQuantizeValue = 2;
+
 ~collisionHandler = {|msg, time, addr, recvPort|
 	// msg[1] ballIndex
     // msg[2] is wallIndex
 	// msg[3] is start/end collision
 
-    if((msg[3].asString == "start") && wallStates[msg[2].asInt],
-        {noteMidiOut.noteOn(msg[2].asInt, ballToNote.wrapAt(msg[1].asInt), 64)});
-    ["COLLIDE", msg, (msg[3].asString == "on") && wallStates[msg[2].asInt]].postln;
+    if(~quantizeBallBeats,
+        {
+            var timeToNextHit = ~ballQuantizeValue - (masterTempoClock.beats % ~ballQuantizeValue);
+            var collisionFunc = {
+                if((msg[3].asString == "start") && wallStates[msg[2].asInt],
+                {noteMidiOut.noteOn(msg[2].asInt, ballToNote.wrapAt(msg[1].asInt), 64)});
+                ["COLLIDE DELAY",timeToNextHit, msg, (msg[3].asString == "on") && wallStates[msg[2].asInt]].postln;
+            };
+            masterTempoClock.sched(timeToNextHit, collisionFunc);
+        },
+        {
+            if((msg[3].asString == "start") && wallStates[msg[2].asInt],
+                {noteMidiOut.noteOn(msg[2].asInt, ballToNote.wrapAt(msg[1].asInt), 64)});
+            ["COLLIDE", msg, (msg[3].asString == "on") && wallStates[msg[2].asInt]].postln;
+        }
+    );
+
+
 
 };
 
