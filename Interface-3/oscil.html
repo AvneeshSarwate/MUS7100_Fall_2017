@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>Virtual Oscilloscope - Andrew Tubelli</title>
+
+<link href='http://fonts.googleapis.com/css?family=Montserrat:400,700' rel='stylesheet' type='text/css'>
+
+<style>
+html {
+	height: 100%;
+}
+body {
+	background-color: #DFE0DD;
+	/* background-image: radial-gradient(#BABBC3, #B3B4AF); */
+	height: 100%;
+	margin: 0;
+	text-align: center;
+	font-family: 'Montserrat', sans-serif;
+}
+button {
+	margin-top: 10px;
+	width: 90px;
+	height: 30px;
+}
+h1 {
+	text-align: center;
+	margin: 0 0 10px 0;
+	font-size: 60px;
+}
+h2 {
+	text-align: left;
+	margin-top: -15px;
+	font-weight: 400;
+}
+h3 {
+	margin-top: 20px;
+	margin-bottom: 10px;
+	font-weight: 400;
+}
+a:link, a:visited, a:hover, a:active {
+	color: #00C5B6;
+}
+
+#buttons {
+	width: 190px;
+	margin: 0 auto;
+}
+#container {
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+	display: inline-block;
+	max-width: 1300px;
+}
+#displayBox {
+	width: 960px;
+	height: 164px;
+	display: inline-block;
+	background-color: #DFE0DD;
+	border-radius: 8px;
+	border: 1px solid;
+	margin-left: -19px;
+	margin-bottom: 20px;
+}
+#displayBox h3 {
+	display: inline-block;
+	margin-right: 20px;
+}
+#displayBoxTitle {
+	width: 109px;
+}
+#signalBox {
+	width: 250px;
+	height: 596px;
+	float: right;
+	background-color: #DFE0DD;
+	border-radius: 8px;
+	border: 1px solid;
+	margin-top: 8px;
+	margin-left: -50px;
+}
+#signalBoxTitle {
+	width: 93px;
+}
+#vis {
+	display: inline-block;
+	background-color: #00C5B6; /* #02a99c; */
+	background-image: radial-gradient(#00C5B6, #00A984);
+	border-radius: 8px;
+	border: 8px inset #f4f4f4;
+	-webkit-box-shadow: inset 6px 5px 55px 1px rgba(0,0,0,0.8);
+	-moz-box-shadow: inset 6px 5px 55px 1px rgba(0,0,0,0.8);
+	box-shadow: inset 6px 5px 55px 1px rgba(0,0,0,0.8);
+	margin: 0 20px 20px 0;
+}
+#focus {
+	margin-right: 80px;
+}
+
+.boxTitle {
+	margin-left: 60px;
+	background-color: #DFE0DD;
+}
+.boxTitle h2 {
+	margin-left: 10px;
+}
+.knob-sx, .knob-sy {
+	width: 130px;
+	height: 130px;
+	margin: 0 auto;
+}
+.knob-sx { background-image: url("img/knob-sx.png"); }
+.knob-sy { background-image: url("img/knob-sy.png"); }
+.knobContainerV {
+	display: block;
+	margin-top: 70px;
+}
+.knob-dx, .knob-dy {
+	width: 130px;
+	height: 130px;
+	display: inline-block;
+	vertical-align: middle;
+}
+.knob-dx { background-image: url("img/knob-dx.png"); }
+.knob-dy { background-image: url("img/knob-dy.png"); }
+.knobContainerH {
+	display: inline-block;
+	margin-right: 80px;
+	margin-top: -14px;
+}
+.ctrlBtn {
+	width: 40px;
+}
+
+/* ---------- Waveforms ---------- */
+.axis path, .axis line {
+	fill: none;
+	stroke: #353535;
+	stroke-width: 2px;
+	shape-rendering: crispEdges;
+}
+.line {
+	fill: none;
+	stroke-width: 2px;
+}
+.hidden {
+	visibility: hidden;
+}
+.grid path {
+    stroke-width: 0;
+}
+.grid .tick {
+    stroke: #204739;
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 1300px) {
+	#container {
+		top: 0;
+		transform: none;
+	}
+	#signalBox {
+		float: none;
+		width: 960px;
+		height: 164px;
+		display: inline-block;
+		margin-left: -19px;
+		margin-bottom: 20px;
+	}
+	.knobContainerV {
+		display: inline-block;
+		margin-top: 0;
+		margin-right: 50px;
+		vertical-align: top;
+		margin-top: -14px;
+	}
+	#buttons {
+		margin-right: 50px;
+		display: inline-block;
+	}
+	.knob-sx, .knob-sy {
+		display: inline-block;
+		vertical-align: middle;
+	}
+	#signalBox h3 {
+		display: inline-block;
+		margin-right: 20px;
+	}
+}
+
+/* ---------- KNOBS ---------- */
+.sx-dial, .sy-dial, .dx-dial, .dy-dial {
+	font-weight: 400 !important;
+	font-family: 'Montserrat', sans-serif !important;
+}
+canvas {
+	margin-top: 25px;
+}
+
+</style>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-24583474-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+<body>
+
+<div id="container">
+	<h1>Virtual Oscilloscope</h1>
+	<div id="vis"></div>
+	<div id="signalBox">
+		<div id="signalBoxTitle" class="boxTitle">
+			<h2>Signal</h2>
+		</div>
+		<div id="buttons">
+			<button type="button" id="sinwave">Sine</button>
+			<button type="button" id="squwave">Square</button>
+			<button type="button" id="triwave">Triangular</button>
+			<button type="button" id="sawwave">Sawtooth</button>
+		</div>
+		<div class="knobContainerV">
+			<h3>Amplitude</h3>
+			<div class="knob-sy">
+				<input class="sy-dial" value="1" data-width="80" data-cursor="1" data-thickness="0.5" data-linecap="round" data-angleOffset="-135" data-angleArc="270" data-bgColor="#333333" data-fgColor="#909090" data-min="1" data-max="10" data-displayInput="false">
+			</div>
+		</div>
+		<div class="knobContainerV">
+			<h3>Period</h3>
+			<div class="knob-sx">
+				<input class="sx-dial" value="2" data-width="80" data-cursor="1" data-thickness="0.5" data-linecap="round" data-angleOffset="-135" data-angleArc="270" data-bgColor="#333333" data-fgColor="#909090" data-min="1" data-max="4" data-displayInput="false">
+			</div>
+		</div>
+	</div>
+	<div id="displayBox">
+		<div id="displayBoxTitle" class="boxTitle">
+			<h2>Display</h2>
+		</div>
+		<div class="knobContainerH">
+			<h3>x</h3>
+			<div class="knob-dx">
+				<input class="dx-dial" value="2" data-width="80" data-cursor="1" data-thickness="0.5" data-linecap="round" data-angleOffset="-135" data-angleArc="270" data-bgColor="#333333" data-fgColor="#909090" data-min="1" data-max="4" data-displayInput="false">
+			</div>
+		</div>
+		<div class="knobContainerH">
+			<h3>y</h3>
+			<div class="knob-dy">
+				<input class="dy-dial" value="1" data-width="80" data-cursor="1" data-thickness="0.5" data-linecap="round" data-angleOffset="-135" data-angleArc="270" data-bgColor="#333333" data-fgColor="#909090" data-min="1" data-max="10" data-displayInput="false">
+			</div>
+		</div>
+		<button type="button" id="focus">Focus</button>
+		<button type="button" id="pause">Pause</button>
+	</div>
+	<div id="copyright">&#169; 2015, created by <a href="http://www.andrewtubelli.com">Andrew Tubelli</a></div>
+</div>
+
+<script src="js/d3.v3.min.js"></script>
+<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+<script src="js/jquery.knob.js"></script>
+<script>
+
+/* -------------------- VARIABLES -------------------- */
+var visWindow = 2 * Math.PI; // Window
+var T = 1 * Math.PI; // Period of the wave
+var A = 1; // Amplitude of the wave
+var n = 128; // Generate 128 points within the window (0 -> 2*pi)
+var dx = visWindow / n; // Increment for the for loops
+var waveType = "sin";
+
+
+/* -------------------- INITIAL DATA CREATION -------------------- */
+var wave_sin = makeSine(A, T, dx); // creates 1 period of a sine wave
+var wave_sin_o = wave_sin.slice(0); // stores data as "original"; this is the wave we will refer to when updating
+var count = getCount(T, visWindow, n, wave_sin); // sets the starting count, which changes depending on period
+var wave_sin_d = getDynamic(T, visWindow, n, wave_sin); // create an array of n+1 points of the wave - this is the data that will be shown
+
+var data_ref = [/*wave_ph_o,*/ wave_sin_o]; // the actual data being referenced; an array containing both original arrays
+var data_dynamic = [/*wave_ph_d,*/ wave_sin_d]; // the data getting passed on; an array containing both dynamic arrays
+
+
+/* -------------------- BUTTONS -------------------- */
+$(document).ready(function() {
+
+	dx = visWindow / n;
+
+	$('#sinwave').click(function() {
+		// reference data already defined by initial data, wave_sin_o
+		waveType = "sin";
+		data_ref = [wave_sin_o];
+	});
+	$('#squwave').click(function() {
+		waveType = "squ";
+		var wave_squ = makeSquare(A, T, dx);
+		var wave_squ_o = wave_squ.slice(0);
+		data_ref = [wave_squ_o];
+	});
+	$('#triwave').click(function() {
+		waveType = "tri";
+		var wave_tri = makeTri(A, T, dx);
+		var wave_tri_o = wave_tri.slice(0);
+		data_ref = [wave_tri_o];
+	});
+	$('#sawwave').click(function() {
+		waveType = "saw";
+		var wave_saw = makeSaw(A, T, dx);
+		var wave_saw_o = wave_saw.slice(0);
+		data_ref = [wave_saw_o];
+	});
+	$('#focus').click(function() {
+		changeDispX(2*T/Math.PI);
+		changeDispAmp(minmax[1]);
+	});
+	$('#pause').click(function () {
+		if ($('#pause').html() == "Pause") {
+			pause();
+			$('#pause').html("Resume");
+		} else {
+			tick();
+			$('#pause').html("Pause");
+		}
+	});
+
+});
+
+function changeSigAmp(q) {
+	A = q;
+
+	if (waveType == "sin") {
+		data_ref = [makeSine(1, T, dx).slice(0)];
+	} else if (waveType == "squ") {
+		data_ref = [makeSquare(1, T, dx).slice(0)];
+	} else if (waveType == "tri") {
+		data_ref = [makeTri(1, T, dx).slice(0)];
+	} else {
+		data_ref = [makeSaw(1, T, dx).slice(0)];
+	}
+
+	for (i = 0; i < data_ref.length; i++) {
+		for (j = 0; j < data_ref[0].length; j++) {
+			data_ref[i][j] = data_ref[i][j] * A;
+		}
+	}
+
+	minmax = findMinMax(data_ref);
+}
+
+function changeSigPer(q) {
+	T = q / 2 * Math.PI;
+
+	if (waveType == "sin") {
+		data_ref = [makeSine(1, T, dx).slice(0)];
+	} else if (waveType == "squ") {
+		data_ref = [makeSquare(1, T, dx).slice(0)];
+	} else if (waveType == "tri") {
+		data_ref = [makeTri(1, T, dx).slice(0)];
+	} else {
+		data_ref = [makeSaw(1, T, dx).slice(0)];
+	}
+
+	if (count > data_ref[0].length) {
+		var startLength = data_ref[0].length - 1;
+		count =  count % startLength;
+	}
+
+	for (i = 0; i < data_ref.length; i++) {
+		for (j = 0; j < data_ref[0].length; j++) {
+			data_ref[i][j] = data_ref[i][j] * A;
+		}
+	}
+}
+
+function changeDispAmp(q) {
+	y = d3.scale.linear().domain([-1*q*1.1, 1*q*1.1]).range([height, 0]);
+	d3.select(".y.axis").call(d3.svg.axis().scale(y).orient("right"));
+}
+
+function changeDispX(q) {
+	var prev_n = n;
+	visWindow = q * Math.PI;
+	n = 64 * q;
+	dx = visWindow / n;
+
+	if (prev_n != n) {
+		x = d3.scale.linear().domain([0, n]).range([0, width]);
+
+		if (q <= 1.5) {
+			d3.select(".x.axis").call(
+				d3.svg.axis().scale(x).orient("bottom")
+					.tickValues([n/2, n])
+					.tickFormat(function(d, i) { return label[i]; })
+			);
+		}
+		if (q > 1.5 && q <= 2.5) {
+			d3.select(".x.axis").call(
+				d3.svg.axis().scale(x).orient("bottom")
+					.tickValues([n/4, n/2, 3*n/4, n])
+					.tickFormat(function(d, i) { return label[i]; })
+			);
+		}
+		if (q > 2.5 && q <= 3.5) {
+			d3.select(".x.axis").call(
+				d3.svg.axis().scale(x).orient("bottom")
+					.tickValues([n/6, n/3, n/2, 2*n/3, 5*n/6, n])
+					.tickFormat(function(d, i) { return label[i]; })
+			);
+		}
+		if (q > 3.5) {
+			d3.select(".x.axis").call(
+				d3.svg.axis().scale(x).orient("bottom")
+				.tickValues([n/8, n/4, 3*n/8, n/2, 5*n/8, 3*n/4, 7*n/8, n])
+				.tickFormat(function(d, i) { return label[i]; })
+			);
+		}
+
+		// The dynamic data needs to be tailored correctly to the new window;
+		var wave = data_dynamic[0];
+		data_d = getDynamic(T, visWindow, n, wave);
+
+		if (data_d.length > n + 1 ) {
+			var remove = data_d.length - n + 1;
+			data_d.splice(0, remove);
+		}
+		data_dynamic = [data_d];
+	}
+}
+
+
+/* -------------------- GRAPH -------------------- */
+var margin = {top: 20, right: 20, bottom: 20, left: 20},
+	width = 960 - margin.left - margin.right,
+	height = 400 - margin.top - margin.bottom;
+
+var colors = ["#42ff4f"];
+var label = ["\u03c0/2", "\u03c0", "3\u03c0/2", "2\u03c0", "5\u03c0/2", "3\u03c0", "7\u03c0/2", "4\u03c0"];
+
+var minmax = findMinMax(data_ref);
+var x = d3.scale.linear().domain([0, n]).range([0, width]);
+var y = d3.scale.linear().domain([minmax[0]*1.1, minmax[1]*1.1]).range([height, 0]);
+
+var line = d3.svg.line()
+    .x(function(d, i) { return x(i); })
+    .y(function(d, i) { return y(d); });
+
+var svg = d3.select("#vis").append("svg")
+	.attr("width", width + margin.left + margin.right)
+	.attr("height", height + margin.top + margin.bottom)
+	.append("g")
+	.attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+svg.append("defs").append("clipPath")
+	.attr("id", "clip")
+	.append("rect")
+	.attr("width", width)
+	.attr("height", height);
+
+// GLOW
+var defs = svg.select("defs");
+var filter = defs.append("filter").attr("id", "glow")
+filter.append("feGaussianBlur")
+	.attr("stdDeviation", 4)
+	.attr("result", "coloredBlur");
+var feMerge = filter.append("feMerge");
+feMerge.append("feMergeNode").attr("in", "coloredBlur")
+feMerge.append("feMergeNode").attr("in", "SourceGraphic");
+
+// GRID LINES
+function make_x_axis() {
+    return d3.svg.axis()
+        .scale(x)
+        .orient("bottom")
+		.tickValues([n/8, n/4, 3*n/8, n/2, 5*n/8, 3*n/4, 7*n/8, n])
+}
+
+function make_y_axis() {
+    return d3.svg.axis()
+        .scale(y)
+        .orient("left")
+        .ticks(10)
+}
+
+svg.append("g")
+	.attr("class", "grid")
+	.attr("transform", "translate(0," + height + ")")
+	.attr("opacity", 0.6)
+	.call(make_x_axis()
+		.tickSize(-height, 0, 0)
+		.tickFormat("")
+);
+
+svg.append("g")
+	.attr("class", "grid")
+	.attr("opacity", 0.6)
+	.call(make_y_axis()
+		.tickSize(-width, 0, 0)
+		.tickFormat("")
+);
+
+// AXES
+var xAxis = d3.svg.axis()
+	.scale(x)
+    .orient("bottom")
+	.tickValues([n/4, n/2, 3*n/4, n])
+	.tickFormat(function(d, i) { return label[i]; });
+
+svg.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + y(0) + ")")
+	.style("stroke-dasharray", ("6, 6"))
+    .call(xAxis);
+
+svg.append("g")
+    .attr("class", "y axis")
+    .call(d3.svg.axis().scale(y).orient("right"));
+
+// DATA
+for(i = 0; i < data_dynamic.length; i++) {
+	var path = svg.append("g")
+		.attr("clip-path", "url(#clip)")
+		.append("path")
+		.datum(data_dynamic[i])
+		.attr("id", function() {
+			return "waveform" + i
+		})
+		.attr("class", "line")
+		.attr("stroke", colors[i])
+		.attr("d", line)
+		.attr("filter", "url(#glow)");
+}
+
+tick();
+
+
+/* -------------------- FUNCTIONS -------------------- */
+
+function precision(num, pre) {
+	return +num.toFixed(pre)
+}
+
+function findMinMax(d) {
+	var localmax = [];
+	var localmin = [];
+
+	for (i = 0; i < d.length; i++) {
+		var max = d[i].reduce(function(a, b) {
+			return Math.max(a, b);
+		}, 0);
+		localmax.push(max);
+
+		var min = d[i].reduce(function(a, b) {
+			return Math.min(a, b);
+		}, 0);
+		localmin.push(min);
+	}
+	return [Math.min.apply(Math, localmin), Math.max.apply(Math, localmax)]
+}
+
+function tick() {
+	for (i = 0; i < data_dynamic.length; i++) {
+		var nextpoint = nextGen(count, i);
+		data_dynamic[i].push(nextpoint); // push a new data point onto the back
+
+		d3.select("#waveform" + i).attr("d", line)  // redraw the line, and slide it to the left
+			.attr("transform", null)
+			.transition().duration(10).ease("linear")
+			.attr("transform", "translate(" + x(-1) + ",0)")
+			.each("end", tick);
+
+		data_dynamic[i].shift(); // pop the old data point off the front
+	}
+
+	if (count == data_ref[0].length-1) {
+		count = 1;
+	} else {
+		count++;
+	}
+}
+
+function pause() {
+	for (i = 0; i < data_dynamic.length; i++) {
+		var nextpoint = nextGen(count, i);
+		data_dynamic[i].push(nextpoint);
+
+		d3.select("#waveform" + i).attr("d", line)
+			.attr("transform", null)
+			.transition().duration(10).ease("linear")
+			.attr("transform", "translate(" + x(-1) + ",0)");
+
+		data_dynamic[i].shift();
+	}
+
+	if (count == data_ref[0].length-1) {
+		count = 1;
+	} else {
+		count++;
+	}
+}
+
+function nextGen(c, i) {
+	return data_ref[i][c]
+}
+
+function makeSine(A, T, dx) {
+	var wave = [];
+	for (i = 0; i < T; i += dx) {
+		wave.push(A * precision(Math.sin(2 * Math.PI / T * i), 4));
+	}
+	return wave
+}
+
+function makeSquare(A, T, dx) {
+	var wave = [];
+	for (i = 0; i < T; i += dx) {
+		if (i <= T/2) { wave.push(A); }
+		else { wave.push(-A); }
+	}
+	return wave
+}
+
+function makeTri(A, T, dx) {
+	var wave = [];
+	for (i = 0; i < T; i += dx) {
+		wave.push(2 * A / Math.PI * Math.asin(Math.sin(2 * Math.PI / T * i)));
+	}
+	return wave
+}
+
+function makeSaw(A, T, dx) {
+	var wave = [];
+	for (i = 0; i < T; i += dx) {
+		wave.push(-2 * A / Math.PI * Math.atan(1 / Math.tan(Math.PI / T * i)));
+	}
+	return wave
+}
+
+function getCount(T, visWindow, n, wave) {
+	// The dynamic data must have n + 1 points
+	if (T < visWindow) {
+		// Starting point (count) must be calculated
+		var startLength = wave.length;
+		var count =  n % (startLength - 1) + 1;
+	} else if (T > visWindow) {
+		// Start count at n + 1
+		var count = n + 1;
+	} else {
+		// Start count at 1
+		var count = 1;
+	}
+
+	return count;
+}
+
+function getDynamic(T, visWindow, n, wave) {
+	// The dynamic data must have n + 1 points
+	if (T < visWindow) {
+		// The dynamic data must be filled by looping data until point n+1
+		var c = 1;
+		var startLength = wave.length;
+		while (wave.length < n + 1) {
+			wave.splice(wave.length, 0, wave[c]);
+			c++;
+		}
+		var data_d = wave;
+	} else if (T > visWindow) {
+		// The dynamic data must have n+1 points, so reduce the array
+		wave.splice(n + 1, wave.length - n);
+		var data_d = wave;
+	} else {
+		// The dynamic data already has the correct number of points
+		var data_d = wave;
+	}
+
+	return data_d;
+}
+
+function phaseShift(data, q, n) {
+	var shiftAmt = (1 - q / 360) * n / 2 - 1; //define amount
+	data.splice(0, 1); // remove first element
+	data = data.concat(data.splice(0, shiftAmt)); // shift array by appropriate amount
+	data.push(data[0]); // add on first element as last element also
+	return data;
+}
+
+/* -------------------- KNOBS --------------------*/
+// See https://github.com/aterrien/jQuery-Knob, http://anthonyterrien.com/knob/
+
+$(function() {
+	$(".sx-dial").knob({
+		'change' : function (v) {
+			// Conversion: x -> x*pi/2
+			changeSigPer(v);
+		}
+	});
+	$(".sy-dial").knob({
+		'change' : function (v) {
+			changeSigAmp(v);
+		}
+	});
+	$(".dx-dial").knob({
+		'change' : function (v) {
+			// Conversion: x -> x*pi
+			changeDispX(v);
+		}
+	});
+	$(".dy-dial").knob({
+		'change' : function (v) {
+			changeDispAmp(v);
+		}
+	});
+});
+
+</script>
+
+</body>
+</html>
