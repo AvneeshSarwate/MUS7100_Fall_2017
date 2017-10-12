@@ -5,11 +5,27 @@
         <meta charset="UTF-8" />
         <script src="bower_components/jquery/dist/jquery.js"></script>
         <script src="bower_components/osc.js/dist/osc-browser.min.js"></script>
-        <script src="lemurBounce.js"></script>
+        <script src="matter.min.js" type="text/javascript"></script>
+        <script src="NexusUI.js"></script>
     </head>
 
     <body>
         <h1>Lemur Bounce 2</h1>
+        <p id='m'>Hi</p>
+        <div id="matter"></div>
+        <div id="grav">        
+            <div nexus-ui="number" id="number"></div>
+            <div nexus-ui="slider" id="slider"></div>
+            <div nexus-ui="button" id="button"></div>
+        </div>
         <button onclick="sayHello()">Send OSC message</button>
+
+        <script src="lemurBounce.js"></script>
     </body>
+
+    <style type="text/css">
+        #grav div {
+            margin: 0 auto;
+        }
+    </style>
 </html>
