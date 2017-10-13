@@ -1,31 +1,61 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>Lemur Bounce 2</title>
-        <meta charset="UTF-8" />
-        <script src="bower_components/jquery/dist/jquery.js"></script>
-        <script src="bower_components/osc.js/dist/osc-browser.min.js"></script>
-        <script src="matter.min.js" type="text/javascript"></script>
-        <script src="NexusUI.js"></script>
-    </head>
+<head>
+    <title>Lemur Bounce 2</title>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <body>
-        <h1>Lemur Bounce 2</h1>
-        <p id='m'>Hi</p>
-        <div id="matter"></div>
-        <div id="grav">        
-            <div nexus-ui="number" id="number"></div>
-            <div nexus-ui="slider" id="slider"></div>
-            <div nexus-ui="button" id="button"></div>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/css/bootstrap.min.css"
+          integrity="sha384-/Y6pD6FV/Vv2HJnA6t+vslU6fwYXjCFtcEpHbNJ0lyAFsXTsjBbfaDjzALeQsN6M" crossorigin="anonymous">
+
+    <script src="bower_components/jquery/dist/jquery.js"></script>
+    <script src="bower_components/osc.js/dist/osc-browser.min.js"></script>
+    <script src="matter.min.js" type="text/javascript"></script>
+    <script src="NexusUI.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"
+            integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta/js/bootstrap.min.js"
+            integrity="sha384-h0AbiXch4ZDo7tp9hKZ4TsHbi047NrKGLO3SEJAg45jXxnGIfYzk4Si90RDIqNm1"
+            crossorigin="anonymous"></script>
+</head>
+
+<body>
+<div class="container">
+    <p id='m'>Hi</p>
+    <div id="matter"></div>
+
+    <div class="row">
+        <div class="col-6 paramSet">
+            <div id="frict">
+                <div>Friction</div>
+                <div id="frictNumber"></div>
+                <div id="frictSlider"></div>
+                <div id="frictButton"></div>
+            </div>
         </div>
-        <button onclick="sayHello()">Send OSC message</button>
 
-        <script src="lemurBounce.js"></script>
-    </body>
+        <div class="col-6 paramSet">
+            <div id="balls">
+                <div>Balls</div>
+                <div id="ballsNumber"></div>
+                <div id="ballsSlider"></div>
+                <div id="ballsButton"></div>
+            </div>
+        </div>
+    </div>
 
-    <style type="text/css">
-        #grav div {
-            margin: 0 auto;
-        }
-    </style>
+    <button onclick="sayHello()">Send OSC message</button>
+</div>
+<script src="lemurBounce.js"></script>
+</body>
+
+<style type="text/css">
+    .paramSet>div div {
+        margin: 4px auto;
+        padding: 4px;
+        text-align: center;
+    }
+</style>
 </html>

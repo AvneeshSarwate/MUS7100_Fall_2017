@@ -21,6 +21,7 @@ class LemurBounce2:
         self.visualsClient.connect(('127.0.0.1', 7400))
 
         self.visualsServer.addMsgHandler("/hello", self.testResponder)
+        self.visualsServer.addMsgHandler("/toSC", self.toSCResponder)
 
     def sendOSCMessage(self, addr, client=0, *msgArgs):
         msg = OSC.OSCMessage()
@@ -31,7 +32,13 @@ class LemurBounce2:
         else:
             self.visualsClient.send(msg)
 
+    def toSCResponder(self, addr, tags, stuff, source):
+        address = stuff[0]
+        args = stuff[1:]
+        print address
+        print args
+        self.sendOSCMessage(address, 0, args)
 
     def testResponder(self, addr, tags, stuff, source):
         print stuff
-        self.sendOSCMessage('/test', 1, 'Did you get this message?')
+        self.sendOSCMessage('/test', 1, ['Did you get this message?', 'Didja?'])

@@ -1,8 +1,8 @@
 /*
     NexusUI Elements
 */
-var slider = new Nexus.Slider('#slider',{
-    'size': [20,120],
+var frictSlider = new Nexus.Slider('#frictSlider', {
+    'size': [60, 200],
     'mode': 'relative',  // 'relative' or 'absolute'
     'min': 0,
     'max': 1,
@@ -10,10 +10,24 @@ var slider = new Nexus.Slider('#slider',{
     'value': 0
 });
 
-var number = new Nexus.Number('#number');
-number.link(slider);
+var frictNumber = new Nexus.Number('#frictNumber');
+frictNumber.link(frictSlider);
 
-var button = new Nexus.Button('#button');
+var frictButton = new Nexus.Button('#frictButton');
+
+var ballsSlider = new Nexus.Slider('#ballsSlider', {
+    'size': [60, 200],
+    'mode': 'relative',  // 'relative' or 'absolute'
+    'min': 1,
+    'max': 10,
+    'step': 1,
+    'value': 10
+});
+
+var ballsNumber = new Nexus.Number('#ballsNumber');
+ballsNumber.link(ballsSlider);
+
+var ballsButton = new Nexus.Button('#ballsButton');
 
 /*
     OSC Communication and Handlers
@@ -24,8 +38,7 @@ var port = new osc.WebSocketPort({
 
 port.on("message", function (oscMessage) {
     // Configure handlers here
-    $('#m').append("<p>" + oscMessage + "</p>");
-    console.log("message", oscMessage);
+    $('#m').text(oscMessage.args[1]);
 });
 
 port.open();
@@ -40,7 +53,7 @@ var sayHello = function () {
 /*
     Matter.js content
  */
-$(function() {
+$(function () {
     var Engine = Matter.Engine,
         Render = Matter.Render,
         Runner = Matter.Runner,
@@ -79,12 +92,12 @@ $(function() {
     Runner.run(runner, engine);
 
     // an example of using composite events on the world
-    Events.on(world, 'afterAdd', function(event) {
+    Events.on(world, 'afterAdd', function (event) {
         console.log('added to world:', event.object);
     });
 
     // an example of using beforeUpdate event on an engine
-    Events.on(engine, 'beforeUpdate', function(event) {
+    Events.on(engine, 'beforeUpdate', function (event) {
         var engine = event.source;
 
         // apply random forces every 5 secs
@@ -93,7 +106,7 @@ $(function() {
     });
 
     // an example of using collisionStart event on an engine
-    Events.on(engine, 'collisionStart', function(event) {
+    Events.on(engine, 'collisionStart', function (event) {
         var pairs = event.pairs;
 
         // change object colours to show those starting a collision
@@ -101,11 +114,22 @@ $(function() {
             var pair = pairs[i];
             pair.bodyA.render.fillStyle = '#333';
             pair.bodyB.render.fillStyle = '#333';
+
+            collisionPair = getCollisionPair(pair);
+            if(collisionPair){
+                wall = collisionPair['wall'];
+                wallIndex = parseInt(wall[wall.length - 1]);
+                ballIndex = collisionPair['ball'];
+                port.send({
+                    address: "/toSC",
+                    args: ["/collision", ballIndex, wallIndex, 'start']
+                });
+            }
         }
     });
 
     // an example of using collisionActive event on an engine
-    Events.on(engine, 'collisionActive', function(event) {
+    Events.on(engine, 'collisionActive', function (event) {
         var pairs = event.pairs;
 
         // change object colours to show those in an active collision (e.g. resting contact)
@@ -117,7 +141,7 @@ $(function() {
     });
 
     // an example of using collisionEnd event on an engine
-    Events.on(engine, 'collisionEnd', function(event) {
+    Events.on(engine, 'collisionEnd', function (event) {
         var pairs = event.pairs;
 
         // change object colours to show those ending a collision
@@ -126,26 +150,57 @@ $(function() {
 
             pair.bodyA.render.fillStyle = '#222';
             pair.bodyB.render.fillStyle = '#222';
+
+            collisionPair = getCollisionPair(pair);
+            if(collisionPair){
+                wall = collisionPair['wall'];
+                wallIndex = parseInt(wall[wall.length - 1]);
+                ballIndex = collisionPair['ball'];
+                port.send({
+                    address: "/toSC",
+                    args: ["/collision", ballIndex, wallIndex, 'end']
+                });
+            }
         }
     });
 
-    var bodyStyle = { fillStyle: '#222' };
+    var getCollisionPair = function(pair) {
+        if(pair.bodyA.label.match(/(Wall)[\s\S]*/)){
+            return {
+                'wall': pair.bodyA.label,
+                'ball': pair.bodyB.id - 6
+            }
+        }
+        else if(pair.bodyA.label.match(/(Wall)[\s\S]*/)){
+            return {
+                'wall': pair.bodyB.label,
+                'ball': pair.bodyA.id - 6
+            }
+        }
+        else {
+            return null
+        }
+    };
+
+    var bodyStyle = {fillStyle: '#222'};
 
     // Add walls to scene
     World.add(world, [
-        Bodies.rectangle(400, 0, 800, 50, { isStatic: true, render: bodyStyle }),
-        Bodies.rectangle(400, 600, 800, 50, { isStatic: true, render: bodyStyle }),
-        Bodies.rectangle(800, 300, 50, 600, { isStatic: true, render: bodyStyle }),
-        Bodies.rectangle(0, 300, 50, 600, { isStatic: true, render: bodyStyle })
+        Bodies.rectangle(400, 0, 800, 50, {isStatic: true, label: 'Wall 0', render: bodyStyle}),
+        Bodies.rectangle(400, 600, 800, 50, {isStatic: true, label: 'Wall 2', render: bodyStyle}),
+        Bodies.rectangle(800, 300, 50, 600, {isStatic: true, label: 'Wall 1', render: bodyStyle}),
+        Bodies.rectangle(0, 300, 50, 600, {isStatic: true, label: 'Wall 3', render: bodyStyle})
     ]);
 
-    var stack = Composites.stack(70, 100, 9, 4, 50, 50, function(x, y) {
-        return Bodies.circle(x, y, 15, { restitution: 1, render: bodyStyle });
+    var stack = Composites.stack(70, 100, 5, 2, 50, 50, function (x, y) {
+        return Bodies.circle(x, y, 30, {restitution: 1, render: bodyStyle});
     });
+
+    var ballHistory = Composite.allBodies(stack);
 
     World.add(world, stack);
 
-    var shakeScene = function(engine) {
+    var shakeScene = function (engine) {
         var bodies = Composite.allBodies(engine.world);
 
         for (var i = 0; i < bodies.length; i++) {
@@ -180,35 +235,58 @@ $(function() {
     render.mouse = mouse;
 
     // an example of using mouse events on a mouse
-    Events.on(mouseConstraint, 'mousedown', function(event) {
+    Events.on(mouseConstraint, 'mousedown', function (event) {
         var mousePosition = event.mouse.position;
         console.log('mousedown at ' + mousePosition.x + ' ' + mousePosition.y);
+        console.log(Composite.allBodies(stack));
     });
 
     // an example of using mouse events on a mouse
-    Events.on(mouseConstraint, 'mouseup', function(event) {
+    Events.on(mouseConstraint, 'mouseup', function (event) {
         var mousePosition = event.mouse.position;
         console.log('mouseup at ' + mousePosition.x + ' ' + mousePosition.y);
     });
 
     // an example of using mouse events on a mouse
-    Events.on(mouseConstraint, 'startdrag', function(event) {
+    Events.on(mouseConstraint, 'startdrag', function (event) {
         console.log('startdrag', event);
     });
 
     // an example of using mouse events on a mouse
-    Events.on(mouseConstraint, 'enddrag', function(event) {
+    Events.on(mouseConstraint, 'enddrag', function (event) {
         console.log('enddrag', event);
     });
 
     // fit the render viewport to the scene
     Render.lookAt(render, {
-        min: { x: 0, y: 0 },
-        max: { x: 800, y: 600 }
+        min: {x: 0, y: 0},
+        max: {x: 800, y: 600}
     });
 
-    slider.on('change', function(value){
-        world.gravity.scale = value / 1000;
+    frictSlider.on('change', function (value) {
+        balls = Composite.allBodies(stack);
+        for (var i = 0; i < balls.length; i++) {
+            ball = balls[i];
+            ball.frictionAir = value / 10;
+        }
+    });
+
+    ballsSlider.on('change', function (value) {
+        console.log(value);
+        balls = Composite.allBodies(stack);
+        if (value > balls.length) {
+            for (var i = balls.length; i < value; i++) {
+                newBall = ballHistory[i];
+                Composite.add(stack, newBall);
+            }
+        }
+        else if (value < balls.length) {
+            for (var i = value - 1; i < balls.length; i++) {
+                ballToRemove = balls[i];
+                ballHistory[i] = ballToRemove;
+                Composite.remove(stack, ballToRemove);
+            }
+        }
     });
 
     // context for MatterTools.Demo
@@ -217,7 +295,7 @@ $(function() {
         runner: runner,
         render: render,
         canvas: render.canvas,
-        stop: function() {
+        stop: function () {
             Matter.Render.stop(render);
             Matter.Runner.stop(runner);
         }

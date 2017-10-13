@@ -253,7 +253,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	* Position
 	*
-	* @description Two-dimensional touch slider.
+	* @description Two-dimensional touch gravSlider.
 	*
 	* @demo <span nexus-ui="position"></span>
 	*
@@ -1976,15 +1976,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	* Slider
 	*
-	* @description Horizontal or vertical slider with settable interaction modes.
+	* @description Horizontal or vertical gravSlider with settable interaction modes.
 	*
-	* @demo <span nexus-ui="slider" step=0.2></span>
-	*
-	* @example
-	* var slider = new Nexus.Slider('#target')
+	* @demo <span nexus-ui="gravSlider" step=0.2></span>
 	*
 	* @example
-	* var slider = new Nexus.Slider('#target',{
+	* var gravSlider = new Nexus.Slider('#target')
+	*
+	* @example
+	* var gravSlider = new Nexus.Slider('#target',{
 	*     'size': [120,20],
 	*     'mode': 'relative',  // 'relative' or 'absolute'
 	*     'min': 0,
@@ -1999,7 +1999,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	* Event data: <i>number</i> The number value of the interface.
 	*
 	* @outputexample
-	* slider.on('change',function(v) {
+	* gravSlider.on('change',function(v) {
 	*   console.log(v);
 	* })
 	*
@@ -2188,9 +2188,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: {
 	
 	      /**
-	      The slider's current value. If set manually, will update the interface and trigger the output event.
+	      The gravSlider's current value. If set manually, will update the interface and trigger the output event.
 	      @type {number}
-	      @example slider.value = 10;
+	      @example gravSlider.value = 10;
 	      */
 	
 	      get: function () {
@@ -2208,7 +2208,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      /**
 	      Lower limit of the sliders's output range
 	      @type {number}
-	      @example slider.min = 1000;
+	      @example gravSlider.min = 1000;
 	      */
 	
 	      get: function () {
@@ -2221,9 +2221,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    max: {
 	
 	      /**
-	      Upper limit of the slider's output range
+	      Upper limit of the gravSlider's output range
 	      @type {number}
-	      @example slider.max = 1000;
+	      @example gravSlider.max = 1000;
 	      */
 	
 	      get: function () {
@@ -2236,9 +2236,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    step: {
 	
 	      /**
-	      The increment that the slider's value changes by.
+	      The increment that the gravSlider's value changes by.
 	      @type {number}
-	      @example slider.step = 5;
+	      @example gravSlider.step = 5;
 	      */
 	
 	      get: function () {
@@ -2251,9 +2251,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    mode: {
 	
 	      /**
-	      Absolute mode (slider's value jumps to mouse click position) or relative mode (mouse drag changes value relative to its current position). Default: "relative".
+	      Absolute mode (gravSlider's value jumps to mouse click position) or relative mode (mouse drag changes value relative to its current position). Default: "relative".
 	      @type {string}
-	      @example slider.mode = "relative";
+	      @example gravSlider.mode = "relative";
 	      */
 	
 	      get: function () {
@@ -3398,9 +3398,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    link: {
 	
 	      /**
-	      Connect this number interface to a dial or slider
+	      Connect this number interface to a dial or gravSlider
 	      @param {Interface} element Element to connect to.
-	      @example number.link(slider)
+	      @example number.link(gravSlider)
 	      */
 	
 	      value: function link(destination) {
@@ -6753,11 +6753,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    setSlider: {
 	
 	      /**
-	      Set the value of an individual slider
+	      Set the value of an individual gravSlider
 	      @param index {number} Slider index
-	      @param value {number} New slider value
+	      @param value {number} New gravSlider value
 	      @example
-	      // Set the first slider to value 0.5
+	      // Set the first gravSlider to value 0.5
 	      multislider.setSlider(0,0.5)
 	      */
 	
@@ -6773,7 +6773,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	
 	      /**
 	      Set the value of all sliders at once. If the size of the input array does not match the current number of sliders, the value array will repeat until all sliders have been set. I.e. an input array of length 1 will set all sliders to that value.
-	      @param values {Array} All slider values
+	      @param values {Array} All gravSlider values
 	      @example
 	      multislider.setAllSliders([0.2,0.3,0.4,0.5,0.6])
 	      */
@@ -7008,9 +7008,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: {
 	
 	      /**
-	      The slider's current value. If set manually, will update the interface and trigger the output event.
+	      The gravSlider's current value. If set manually, will update the interface and trigger the output event.
 	      @type {number}
-	      @example slider.value = 10;
+	      @example gravSlider.value = 10;
 	      */
 	
 	      get: function () {
@@ -7027,7 +7027,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      /**
 	      Lower limit of the sliders's output range
 	      @type {number}
-	      @example slider.min = 1000;
+	      @example gravSlider.min = 1000;
 	      */
 	
 	      get: function () {
@@ -7040,9 +7040,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    max: {
 	
 	      /**
-	      Upper limit of the slider's output range
+	      Upper limit of the gravSlider's output range
 	      @type {number}
-	      @example slider.max = 1000;
+	      @example gravSlider.max = 1000;
 	      */
 	
 	      get: function () {
@@ -7055,9 +7055,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    step: {
 	
 	      /**
-	      The increment that the slider's value changes by.
+	      The increment that the gravSlider's value changes by.
 	      @type {number}
-	      @example slider.step = 5;
+	      @example gravSlider.step = 5;
 	      */
 	
 	      get: function () {
@@ -7070,9 +7070,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    mode: {
 	
 	      /**
-	      Absolute mode (slider's value jumps to mouse click position) or relative mode (mouse drag changes value relative to its current position). Default: "relative".
+	      Absolute mode (gravSlider's value jumps to mouse click position) or relative mode (mouse drag changes value relative to its current position). Default: "relative".
 	      @type {string}
-	      @example slider.mode = "relative";
+	      @example gravSlider.mode = "relative";
 	      */
 	
 	      get: function () {
@@ -8426,7 +8426,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	synth = new Nexus.Rack('elementID');
 	
 	Transform all elements inside the div
-	synth.elementID will hold the first slider interface
+	synth.elementID will hold the first gravSlider interface
 	
 	2) In future, potentially writing a rack that is re-usable?
 	Could also take JSON
@@ -8436,7 +8436,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    create some divs here, or some audio code
 	  },
 	  interface: {
-	    slider1: Nexus.add.slider({
+	    slider1: Nexus.add.gravSlider({
 	      top:10,
 	      left:10,
 	      width:50,
