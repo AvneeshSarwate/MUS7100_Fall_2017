@@ -33,7 +33,7 @@ var ballsButton = new Nexus.Button('#ballsButton');
     OSC Communication and Handlers
 */
 var port = new osc.WebSocketPort({
-    url: "ws://192.168.0.114:8081" // *** CHANGE THIS TO LAPTOP IP ***
+    url: "ws://192.168.0.118:8081" // *** CHANGE THIS TO LAPTOP IP ***
 });
 
 port.on("message", function (oscMessage) {
