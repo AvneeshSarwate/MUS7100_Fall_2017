@@ -33,12 +33,14 @@ var ballsButton = new Nexus.Button('#ballsButton');
     OSC Communication and Handlers
 */
 var port = new osc.WebSocketPort({
-    url: "ws://192.168.0.118:8081" // *** CHANGE THIS TO LAPTOP IP ***
+    url: "ws://128.61.5.197:8081" // *** CHANGE THIS TO LAPTOP IP ***
 });
 
 port.on("message", function (oscMessage) {
     // Configure handlers here
     $('#m').text(oscMessage.args[1]);
+    if(oscMessage.address == "/saveWorld") saveWorld(oscMessage.args[0]);
+    if(oscMessage.address == "/loadWorld") loadWorld(oscMessage.args[0]);
 });
 
 port.open();
@@ -53,7 +55,7 @@ var sayHello = function () {
 /*
     Matter.js content
  */
-$(function () {
+$(window.matterContext = (function () {
     var Engine = Matter.Engine,
         Render = Matter.Render,
         Runner = Matter.Runner,
@@ -272,7 +274,6 @@ $(function () {
     });
 
     ballsSlider.on('change', function (value) {
-        console.log(value);
         balls = Composite.allBodies(stack);
         if (value > balls.length) {
             for (var i = balls.length; i < value; i++) {
@@ -300,4 +301,31 @@ $(function () {
             Matter.Runner.stop(runner);
         }
     };
-});
+})());
+
+var worlds = {};
+
+// Setup resurrect for world serialization
+var resurrect = new Resurrect({ cleanup: true, revive: false });
+var precisionLimiter = function(key, value) {
+    if (typeof value === 'number') {
+        return parseFloat(value.toFixed(5));
+    }
+    return value;
+};
+// THIS DIDN'T WORK :/
+
+
+// Save the current world to a dictionary
+var saveWorld = function(worldName) {
+    worlds[worldName] = _.cloneDeep(matterContext['engine'].world);
+}
+
+// Load a world
+var loadWorld = function(worldName) {
+    
+    var loadedWorld = worlds[worldName];
+    Matter.Engine.merge(matterContext['engine'], { world: loadedWorld });
+    
+    console.log("World " + worldName + " loaded.");
+}
