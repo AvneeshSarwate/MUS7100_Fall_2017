@@ -313,8 +313,7 @@ var saveWorld = function(worldName) {
 // Load a world
 var loadWorld = function(worldName) {
     
-    saveWorld(worldName);
-    var loadedWorld = worlds[worldName];
+    var loadedWorld =_.cloneDeep( worlds[worldName]);
     Matter.World.remove(matterContext['engine'].world, Matter.Composite.allComposites(matterContext['engine'].world), deep=true);
     Matter.World.addComposite(matterContext['engine'].world, loadedWorld[0]);
 
