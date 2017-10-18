@@ -202,7 +202,7 @@ $(window.matterContext = (function () {
 
     World.add(world, stack);
 
-    var shakeScene = function (engine) {
+    window.shakeScene = function (engine) {
         var bodies = Composite.allBodies(engine.world);
 
         for (var i = 0; i < bodies.length; i++) {
@@ -305,27 +305,18 @@ $(window.matterContext = (function () {
 
 var worlds = {};
 
-// Setup resurrect for world serialization
-var resurrect = new Resurrect({ cleanup: true, revive: false });
-var precisionLimiter = function(key, value) {
-    if (typeof value === 'number') {
-        return parseFloat(value.toFixed(5));
-    }
-    return value;
-};
-// THIS DIDN'T WORK :/
-
-
 // Save the current world to a dictionary
 var saveWorld = function(worldName) {
-    worlds[worldName] = _.cloneDeep(matterContext['engine'].world);
+    worlds[worldName] = _.cloneDeep(Matter.Composite.allComposites(matterContext['engine'].world));
 }
 
 // Load a world
 var loadWorld = function(worldName) {
     
+    saveWorld(worldName);
     var loadedWorld = worlds[worldName];
-    Matter.Engine.merge(matterContext['engine'], { world: loadedWorld });
-    
+    Matter.World.remove(matterContext['engine'].world, Matter.Composite.allComposites(matterContext['engine'].world), deep=true);
+    Matter.World.addComposite(matterContext['engine'].world, loadedWorld[0]);
+
     console.log("World " + worldName + " loaded.");
 }
