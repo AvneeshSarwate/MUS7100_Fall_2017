@@ -114,8 +114,8 @@ $(window.matterContext = (function () {
         // change object colours to show those starting a collision
         for (var i = 0; i < pairs.length; i++) {
             var pair = pairs[i];
-            pair.bodyA.render.fillStyle = '#333';
-            pair.bodyB.render.fillStyle = '#333';
+            pair.bodyA.render.fillStyle = '#aaa';
+            pair.bodyB.render.fillStyle = '#aaa';
 
             collisionPair = getCollisionPair(pair);
             if(collisionPair){
@@ -137,8 +137,8 @@ $(window.matterContext = (function () {
         // change object colours to show those in an active collision (e.g. resting contact)
         for (var i = 0; i < pairs.length; i++) {
             var pair = pairs[i];
-            pair.bodyA.render.fillStyle = '#333';
-            pair.bodyB.render.fillStyle = '#333';
+            pair.bodyA.render.fillStyle = '#aaa';
+            pair.bodyB.render.fillStyle = '#aaa';
         }
     });
 
@@ -150,8 +150,8 @@ $(window.matterContext = (function () {
         for (var i = 0; i < pairs.length; i++) {
             var pair = pairs[i];
 
-            pair.bodyA.render.fillStyle = '#222';
-            pair.bodyB.render.fillStyle = '#222';
+            pair.bodyA.render.fillStyle = '#fff';
+            pair.bodyB.render.fillStyle = '#fff';
 
             collisionPair = getCollisionPair(pair);
             if(collisionPair){
@@ -184,7 +184,7 @@ $(window.matterContext = (function () {
         }
     };
 
-    var bodyStyle = {fillStyle: '#222'};
+    var bodyStyle = {fillStyle: '#fff'};
 
     // Add walls to scene
     World.add(world, [
@@ -315,6 +315,11 @@ frictSlider.on('change', function (value) {
         ball = balls[i];
         ball.frictionAir = value / 10;
     }
+
+    for (var i = 0; i < ballHistory.length; i++) {
+        ball = ballHistory[i];
+        ball.frictionAir = value / 10;
+    }
 });
 
 ballsSlider.on('change', function (value) {
@@ -330,14 +335,14 @@ ballsSlider.on('change', function (value) {
 
     if (value > balls.length) {
         for (var i = balls.length; i < value; i++) {
-            newBall = _.cloneDeep(ballHistory[i]);
+            newBall = ballHistory[i];
             Matter.Composite.add(ballsComposite, newBall);
         }
     }
     else if (value < balls.length) {
-        for (var i = value; i < balls.length; i++) {
+        for (var i = balls.length - 1; i > value - 1; i--) {
             ballToRemove = balls[i];
-            ballHistory[i] = _.cloneDeep(ballToRemove);
+            ballHistory[i] = ballToRemove;
             Matter.Composite.remove(ballsComposite, ballToRemove);
         }
     }
