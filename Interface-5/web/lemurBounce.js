@@ -195,10 +195,10 @@ $(window.matterContext = (function () {
     ]);
 
     var stack = Composites.stack(70, 100, 5, 2, 50, 50, function (x, y) {
-        return Bodies.circle(x, y, 30, {restitution: 1, render: bodyStyle});
+        return Bodies.circle(x, y, 30, {restitution: 1, render: bodyStyle, label: 'Ball'});
     });
 
-    var ballHistory = Composite.allBodies(stack);
+    stack.label = "Balls";
 
     World.add(world, stack);
 
@@ -265,31 +265,6 @@ $(window.matterContext = (function () {
         max: {x: 800, y: 600}
     });
 
-    frictSlider.on('change', function (value) {
-        balls = Composite.allBodies(stack);
-        for (var i = 0; i < balls.length; i++) {
-            ball = balls[i];
-            ball.frictionAir = value / 10;
-        }
-    });
-
-    ballsSlider.on('change', function (value) {
-        balls = Composite.allBodies(stack);
-        if (value > balls.length) {
-            for (var i = balls.length; i < value; i++) {
-                newBall = ballHistory[i];
-                Composite.add(stack, newBall);
-            }
-        }
-        else if (value < balls.length) {
-            for (var i = value - 1; i < balls.length; i++) {
-                ballToRemove = balls[i];
-                ballHistory[i] = ballToRemove;
-                Composite.remove(stack, ballToRemove);
-            }
-        }
-    });
-
     // context for MatterTools.Demo
     return {
         engine: engine,
@@ -313,9 +288,57 @@ var saveWorld = function(worldName) {
 // Load a world
 var loadWorld = function(worldName) {
     
-    var loadedWorld =_.cloneDeep( worlds[worldName]);
+    var loadedWorld =_.cloneDeep(worlds[worldName]);
     Matter.World.remove(matterContext['engine'].world, Matter.Composite.allComposites(matterContext['engine'].world), deep=true);
     Matter.World.addComposite(matterContext['engine'].world, loadedWorld[0]);
 
     console.log("World " + worldName + " loaded.");
 }
+
+// Save the first set of active balls
+var ballHistory;
+var composites = Matter.Composite.allComposites(matterContext['engine'].world);
+_.each(composites, function(composite){
+    if(composite.label == "Balls"){
+        ballHistory = _.cloneDeep(composite.bodies);
+    } 
+});
+
+frictSlider.on('change', function (value) {
+    var balls = [];
+    var composites = Matter.Composite.allComposites(matterContext['engine'].world);
+    _.each(composites, function(composite){
+        if(composite.label == "Balls") balls = composite.bodies;
+    });
+
+    for (var i = 0; i < balls.length; i++) {
+        ball = balls[i];
+        ball.frictionAir = value / 10;
+    }
+});
+
+ballsSlider.on('change', function (value) {
+    console.log(value);
+    var balls, ballsComposite;
+    var composites = Matter.Composite.allComposites(matterContext['engine'].world);
+    _.each(composites, function(composite){
+        if(composite.label == "Balls"){
+            ballsComposite = composite;
+            balls = composite.bodies;  
+        } 
+    });
+
+    if (value > balls.length) {
+        for (var i = balls.length; i < value; i++) {
+            newBall = _.cloneDeep(ballHistory[i]);
+            Matter.Composite.add(ballsComposite, newBall);
+        }
+    }
+    else if (value < balls.length) {
+        for (var i = value; i < balls.length; i++) {
+            ballToRemove = balls[i];
+            ballHistory[i] = _.cloneDeep(ballToRemove);
+            Matter.Composite.remove(ballsComposite, ballToRemove);
+        }
+    }
+});
