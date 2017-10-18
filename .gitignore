@@ -4,3 +4,4 @@ Interface-5/web/bower_components
 .npm
 .npmrc
 .vagrant
+*.pyc
