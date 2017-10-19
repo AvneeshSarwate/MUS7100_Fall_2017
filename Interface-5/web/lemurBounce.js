@@ -33,7 +33,7 @@ var ballsButton = new Nexus.Button('#ballsButton');
     OSC Communication and Handlers
 */
 var port = new osc.WebSocketPort({
-    url: "ws://128.61.5.197:8081" // *** CHANGE THIS TO LAPTOP IP ***
+    url: "ws://192.168.0.101:8081" // *** CHANGE THIS TO LAPTOP IP ***
 });
 
 port.on("message", function (oscMessage) {
@@ -41,6 +41,7 @@ port.on("message", function (oscMessage) {
     $('#m').text(oscMessage.args[1]);
     if(oscMessage.address == "/saveWorld") saveWorld(oscMessage.args[0]);
     if(oscMessage.address == "/loadWorld") loadWorld(oscMessage.args[0]);
+    if(oscMessage.address == "/setParam") setParam(oscMessage.args);
 });
 
 port.open();
@@ -295,21 +296,30 @@ var loadWorld = function(worldName) {
     console.log("World " + worldName + " loaded.");
 }
 
-// Save the first set of active balls
-var ballHistory;
-var composites = Matter.Composite.allComposites(matterContext['engine'].world);
-_.each(composites, function(composite){
-    if(composite.label == "Balls"){
-        ballHistory = _.cloneDeep(composite.bodies);
-    } 
-});
-
-frictSlider.on('change', function (value) {
+// Retrieve the set of balls
+var getBalls = function(){
     var balls = [];
     var composites = Matter.Composite.allComposites(matterContext['engine'].world);
     _.each(composites, function(composite){
         if(composite.label == "Balls") balls = composite.bodies;
+    })
+    return balls;
+}
+
+// Get the composite for the set of balls
+var getBallsComposite = function(){
+    var ballsComposite = null;
+    var composites = Matter.Composite.allComposites(matterContext['engine'].world);
+    _.each(composites, function(composite){
+        if(composite.label == "Balls"){
+            ballsComposite = composite;
+        } 
     });
+    return ballsComposite    
+}
+
+var setFriction = function(value) {
+    var balls = getBalls();
 
     for (var i = 0; i < balls.length; i++) {
         ball = balls[i];
@@ -320,18 +330,18 @@ frictSlider.on('change', function (value) {
         ball = ballHistory[i];
         ball.frictionAir = value / 10;
     }
-});
+}
 
-ballsSlider.on('change', function (value) {
-    console.log(value);
-    var balls, ballsComposite;
-    var composites = Matter.Composite.allComposites(matterContext['engine'].world);
-    _.each(composites, function(composite){
-        if(composite.label == "Balls"){
-            ballsComposite = composite;
-            balls = composite.bodies;  
-        } 
-    });
+// Save the first set of active balls
+var ballHistory;
+var composites = Matter.Composite.allComposites(matterContext['engine'].world);
+var ballHistory = _.cloneDeep(getBalls());
+
+frictSlider.on('change', function (value) { setFriction(value) });
+
+var setBalls = function(value) {
+    var balls = getBalls() 
+    var ballsComposite = getBallsComposite();
 
     if (value > balls.length) {
         for (var i = balls.length; i < value; i++) {
@@ -346,4 +356,26 @@ ballsSlider.on('change', function (value) {
             Matter.Composite.remove(ballsComposite, ballToRemove);
         }
     }
-});
+}
+
+ballsSlider.on('change', function (value) { setBalls(value); });
+
+var setParam = function (args) {
+    var param = args[0];
+    var value = args[1];
+
+    switch(param){
+        case 'balls':
+            if(!ballsButton.state) setBalls(value);
+        break;
+
+        case 'friction':
+            if(!frictButton.state) setFriction(value);
+        break;
+
+        default:
+            console.log("Unrecognized parameter " + param);
+    }
+    
+}
+
