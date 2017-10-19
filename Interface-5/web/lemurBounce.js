@@ -33,15 +33,15 @@ var ballsButton = new Nexus.Button('#ballsButton');
     OSC Communication and Handlers
 */
 var port = new osc.WebSocketPort({
-    url: "ws://192.168.0.101:8081" // *** CHANGE THIS TO LAPTOP IP ***
+    url: "ws://192.168.0.107:8081" // *** CHANGE THIS TO LAPTOP IP ***
 });
 
 port.on("message", function (oscMessage) {
     // Configure handlers here
     $('#m').text(oscMessage.args[1]);
-    if(oscMessage.address == "/saveWorld") saveWorld(oscMessage.args[0]);
-    if(oscMessage.address == "/loadWorld") loadWorld(oscMessage.args[0]);
-    if(oscMessage.address == "/setParam") setParam(oscMessage.args);
+    if (oscMessage.address == "/saveWorld") saveWorld(oscMessage.args[0]);
+    if (oscMessage.address == "/loadWorld") loadWorld(oscMessage.args[0]);
+    if (oscMessage.address == "/setParam") setParam(oscMessage.args);
 });
 
 port.open();
@@ -57,6 +57,8 @@ var sayHello = function () {
     Matter.js content
  */
 $(window.matterContext = (function () {
+    Matter.use('matter-wrap');
+
     var Engine = Matter.Engine,
         Render = Matter.Render,
         Runner = Matter.Runner,
@@ -119,7 +121,7 @@ $(window.matterContext = (function () {
             pair.bodyB.render.fillStyle = '#aaa';
 
             collisionPair = getCollisionPair(pair);
-            if(collisionPair){
+            if (collisionPair) {
                 wall = collisionPair['wall'];
                 wallIndex = parseInt(wall[wall.length - 1]);
                 ballIndex = collisionPair['ball'];
@@ -155,7 +157,7 @@ $(window.matterContext = (function () {
             pair.bodyB.render.fillStyle = '#fff';
 
             collisionPair = getCollisionPair(pair);
-            if(collisionPair){
+            if (collisionPair) {
                 wall = collisionPair['wall'];
                 wallIndex = parseInt(wall[wall.length - 1]);
                 ballIndex = collisionPair['ball'];
@@ -167,14 +169,14 @@ $(window.matterContext = (function () {
         }
     });
 
-    var getCollisionPair = function(pair) {
-        if(pair.bodyA.label.match(/(Wall)[\s\S]*/)){
+    var getCollisionPair = function (pair) {
+        if (pair.bodyA.label.match(/(Wall)[\s\S]*/)) {
             return {
                 'wall': pair.bodyA.label,
                 'ball': pair.bodyB.id - 6
             }
         }
-        else if(pair.bodyA.label.match(/(Wall)[\s\S]*/)){
+        else if (pair.bodyA.label.match(/(Wall)[\s\S]*/)) {
             return {
                 'wall': pair.bodyB.label,
                 'ball': pair.bodyA.id - 6
@@ -188,15 +190,21 @@ $(window.matterContext = (function () {
     var bodyStyle = {fillStyle: '#fff'};
 
     // Add walls to scene
-    World.add(world, [
-        Bodies.rectangle(400, 0, 800, 50, {isStatic: true, label: 'Wall 0', render: bodyStyle}),
-        Bodies.rectangle(400, 600, 800, 50, {isStatic: true, label: 'Wall 2', render: bodyStyle}),
-        Bodies.rectangle(800, 300, 50, 600, {isStatic: true, label: 'Wall 1', render: bodyStyle}),
-        Bodies.rectangle(0, 300, 50, 600, {isStatic: true, label: 'Wall 3', render: bodyStyle})
-    ]);
+    // World.add(world, [
+    //     Bodies.rectangle(400, 0, 800, 50, {isStatic: true, label: 'Wall 0', render: bodyStyle}),
+    //     Bodies.rectangle(400, 600, 800, 50, {isStatic: true, label: 'Wall 2', render: bodyStyle}),
+    //     Bodies.rectangle(800, 300, 50, 600, {isStatic: true, label: 'Wall 1', render: bodyStyle}),
+    //     Bodies.rectangle(0, 300, 50, 600, {isStatic: true, label: 'Wall 3', render: bodyStyle})
+    // ]);
 
     var stack = Composites.stack(70, 100, 5, 2, 50, 50, function (x, y) {
-        return Bodies.circle(x, y, 30, {restitution: 1, render: bodyStyle, label: 'Ball'});
+        // Remove the collisionFilter to get the bodies to collide
+        return Bodies.circle(x, y, 30, {
+            restitution: 1,
+            render: bodyStyle,
+            label: 'Ball',
+            collisionFilter: {group: -1, category: 1}
+        });
     });
 
     stack.label = "Balls";
@@ -266,6 +274,23 @@ $(window.matterContext = (function () {
         max: {x: 800, y: 600}
     });
 
+    // wrapping using matter-wrap plugin
+    var allBodies = Composite.allBodies(world);
+
+    _.each(allBodies, function (body) {
+
+        // Wrap bodies around canvas
+        body.plugin.wrap = {
+            min: {x: render.bounds.min.x, y: render.bounds.min.y},
+            max: {x: render.bounds.max.x, y: render.bounds.max.y}
+        };
+
+        // Kill all friction
+        body.friction = 0;
+        body.frictionAir = 0;
+        body.frictionStatic = 0;
+    });
+
     // context for MatterTools.Demo
     return {
         engine: engine,
@@ -282,43 +307,43 @@ $(window.matterContext = (function () {
 var worlds = {};
 
 // Save the current world to a dictionary
-var saveWorld = function(worldName) {
+var saveWorld = function (worldName) {
     worlds[worldName] = _.cloneDeep(Matter.Composite.allComposites(matterContext['engine'].world));
 }
 
 // Load a world
-var loadWorld = function(worldName) {
-    
-    var loadedWorld =_.cloneDeep(worlds[worldName]);
-    Matter.World.remove(matterContext['engine'].world, Matter.Composite.allComposites(matterContext['engine'].world), deep=true);
+var loadWorld = function (worldName) {
+
+    var loadedWorld = _.cloneDeep(worlds[worldName]);
+    Matter.World.remove(matterContext['engine'].world, Matter.Composite.allComposites(matterContext['engine'].world), deep = true);
     Matter.World.addComposite(matterContext['engine'].world, loadedWorld[0]);
 
     console.log("World " + worldName + " loaded.");
 }
 
 // Retrieve the set of balls
-var getBalls = function(){
+var getBalls = function () {
     var balls = [];
     var composites = Matter.Composite.allComposites(matterContext['engine'].world);
-    _.each(composites, function(composite){
-        if(composite.label == "Balls") balls = composite.bodies;
+    _.each(composites, function (composite) {
+        if (composite.label == "Balls") balls = composite.bodies;
     })
     return balls;
 }
 
 // Get the composite for the set of balls
-var getBallsComposite = function(){
+var getBallsComposite = function () {
     var ballsComposite = null;
     var composites = Matter.Composite.allComposites(matterContext['engine'].world);
-    _.each(composites, function(composite){
-        if(composite.label == "Balls"){
+    _.each(composites, function (composite) {
+        if (composite.label == "Balls") {
             ballsComposite = composite;
-        } 
+        }
     });
-    return ballsComposite    
+    return ballsComposite
 }
 
-var setFriction = function(value) {
+var setFriction = function (value) {
     var balls = getBalls();
 
     for (var i = 0; i < balls.length; i++) {
@@ -333,14 +358,14 @@ var setFriction = function(value) {
 }
 
 // Save the first set of active balls
-var ballHistory;
-var composites = Matter.Composite.allComposites(matterContext['engine'].world);
 var ballHistory = _.cloneDeep(getBalls());
 
-frictSlider.on('change', function (value) { setFriction(value) });
+frictSlider.on('change', function (value) {
+    setFriction(value)
+});
 
-var setBalls = function(value) {
-    var balls = getBalls() 
+var setBalls = function (value) {
+    var balls = getBalls()
     var ballsComposite = getBallsComposite();
 
     if (value > balls.length) {
@@ -358,24 +383,25 @@ var setBalls = function(value) {
     }
 }
 
-ballsSlider.on('change', function (value) { setBalls(value); });
+ballsSlider.on('change', function (value) {
+    setBalls(value);
+});
 
 var setParam = function (args) {
     var param = args[0];
     var value = args[1];
 
-    switch(param){
+    switch (param) {
         case 'balls':
-            if(!ballsButton.state) setBalls(value);
-        break;
+            if (!ballsButton.state) setBalls(value);
+            break;
 
         case 'friction':
-            if(!frictButton.state) setFriction(value);
-        break;
+            if (!frictButton.state) setFriction(value);
+            break;
 
         default:
             console.log("Unrecognized parameter " + param);
     }
-    
 }
 
