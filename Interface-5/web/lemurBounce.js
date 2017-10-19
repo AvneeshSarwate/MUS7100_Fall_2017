@@ -33,7 +33,7 @@ var ballsButton = new Nexus.Button('#ballsButton');
     OSC Communication and Handlers
 */
 var port = new osc.WebSocketPort({
-    url: "ws://128.61.28.11:8081" // *** CHANGE THIS TO LAPTOP IP ***
+    url: "ws://192.168.0.113:8081" // *** CHANGE THIS TO LAPTOP IP ***
 });
 
 port.on("message", function (oscMessage) {
@@ -345,7 +345,6 @@ var getBallsComposite = function () {
 
 
 var setFriction = function(value) {
-    frictSlider.value = value;
 
     var balls = getBalls();
 
@@ -368,8 +367,6 @@ frictSlider.on('change', function (value) {
 });
 
 var setBalls = function(value) {
-    ballsSlider.value = value;
-
     var balls = getBalls() 
     var ballsComposite = getBallsComposite();
 
@@ -398,11 +395,11 @@ var setParam = function (args) {
 
     switch (param) {
         case 'balls':
-            if (!ballsButton.state) setBalls(value);
+            if (!ballsButton.state) ballsSlider.value = value;
             break;
 
         case 'friction':
-            if (!frictButton.state) setFriction(value);
+            if (!frictButton.state) frictSlider.value = value;
             break;
 
         default:
