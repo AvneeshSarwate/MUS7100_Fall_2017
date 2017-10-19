@@ -133,14 +133,14 @@ stopWaveHandler = OSCFunc(stopWave, "/stopWave");
 
 
 
-lemurOSCport = NetAddr("169.254.233.11", 8000);
+lemurOSCport = NetAddr("127.0.0.1", 7400);
 
 lemurFunc = {|calcFunc, attr|
 	var lemurTask = Task({
         {
 			var rawVal = calcFunc.(masterTempoClock.beats);
             var val = rawVal + 0.5;
-			if(attr == 0) {lemurOSCport.sendMsg("/setFriction", val)};
+            if(attr == 0) {lemurOSCport.sendMsg("/setParam", "friction",  val)};
 			if(attr == 1) {lemurOSCport.sendMsg("/setAttraction", val)};
 			if(attr == 2) {lemurOSCport.sendMsg("/setBalls", val)};
 			if(attr == 3) {lemurOSCport.sendMsg("/setSpeed", val)};
