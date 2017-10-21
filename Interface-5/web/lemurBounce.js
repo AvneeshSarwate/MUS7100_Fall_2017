@@ -10,6 +10,17 @@ var frictSlider = new Nexus.Slider('#frictSlider', {
     'value': 0
 });
 
+var frictSliderLC = new Nexus.Slider('#frictSliderLC', {
+    'size': [60, 200],
+    'mode': 'relative',  // 'relative' or 'absolute'
+    'min': 0,
+    'max': 1,
+    'step': 0.01,
+    'value': 0
+});
+
+frictSliderLC.colorize("accent","#48f");
+
 var frictNumber = new Nexus.Number('#frictNumber');
 frictNumber.link(frictSlider);
 
@@ -23,6 +34,17 @@ var ballsSlider = new Nexus.Slider('#ballsSlider', {
     'step': 1,
     'value': 10
 });
+
+var ballsSliderLC = new Nexus.Slider('#ballsSliderLC', {
+    'size': [60, 200],
+    'mode': 'relative',  // 'relative' or 'absolute'
+    'min': 1,
+    'max': 10,
+    'step': 1,
+    'value': 10
+});
+
+ballsSliderLC.colorize("accent","#48f");
 
 var ballsNumber = new Nexus.Number('#ballsNumber');
 ballsNumber.link(ballsSlider);
@@ -396,10 +418,12 @@ var setParam = function (args) {
     switch (param) {
         case 'balls':
             if (!ballsButton.state) ballsSlider.value = value;
+            ballsSliderLC.value = value;
             break;
 
         case 'friction':
             if (!frictButton.state) frictSlider.value = value;
+            frictSliderLC.value = value;
             break;
 
         default:

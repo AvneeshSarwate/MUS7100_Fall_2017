@@ -31,22 +31,24 @@
     <div id="matter"></div>
 
     <div class="row">
-        <div class="col-6 paramSet">
-            <div id="frict">
+        <div class="col-6 paramClass">
+            <div id="frict" class="paramSet">
                 <div>Friction</div>
                 <div id="frictNumber"></div>
                 <div id="frictSlider"></div>
                 <div id="frictButton"></div>
             </div>
+            <div id="frictSliderLC" class="LCSlider"></div>
         </div>
 
-        <div class="col-6 paramSet">
-            <div id="balls">
+        <div class="col-6 paramClass">
+            <div id="balls" class="paramSet">
                 <div>Balls</div>
                 <div id="ballsNumber"></div>
                 <div id="ballsSlider"></div>
                 <div id="ballsButton"></div>
             </div>
+            <div id="ballsSliderLC" class="LCSlider"></div>
         </div>
     </div>
 
@@ -56,10 +58,17 @@
 </body>
 
 <style type="text/css">
-    .paramSet>div div {
+    .paramSet div{
         margin: 4px auto;
         padding: 4px;
         text-align: center;
+    }
+    .paramClass>div{
+        float: left;
+    }
+    .LCSlider {
+        margin-top: 78px;
+        pointer-events: none;
     }
 </style>
 </html>
