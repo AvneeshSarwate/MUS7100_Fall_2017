@@ -19,7 +19,7 @@ var frictSliderLC = new Nexus.Slider('#frictSliderLC', {
     'value': 0
 });
 
-frictSliderLC.colorize("accent","#48f");
+frictSliderLC.colorize("accent", "#48f");
 
 var frictNumber = new Nexus.Number('#frictNumber');
 frictNumber.link(frictSlider);
@@ -44,7 +44,7 @@ var ballsSliderLC = new Nexus.Slider('#ballsSliderLC', {
     'value': 10
 });
 
-ballsSliderLC.colorize("accent","#48f");
+ballsSliderLC.colorize("accent", "#48f");
 
 var ballsNumber = new Nexus.Number('#ballsNumber');
 ballsNumber.link(ballsSlider);
@@ -55,7 +55,7 @@ var ballsButton = new Nexus.Button('#ballsButton');
     OSC Communication and Handlers
 */
 var port = new osc.WebSocketPort({
-    url: "ws://192.168.0.113:8081" // *** CHANGE THIS TO LAPTOP IP ***
+    url: "ws://192.168.0.107:8081" // *** CHANGE THIS TO LAPTOP IP ***
 });
 
 port.on("message", function (oscMessage) {
@@ -331,7 +331,7 @@ var worlds = {};
 // Save the current world to a dictionary
 var saveWorld = function (worldName) {
     worlds[worldName] = _.cloneDeep(Matter.Composite.allComposites(matterContext['engine'].world));
-}
+};
 
 // Load a world
 var loadWorld = function (worldName) {
@@ -341,7 +341,7 @@ var loadWorld = function (worldName) {
     Matter.World.addComposite(matterContext['engine'].world, loadedWorld[0]);
 
     console.log("World " + worldName + " loaded.");
-}
+};
 
 // Retrieve the set of balls
 var getBalls = function () {
@@ -351,7 +351,7 @@ var getBalls = function () {
         if (composite.label == "Balls") balls = composite.bodies;
     })
     return balls;
-}
+};
 
 // Get the composite for the set of balls
 var getBallsComposite = function () {
@@ -363,10 +363,10 @@ var getBallsComposite = function () {
         }
     });
     return ballsComposite
-}
+};
 
 
-var setFriction = function(value) {
+var setFriction = function (value) {
 
     var balls = getBalls();
 
@@ -379,7 +379,7 @@ var setFriction = function(value) {
         ball = ballHistory[i];
         ball.frictionAir = value / 10;
     }
-}
+};
 
 // Save the first set of active balls
 var ballHistory = _.cloneDeep(getBalls());
@@ -388,8 +388,8 @@ frictSlider.on('change', function (value) {
     setFriction(value)
 });
 
-var setBalls = function(value) {
-    var balls = getBalls() 
+var setBalls = function (value) {
+    var balls = getBalls();
     var ballsComposite = getBallsComposite();
 
     if (value > balls.length) {
@@ -405,7 +405,7 @@ var setBalls = function(value) {
             Matter.Composite.remove(ballsComposite, ballToRemove);
         }
     }
-}
+};
 
 ballsSlider.on('change', function (value) {
     setBalls(value);
@@ -429,5 +429,75 @@ var setParam = function (args) {
         default:
             console.log("Unrecognized parameter " + param);
     }
-}
+};
+
+var setGate = function (m, b) {
+
+    var width = matterContext['canvas'].width;
+    var height = matterContext['canvas'].height;
+
+    var points = [];
+
+    // See if it intersects with top of canvas, y = height
+    var top_x = (height - b) / m;
+    if (top_x >= 0 && top_x <= width) points.push({'x': top_x, 'y': height});
+
+    // See if it intersects with bottom of canvas, y = 0
+    var bot_x = -b / m;
+    if (bot_x >= 0 && bot_x <= width) points.push({'x': bot_x, 'y': 0});
+
+    // See if it intersects with left of canvas, x = 0
+    if (b > 0 && b < height) points.push({'x': 0, 'y': b});
+
+    // See if it intersects with left of canvas, x = width
+    var right_y = (m * width) + b;
+    if (right_y > 0 && right_y < height) points.push({'x': width, 'y': right_y});
+
+    if (points.length == 2) {
+        points = convertQuadrant(points);
+        return addGate(points);
+    }
+};
+
+var convertQuadrant = function (points) {
+    var width = matterContext['canvas'].width;
+    var height = matterContext['canvas'].height;
+
+    points[0].y = height - points[0].y;
+    points[1].y = height - points[1].y;
+
+    return points;
+};
+
+var addGate = function (points) {
+    // Assume points to be an array of length 2 with JSON objects containing x and y
+    var width = matterContext['canvas'].width;
+    var height = matterContext['canvas'].height;
+    var verts = [];
+
+    _.each(points, function (point) {
+        if (point.x == 0 || point.x == width) {
+            verts.push(Matter.Vector.create(point.x, point.y));
+            if (point.y > height / 2) verts.push(Matter.Vector.create(point.x, point.y - 1));
+            else verts.push(Matter.Vector.create(point.x, point.y + 1));
+        }
+        else if (point.y == 0 || point.y == height) {
+            verts.push(Matter.Vector.create(point.x, point.y));
+            if (point.x > width / 2) verts.push(Matter.Vector.create(point.x - 1, point.y));
+            else verts.push(Matter.Vector.create(point.x + 1, point.y));
+        }
+    });
+
+    mid_x = (points[0].x + points[1].x) / 2;
+    mid_y = (points[0].y + points[1].y) / 2;
+    x_off = (width / 2) - mid_x;
+    y_off = (height / 2) - mid_y;
+
+    console.log(x_off, y_off, verts);
+
+    var body = Matter.Bodies.fromVertices(width / 2 - x_off, height / 2 - y_off, verts);
+    body.render.fillStyle = '#a01';
+    body.collisionFilter = {group: -1, category: 1};
+    Matter.World.add(matterContext['engine'].world, body);
+};
 
