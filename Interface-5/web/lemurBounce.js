@@ -55,7 +55,7 @@ var ballsButton = new Nexus.Button('#ballsButton');
     OSC Communication and Handlers
 */
 var port = new osc.WebSocketPort({
-    url: "ws://192.168.0.107:8081" // *** CHANGE THIS TO LAPTOP IP ***
+    url: "ws://192.168.0.106:8081" // *** CHANGE THIS TO LAPTOP IP ***
 });
 
 port.on("message", function (oscMessage) {
@@ -431,6 +431,8 @@ var setParam = function (args) {
     }
 };
 
+var gates = []
+
 var setGate = function (m, b) {
 
     var width = matterContext['canvas'].width;
@@ -455,12 +457,12 @@ var setGate = function (m, b) {
 
     if (points.length == 2) {
         points = convertQuadrant(points);
+        gates.push({'m': m, 'b': b, 'status': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]});
         return addGate(points);
     }
 };
 
 var convertQuadrant = function (points) {
-    var width = matterContext['canvas'].width;
     var height = matterContext['canvas'].height;
 
     points[0].y = height - points[0].y;
@@ -493,11 +495,34 @@ var addGate = function (points) {
     x_off = (width / 2) - mid_x;
     y_off = (height / 2) - mid_y;
 
-    console.log(x_off, y_off, verts);
+    console.log(mid_x, mid_y, x_off, y_off, verts);
 
-    var body = Matter.Bodies.fromVertices(width / 2 - x_off, height / 2 - y_off, verts);
+    var body = Matter.Bodies.fromVertices((width / 2) - x_off, (height / 2) - y_off, verts);
     body.render.fillStyle = '#a01';
     body.collisionFilter = {group: -1, category: 1};
     Matter.World.add(matterContext['engine'].world, body);
 };
+
+Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
+    var height = matterContext['canvas'].height;
+
+    _.each(gates, function(gate, i) {
+        balls = getBalls();
+        _.each(balls, function(ball, j) {
+            var x = ball.position.x;
+            var y = height - ball.position.y;
+
+            var prevVal = gate.status[j];
+            var curVal = Math.sign(y - ((gate.m * x) + gate.b));
+            gate.status[j] = curVal;
+
+            if(Math.abs(prevVal - curVal) > 1){
+                port.send({
+                    address: "/toSC",
+                    args: ["/gateCross", j, i]
+                });  
+            } 
+        });
+    });
+});
 
