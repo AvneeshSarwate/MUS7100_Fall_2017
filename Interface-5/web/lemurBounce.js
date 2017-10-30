@@ -549,7 +549,7 @@ var stopBall = function(ballNumber) {
     if(ballNumber <= balls.length){
         var ball = balls[ballNumber - 1];
         Matter.Body.setVelocity(ball, Matter.Vector.create(0, 0));
-        Matter.Body.setPosition(ball, Matter.Vector.create(width/2, height/2));
+        Matter.Body.setPosition(ball, Matter.Vector.create(width/2 + (10*Math.random() - 5), height/2 + (10*Math.random() - 5)));
     }
 
 };
