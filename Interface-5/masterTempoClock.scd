@@ -22,4 +22,6 @@ OSCFunc({|msg, time, addr, recvPort|
 
 )
 
+OSCFunc.dump;
+
 ~lightIndex=0

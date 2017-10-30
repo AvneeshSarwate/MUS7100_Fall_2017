@@ -55,7 +55,7 @@ var ballsButton = new Nexus.Button('#ballsButton');
     OSC Communication and Handlers
 */
 var port = new osc.WebSocketPort({
-    url: "ws://192.168.0.106:8081" // *** CHANGE THIS TO LAPTOP IP ***
+    url: "ws://192.168.0.121:8081" // *** CHANGE THIS TO LAPTOP IP ***
 });
 
 port.on("message", function (oscMessage) {
@@ -233,6 +233,10 @@ $(window.matterContext = (function () {
 
     World.add(world, stack);
 
+    var gates = Composite.create({label: 'Gates'});
+
+    World.add(world, gates);
+
     window.shakeScene = function (engine) {
         var bodies = Composite.allBodies(engine.world);
 
@@ -326,8 +330,6 @@ $(window.matterContext = (function () {
     };
 })());
 
-var worlds = {};
-
 // Save the current world to a dictionary
 var saveWorld = function (worldName) {
     worlds[worldName] = _.cloneDeep(Matter.Composite.allComposites(matterContext['engine'].world));
@@ -338,7 +340,9 @@ var loadWorld = function (worldName) {
 
     var loadedWorld = _.cloneDeep(worlds[worldName]);
     Matter.World.remove(matterContext['engine'].world, Matter.Composite.allComposites(matterContext['engine'].world), deep = true);
-    Matter.World.addComposite(matterContext['engine'].world, loadedWorld[0]);
+    _.each(loadedWorld, function(composite){
+        Matter.World.addComposite(matterContext['engine'].world, composite);
+    });
 
     console.log("World " + worldName + " loaded.");
 };
@@ -353,18 +357,28 @@ var getBalls = function () {
     return balls;
 };
 
-// Get the composite for the set of balls
-var getBallsComposite = function () {
-    var ballsComposite = null;
+// https://en.wikipedia.org/wiki/Help:Distinguishable_colors
+// Wine, Red, Orange, Yellow, Jade, Green, Sky, Blue, Violet, White
+var colors =['#990000', '#FF0010', '#FFA405', '#FFFF00', '#94FFB5', '#2BCE48', '#5EF1F2', '#0075DC', '#740AFF', '#FFFFFF']
+var balls = getBalls();
+
+_.each(balls, function(ball, i){
+    ball.render.fillStyle = colors[i];
+});
+
+var worlds = {};
+
+// Gets the composite for a given label
+var getCompositeByLabel = function (label) {
+    var comp = null;
     var composites = Matter.Composite.allComposites(matterContext['engine'].world);
     _.each(composites, function (composite) {
-        if (composite.label == "Balls") {
-            ballsComposite = composite;
+        if (composite.label == label) {
+            comp = composite;
         }
     });
-    return ballsComposite
+    return comp
 };
-
 
 var setFriction = function (value) {
 
@@ -390,7 +404,7 @@ frictSlider.on('change', function (value) {
 
 var setBalls = function (value) {
     var balls = getBalls();
-    var ballsComposite = getBallsComposite();
+    var ballsComposite = getCompositeByLabel('Balls');
 
     if (value > balls.length) {
         for (var i = balls.length; i < value; i++) {
@@ -500,7 +514,8 @@ var addGate = function (points) {
     var body = Matter.Bodies.fromVertices((width / 2) - x_off, (height / 2) - y_off, verts);
     body.render.fillStyle = '#a01';
     body.collisionFilter = {group: -1, category: 1};
-    Matter.World.add(matterContext['engine'].world, body);
+    var gatesComposite = getCompositeByLabel('Gates');
+    Matter.World.add(gatesComposite, body);
 };
 
 Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
@@ -525,4 +540,17 @@ Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
         });
     });
 });
+
+var stopBall = function(ballNumber) {
+    var balls = getBalls();
+    var width = matterContext['canvas'].width;
+    var height = matterContext['canvas'].height;
+
+    if(ballNumber <= balls.length){
+        var ball = balls[ballNumber - 1];
+        Matter.Body.setVelocity(ball, Matter.Vector.create(0, 0));
+        Matter.Body.setPosition(ball, Matter.Vector.create(width/2, height/2));
+    }
+
+};
 
