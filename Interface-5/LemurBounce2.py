@@ -45,3 +45,4 @@ class LemurBounce2:
     def testResponder(self, addr, tags, stuff, source):
         print stuff
         self.sendOSCMessage('/test', 1, ['Did you get this message?', 'Didja?'])
+    

@@ -1,6 +1,7 @@
-(var ballToDeviation, gateToNote, ballToChan, noteMidiOut, tempoClock, masterClockTempoHandler;
+(var ballToDeviation, gateToNote, ballToChan, noteMidiOut, tempoClock, masterClockTempoHandler, pythonOSCport;
 
 noteMidiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
+pythonOSCport = NetAddr("127.0.0.1", 7100);
 
 gateToNote = [60, 64, 67, 79, 60, 60, 60, 60, 60];
 ballToDeviation = [-3, 5, -4, 9];
@@ -51,6 +52,11 @@ OSCFunc({|msg, time, addr, rectPort|
     newNotes.do({|elem, ind| gateToNote[ind] = newNotes[ind]});
     ["gateNotes Changed", newNotes, gateToNote].postln;
 }, "/changeGateNotes");
+
+OSCFunc({|msg, time, addr, rectPort|
+    msg.postln;
+    tempoClock.sched(msg[1], {pythonOSCport.sendMsg(msg[2].asString, 1)});
+}, "/triggerDelayFunc");
 )
 
 
