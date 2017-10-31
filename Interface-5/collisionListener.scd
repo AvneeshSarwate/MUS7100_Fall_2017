@@ -2,7 +2,7 @@
 
 noteMidiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
 
-gateToNote = [60, 64, 67, 79];
+gateToNote = [60, 64, 67, 79, 60, 60, 60, 60, 60];
 ballToDeviation = [-3, 5, -4, 9];
 ballToChan = [0,0,0,0,1,1,1,1];
 
@@ -40,14 +40,20 @@ OSCFunc({|msg, time, addr, rectPort|
 
 
 OSCFunc({|msg, time, addr, rectPort|
-    var ball = msg[1].asInt;
-    var gate = msg[2].asInt;
-    if(ball < ballToDeviation.size, {
-        noteMidiOut.noteOn(ballToChan[ball], ballToDeviation[ball]+gateToNote[gate], 70);
+    var newDev = msg[1..];
+    newDev.postln;
+    msg[1..].do({|elem, ind| ballToDeviation[ind] = newDev[ind]});
+    ["ballDeviations Changed", newDev, ballToDeviation].postln;
+}, "/changeBallDeviation");
 
-    });
-}, "/changeBallNotes");
+OSCFunc({|msg, time, addr, rectPort|
+    var newNotes =  msg[1..];
+    newNotes.do({|elem, ind| gateToNote[ind] = newNotes[ind]});
+    ["gateNotes Changed", newNotes, gateToNote].postln;
+}, "/changeGateNotes");
 )
 
 
 OSCFunc.trace
+
+[1,2,3].do({|elem, ind| [elem, ind].postln})
