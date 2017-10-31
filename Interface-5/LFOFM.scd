@@ -57,6 +57,14 @@ OSCFunc({|msg, time, addr, recvPort|
 }, masterTempoClock).start;
 }, "/masterClockBeat").oneShot;
 
+//msg[1] is the new BEAT DURATION (not tempo)
+//msg[2] is whether the beat is being realigned
+masterClockTempoHandler = {|msg, time, addr, recvPort|
+    masterTempoClock.tempo = 1/msg[1].asFloat;
+    if(msg[2].asBoolean, {masterTempoClock.beats = masterTempoClock.beats.floor + 1});
+};
+OSCFunc(masterClockTempoHandler, "/masterClockTempo");
+
 //cc ind -> waveTask
 channelMap = Dictionary.new;
 ~chanDebugMap = Dictionary.new;

@@ -12,7 +12,7 @@ class LemurBounce2:
         self.superColliderClient = OSC.OSCClient()
         self.superColliderClient.connect(('127.0.0.1', 57120))
 
-        self.visualsServer = OSC.OSCServer(('127.0.0.1', 7500))
+        self.visualsServer = OSC.OSCServer(('127.0.0.1', 57121))
         self.vizServerThread = threading.Thread(target=self.visualsServer.serve_forever)
         self.vizServerThread.daemon = False
         self.vizServerThread.start()
@@ -22,6 +22,8 @@ class LemurBounce2:
 
         self.visualsServer.addMsgHandler("/hello", self.testResponder)
         self.visualsServer.addMsgHandler("/toSC", self.toSCResponder)
+
+        self.printLog = False;
 
     def sendOSCMessage(self, addr, client=0, *msgArgs):
         msg = OSC.OSCMessage()
@@ -35,8 +37,9 @@ class LemurBounce2:
     def toSCResponder(self, addr, tags, stuff, source):
         address = stuff[0]
         args = stuff[1:]
-        print address
-        print args
+        if self.printLog:
+            print address
+            print args
         self.sendOSCMessage(address, 0, args)
 
     def testResponder(self, addr, tags, stuff, source):

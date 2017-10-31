@@ -55,7 +55,7 @@ var ballsButton = new Nexus.Button('#ballsButton');
     OSC Communication and Handlers
 */
 var port = new osc.WebSocketPort({
-    url: "ws://192.168.0.121:8081" // *** CHANGE THIS TO LAPTOP IP ***
+    url: "ws://192.168.0.113:8081" // *** CHANGE THIS TO LAPTOP IP ***
 });
 
 port.on("message", function (oscMessage) {
@@ -526,17 +526,22 @@ Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
         _.each(balls, function(ball, j) {
             var x = ball.position.x;
             var y = height - ball.position.y;
+            var prevX = ballHistory[j][0];
+            var prevY = ballHistory[j][1];
+            var xDist = Math.abs(x - prevX);
+            var yDist = Math.abs(y-prevY);
 
             var prevVal = gate.status[j];
             var curVal = Math.sign(y - ((gate.m * x) + gate.b));
             gate.status[j] = curVal;
 
-            if(Math.abs(prevVal - curVal) > 1){
+            if(Math.abs(prevVal - curVal) > 1 && xDist < 50 && yDist < 50){
                 port.send({
                     address: "/toSC",
                     args: ["/gateCross", j, i]
                 });  
             } 
+            ballHistory[j] = [x, y];
         });
     });
 });
