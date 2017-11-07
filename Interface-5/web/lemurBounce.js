@@ -51,6 +51,31 @@ ballsNumber.link(ballsSlider);
 
 var ballsButton = new Nexus.Button('#ballsButton');
 
+var massSlider = new Nexus.Slider('#massSlider', {
+    'size': [60, 200],
+    'mode': 'relative',  // 'relative' or 'absolute'
+    'min': 1,
+    'max': 10,
+    'step': 0.01,
+    'value': 3
+});
+
+var massSliderLC = new Nexus.Slider('#massSliderLC', {
+    'size': [60, 200],
+    'mode': 'relative',  // 'relative' or 'absolute'
+    'min': 1,
+    'max': 10,
+    'step': 0.01,
+    'value': 3
+});
+
+massSliderLC.colorize("accent", "#48f");
+
+var massNumber = new Nexus.Number('#massNumber');
+massNumber.link(massSlider);
+
+var massButton = new Nexus.Button('#massButton');
+
 /*
     OSC Communication and Handlers
 */
@@ -233,12 +258,21 @@ $(window.matterContext = (function () {
     });
 
     stack.label = "Balls";
-
     World.add(world, stack);
 
     var gates = Composite.create({label: 'Gates'});
-
     World.add(world, gates);
+
+    var wellComposite = Composite.create({label: 'Wells'});
+    World.add(world, wellComposite);
+
+    World.add(wellComposite, Bodies.circle(600, 600, 50, {
+            restitution: 1,
+            render: bodyStyle,
+            label: 'Well',
+            collisionFilter: {group: -1, category: 1}
+        })
+    );
 
     window.shakeScene = function (engine) {
         var bodies = Composite.allBodies(engine.world);
@@ -312,6 +346,95 @@ $(window.matterContext = (function () {
         body.plugin.wrap = {
             min: {x: render.bounds.min.x, y: render.bounds.min.y},
             max: {x: render.bounds.max.x, y: render.bounds.max.y}
+        };
+
+        // Kill all friction
+        body.friction = 0;
+        body.frictionAir = 0;
+        body.frictionStatic = 0;
+    });
+
+    /*
+        Slow Ball Instance
+    */
+    var WIDTH_SLOW = 400,
+        HEIGHT_SLOW = 400;
+
+    // create engine
+    var engine_slow = Engine.create(),
+        world_slow = engine_slow.world;
+
+    // Set gravity to none
+    world_slow.gravity.scale = 0.000;
+
+    // create renderer
+    var render_slow = Render.create({
+        element: document.getElementById('matter_slow'),
+        engine: engine_slow,
+        options: {
+            width: WIDTH_SLOW,
+            height: HEIGHT_SLOW,
+            wireframes: false
+        }
+    });
+
+    Render.run(render_slow);
+
+    // create runner
+    var runner_slow = Runner.create();
+    Runner.run(runner_slow, engine_slow);
+
+    var bodyStyle_slow = {fillStyle: '#fff'};
+
+    var stack_slow = Composites.stack(70, 100, 2, 2, 50, 50, function (x, y) {
+        // Remove the collisionFilter to get the bodies to collide
+        return Bodies.circle(x, y, 20, {
+            restitution: 1,
+            render: bodyStyle_slow,
+            label: 'Ball',
+            collisionFilter: {group: -1, category: 1}
+        });
+    });
+
+    stack_slow.label = "Balls";
+
+    World.add(world_slow, stack_slow);
+
+    var gates_slow = Composite.create({label: 'Gates'});
+
+    World.add(world_slow, gates_slow);
+
+    var mouse_slow = Mouse.create(render_slow.canvas),
+        mouseConstraint_slow = MouseConstraint.create(engine_slow, {
+            mouse: mouse_slow,
+            constraint: {
+                stiffness: 0.2,
+                render: {
+                    visible: false
+                }
+            }
+        });
+
+    World.add(world_slow, mouseConstraint_slow);
+
+    // keep the mouse in sync with rendering
+    render_slow.mouse = mouse_slow;
+
+    // fit the render viewport to the scene
+    Render.lookAt(render_slow, {
+        min: {x: 0, y: 0},
+        max: {x: WIDTH_SLOW, y: HEIGHT_SLOW}
+    });
+
+    // wrapping using matter-wrap plugin
+    var allBodies_slow = Composite.allBodies(world_slow);
+
+    _.each(allBodies_slow, function (body) {
+
+        // Wrap bodies around canvas
+        body.plugin.wrap = {
+            min: {x: render_slow.bounds.min.x, y: render_slow.bounds.min.y},
+            max: {x: render_slow.bounds.max.x, y: render_slow.bounds.max.y}
         };
 
         // Kill all friction
@@ -443,6 +566,25 @@ ballsSlider.on('change', function (value) {
     setBalls(value);
 });
 
+var setMass = function (value) {
+
+    var balls = getBalls();
+
+    for (var i = 0; i < balls.length; i++) {
+        ball = balls[i];
+        ball.mass = value;
+    }
+
+    for (var i = 0; i < ballHistory.length; i++) {
+        ball = ballHistory[i];
+        ball.mass = value;
+    }
+};
+
+massSlider.on('change', function (value) {
+    setMass(value)
+});
+
 var setParam = function (args) {
     var param = args[0];
     var value = args[1];
@@ -555,10 +697,10 @@ var toggleGate = function(key) {
 
 Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
     var height = matterContext['canvas'].height;
+    var balls = getBalls();
 
     // Gate cross event handler
     _.each(gates, function(gate, key) {
-        balls = getBalls();
         if(gate.show){
             _.each(balls, function(ball, j) {
                 var x = ball.position.x;
@@ -582,7 +724,28 @@ Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
             });
         }   
     });
+
+    // Gravity well handler
+    const FORCE_STRENGTH = 0.000001;
+    const DIST_THRESHOLD = 400;
+    var wells = getCompositeByLabel('Wells').bodies;
+    _.each(wells, function(well) {
+        _.each(balls, function(ball){
+            var dist = getDist(well, ball);
+            if(dist < DIST_THRESHOLD && dist > 10) {
+                angle = getAngle(ball.position.x, ball.position.y, well.position.x, well.position.y);
+                Matter.Body.applyForce(ball, ball.position, {
+                    x: (well.mass * ball.mass * Math.cos(angle)) / Math.pow(dist, 2),
+                    y: (well.mass * ball.mass * (Math.sin(angle))) / Math.pow(dist, 2)
+                });
+            }
+        });
+    });
 });
+
+var getDist = function(well, ball) {
+    return Math.sqrt( Math.pow(ball.position.x - well.position.x, 2) + Math.pow(ball.position.y - well.position.y, 2) )
+}
 
 var stopBall = function(ballNumber) {
     var balls = getBalls();
@@ -601,12 +764,12 @@ var slingshot = function(args) {
     var width = matterContext['canvas'].width;
     var height = matterContext['canvas'].height;
 
-    var pos_x = args[1][0];
-    var pos_y = args[1][1];
-    var des_x = args[2][0];
-    var des_y = args[2][1];
+    var pos_x = args[0];
+    var pos_y = args[1];
+    var des_x = args[2];
+    var des_y = args[3];
 
-    var mag = args[3];
+    var mag = args[4];
     var vel = mag * MAX_VEL;
 
     var del_x = des_x - pos_x;
@@ -616,11 +779,18 @@ var slingshot = function(args) {
     var vel_x = vel * Math.cos(angle_rads);
     var vel_y = -(vel * Math.sin(angle_rads));
 
-    var ballIndex = args[0];
+    var ballIndexes = args[5];
     var balls = getBalls();
-    var ball = balls[ballIndex];
 
-    Matter.Body.setVelocity(ball, Matter.Vector.create(vel_x, vel_y));
-    Matter.Body.setPosition(ball, Matter.Vector.create((pos_x * (width / 8)) + (width / 16), (pos_y * (height / 8)) + (height / 16)));
+    _.each(ballIndexes, function(i) {
+        var ball = balls[i];
+        Matter.Body.setVelocity(ball, Matter.Vector.create(vel_x, vel_y));
+        Matter.Body.setPosition(ball, Matter.Vector.create((pos_x * (width / 8)) + (width / 16), (pos_y * (height / 8)) + (height / 16)));
+    });
 };
 
+var getAngle = function(x1, y1, x2, y2) {
+    var del_x = x2 - x1;
+    var del_y = y2 - y1;
+    return Math.atan2(del_y, del_x);
+};

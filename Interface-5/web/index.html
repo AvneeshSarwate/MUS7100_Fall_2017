@@ -27,7 +27,14 @@
 <body>
 <div class="container">
     <p id='m'>Hi</p>
-    <div id="matter"></div>
+    <div class="row">
+        <div class="col-9">
+            <div id="matter"></div>
+        </div>
+        <div class="col-3">
+            <div id="matter_slow"></div>
+        </div>
+    </div>
     <div>
         <span style="background-color: #990000">1 </span>
         <span style="background-color: #FF0010">2 </span>
@@ -46,7 +53,7 @@
     </div>
 
     <div class="row">
-        <div class="col-6 paramClass">
+        <div class="col-4 paramClass">
             <div id="frict" class="paramSet">
                 <div>Friction</div>
                 <div id="frictNumber"></div>
@@ -56,7 +63,7 @@
             <div id="frictSliderLC" class="LCSlider"></div>
         </div>
 
-        <div class="col-6 paramClass">
+        <div class="col-4 paramClass">
             <div id="balls" class="paramSet">
                 <div>Balls</div>
                 <div id="ballsNumber"></div>
@@ -64,6 +71,16 @@
                 <div id="ballsButton"></div>
             </div>
             <div id="ballsSliderLC" class="LCSlider"></div>
+        </div>
+
+        <div class="col-4 paramClass">
+            <div id="mass" class="paramSet">
+                <div>Mass</div>
+                <div id="massNumber"></div>
+                <div id="massSlider"></div>
+                <div id="massButton"></div>
+            </div>
+            <div id="massSliderLC" class="LCSlider"></div>
         </div>
     </div>
 
