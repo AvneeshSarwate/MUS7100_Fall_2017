@@ -335,17 +335,20 @@ $(window.matterContext = (function () {
 
 // Save the current world to a dictionary
 var saveWorld = function (worldName) {
-    worlds[worldName] = _.cloneDeep(Matter.Composite.allComposites(matterContext['engine'].world));
+    worlds[worldName] = {};
+    worlds[worldName].world = _.cloneDeep(Matter.Composite.allComposites(matterContext['engine'].world));
+    worlds[worldName].gates = _.cloneDeep(gates);
 };
 
 // Load a world
 var loadWorld = function (worldName) {
 
-    var loadedWorld = _.cloneDeep(worlds[worldName]);
+    var loadedWorld = _.cloneDeep(worlds[worldName].world);
     Matter.World.remove(matterContext['engine'].world, Matter.Composite.allComposites(matterContext['engine'].world), deep = true);
     _.each(loadedWorld, function(composite){
         Matter.World.addComposite(matterContext['engine'].world, composite);
     });
+    gates = worlds[worldName].gates
 
     console.log("World " + worldName + " loaded.");
 };
@@ -381,6 +384,18 @@ var getCompositeByLabel = function (label) {
         }
     });
     return comp
+};
+
+// Gets the body for a given label
+var getBodyByLabel = function (label) {
+    var bod = null;
+    var bodies = Matter.Composite.allBodies(matterContext['engine'].world);
+    _.each(bodies, function (body) {
+        if (body.label == label) {
+            bod = body;
+        }
+    });
+    return bod
 };
 
 // Save the first set of active balls
@@ -448,9 +463,9 @@ var setParam = function (args) {
     }
 };
 
-var gates = []
+var gates = {};
 
-var setGate = function (m, b) {
+var setGate = function (key, m, b) {
 
     var width = matterContext['canvas'].width;
     var height = matterContext['canvas'].height;
@@ -474,8 +489,8 @@ var setGate = function (m, b) {
 
     if (points.length == 2) {
         points = convertQuadrant(points);
-        gates.push({'m': m, 'b': b, 'status': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]});
-        return addGate(points);
+        gates[key] = {'m': m, 'b': b, 'status': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'show':true};
+        return addGate(key, points);
     }
 };
 
@@ -488,7 +503,7 @@ var convertQuadrant = function (points) {
     return points;
 };
 
-var addGate = function (points) {
+var addGate = function (key, points) {
     // Assume points to be an array of length 2 with JSON objects containing x and y
     var width = matterContext['canvas'].width;
     var height = matterContext['canvas'].height;
@@ -517,36 +532,55 @@ var addGate = function (points) {
     var body = Matter.Bodies.fromVertices((width / 2) - x_off, (height / 2) - y_off, verts);
     body.render.fillStyle = '#a01';
     body.collisionFilter = {group: -1, category: 1};
+    body.label = "Gate #" + key;
     var gatesComposite = getCompositeByLabel('Gates');
     Matter.World.add(gatesComposite, body);
 };
+
+var toggleGate = function(key) {
+    gate = gates[key];
+    if(gate.show) {
+        // Hide gate
+        var gatesComposite = getCompositeByLabel('Gates');
+        var body = getBodyByLabel("Gate #" + key);
+        if(body) Matter.World.remove(gatesComposite, body);
+        gate.show = !gate.show;
+    }
+    else {
+        // Show gate
+        setGate(key, gate.m, gate.b);
+        gate.show = !gate.show;   
+    }
+}
 
 Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
     var height = matterContext['canvas'].height;
 
     // Gate cross event handler
-    _.each(gates, function(gate, i) {
+    _.each(gates, function(gate, key) {
         balls = getBalls();
-        _.each(balls, function(ball, j) {
-            var x = ball.position.x;
-            var y = height - ball.position.y;
-            var prevX = ballHistory[j][0];
-            var prevY = ballHistory[j][1];
-            var xDist = Math.abs(x - prevX);
-            var yDist = Math.abs(y-prevY);
+        if(gate.show){
+            _.each(balls, function(ball, j) {
+                var x = ball.position.x;
+                var y = height - ball.position.y;
+                var prevX = ballHistory[j][0];
+                var prevY = ballHistory[j][1];
+                var xDist = Math.abs(x - prevX);
+                var yDist = Math.abs(y-prevY);
 
-            var prevVal = gate.status[j];
-            var curVal = Math.sign(y - ((gate.m * x) + gate.b));
-            gate.status[j] = curVal;
+                var prevVal = gate.status[j];
+                var curVal = Math.sign(y - ((gate.m * x) + gate.b));
+                gate.status[j] = curVal;
 
-            if(Math.abs(prevVal - curVal) > 1 && xDist < 50 && yDist < 50){
-                port.send({
-                    address: "/toSC",
-                    args: ["/gateCross", j, i]
-                });  
-            } 
-            ballHistory[j] = [x, y];
-        });
+                if(Math.abs(prevVal - curVal) > 1 && xDist < 50 && yDist < 50){
+                    port.send({
+                        address: "/toSC",
+                        args: ["/gateCross", j, key]
+                    });  
+                } 
+                ballHistory[j] = [x, y];
+            });
+        }   
     });
 });
 
