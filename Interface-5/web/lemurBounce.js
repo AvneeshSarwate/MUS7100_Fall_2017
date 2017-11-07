@@ -55,7 +55,7 @@ var ballsButton = new Nexus.Button('#ballsButton');
     OSC Communication and Handlers
 */
 var port = new osc.WebSocketPort({
-    url: "ws://192.168.0.117:8081" // *** CHANGE THIS TO LAPTOP IP ***
+    url: "ws://192.168.0.115:8081" // *** CHANGE THIS TO LAPTOP IP ***
 });
 
 port.on("message", function (oscMessage) {
@@ -64,6 +64,7 @@ port.on("message", function (oscMessage) {
     if (oscMessage.address == "/saveWorld") saveWorld(oscMessage.args[0]);
     if (oscMessage.address == "/loadWorld") loadWorld(oscMessage.args[0]);
     if (oscMessage.address == "/setParam") setParam(oscMessage.args);
+    if (oscMessage.address == "/slingshot") slingshot(oscMessage.args);
 });
 
 port.open();
@@ -92,7 +93,9 @@ $(window.matterContext = (function () {
         MouseConstraint = Matter.MouseConstraint,
         Mouse = Matter.Mouse,
         World = Matter.World,
-        Bodies = Matter.Bodies;
+        Bodies = Matter.Bodies,
+        WIDTH = 800,
+        HEIGHT = 800;
 
     // create engine
     var engine = Engine.create(),
@@ -106,8 +109,8 @@ $(window.matterContext = (function () {
         element: document.getElementById('matter'),
         engine: engine,
         options: {
-            width: 800,
-            height: 600,
+            width: WIDTH,
+            height: HEIGHT,
             wireframes: false
         }
     });
@@ -297,7 +300,7 @@ $(window.matterContext = (function () {
     // fit the render viewport to the scene
     Render.lookAt(render, {
         min: {x: 0, y: 0},
-        max: {x: 800, y: 600}
+        max: {x: WIDTH, y: HEIGHT}
     });
 
     // wrapping using matter-wrap plugin
@@ -380,6 +383,9 @@ var getCompositeByLabel = function (label) {
     return comp
 };
 
+// Save the first set of active balls
+var ballHistory = _.cloneDeep(getBalls());
+
 var setFriction = function (value) {
 
     var balls = getBalls();
@@ -394,9 +400,6 @@ var setFriction = function (value) {
         ball.frictionAir = value / 10;
     }
 };
-
-// Save the first set of active balls
-var ballHistory = _.cloneDeep(getBalls());
 
 frictSlider.on('change', function (value) {
     setFriction(value)
@@ -521,6 +524,7 @@ var addGate = function (points) {
 Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
     var height = matterContext['canvas'].height;
 
+    // Gate cross event handler
     _.each(gates, function(gate, i) {
         balls = getBalls();
         _.each(balls, function(ball, j) {
@@ -556,6 +560,33 @@ var stopBall = function(ballNumber) {
         Matter.Body.setVelocity(ball, Matter.Vector.create(0, 0));
         Matter.Body.setPosition(ball, Matter.Vector.create(width/2 + (10*Math.random() - 5), height/2 + (10*Math.random() - 5)));
     }
+};
 
+var slingshot = function(args) {
+    const MAX_VEL = 30;
+    var width = matterContext['canvas'].width;
+    var height = matterContext['canvas'].height;
+
+    var pos_x = args[1][0];
+    var pos_y = args[1][1];
+    var des_x = args[2][0];
+    var des_y = args[2][1];
+
+    var mag = args[3];
+    var vel = mag * MAX_VEL;
+
+    var del_x = des_x - pos_x;
+    var del_y = pos_y - des_y;
+    var angle_rads = Math.atan2(del_y, del_x);
+
+    var vel_x = vel * Math.cos(angle_rads);
+    var vel_y = -(vel * Math.sin(angle_rads));
+
+    var ballIndex = args[0];
+    var balls = getBalls();
+    var ball = balls[ballIndex];
+
+    Matter.Body.setVelocity(ball, Matter.Vector.create(vel_x, vel_y));
+    Matter.Body.setPosition(ball, Matter.Vector.create((pos_x * (width / 8)) + (width / 16), (pos_y * (height / 8)) + (height / 16)));
 };
 
