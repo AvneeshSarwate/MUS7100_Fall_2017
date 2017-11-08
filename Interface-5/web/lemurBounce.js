@@ -80,7 +80,7 @@ var massButton = new Nexus.Button('#massButton');
     OSC Communication and Handlers
 */
 var port = new osc.WebSocketPort({
-    url: "ws://192.168.0.115:8081" // *** CHANGE THIS TO LAPTOP IP ***
+    url: "ws://192.168.0.127:8081" // *** CHANGE THIS TO LAPTOP IP ***
 });
 
 port.on("message", function (oscMessage) {
@@ -266,13 +266,13 @@ $(window.matterContext = (function () {
     var wellComposite = Composite.create({label: 'Wells'});
     World.add(world, wellComposite);
 
-    World.add(wellComposite, Bodies.circle(600, 600, 50, {
-            restitution: 1,
-            render: bodyStyle,
-            label: 'Well',
-            collisionFilter: {group: -1, category: 1}
-        })
-    );
+    // World.add(wellComposite, Bodies.circle(600, 600, 50, {
+    //         restitution: 1,
+    //         render: bodyStyle,
+    //         label: 'Well',
+    //         collisionFilter: {group: -1, category: 1}
+    //     })
+    // );
 
     window.shakeScene = function (engine) {
         var bodies = Composite.allBodies(engine.world);
@@ -726,13 +726,11 @@ Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
     });
 
     // Gravity well handler
-    const FORCE_STRENGTH = 0.000001;
-    const DIST_THRESHOLD = 400;
     var wells = getCompositeByLabel('Wells').bodies;
     _.each(wells, function(well) {
         _.each(balls, function(ball){
             var dist = getDist(well, ball);
-            if(dist < DIST_THRESHOLD && dist > 10) {
+            if(dist < Infinity && dist > 10) {
                 angle = getAngle(ball.position.x, ball.position.y, well.position.x, well.position.y);
                 Matter.Body.applyForce(ball, ball.position, {
                     x: (well.mass * ball.mass * Math.cos(angle)) / Math.pow(dist, 2),
@@ -779,13 +777,26 @@ var slingshot = function(args) {
     var vel_x = vel * Math.cos(angle_rads);
     var vel_y = -(vel * Math.sin(angle_rads));
 
-    var ballIndexes = args[5];
-    var balls = getBalls();
+    var ballIndexes = [];
+    for(var i = 5; i < args.length; i++) ballIndexes.push(args[i]);
 
+    var balls = getBalls();
+    var count = 0;
+    var x_off = 0;
+    var y_off = 0;
     _.each(ballIndexes, function(i) {
+        if(count != 0){
+            if(count % 2 == 1){
+                x_off += 10;
+                y_off += 10;
+            }
+            x_off = Math.sign(del_x) * -1 * x_off;
+            y_off = Math.sign(del_y) * -1 * y_off;
+        }
         var ball = balls[i];
         Matter.Body.setVelocity(ball, Matter.Vector.create(vel_x, vel_y));
-        Matter.Body.setPosition(ball, Matter.Vector.create((pos_x * (width / 8)) + (width / 16), (pos_y * (height / 8)) + (height / 16)));
+        Matter.Body.setPosition(ball, Matter.Vector.create((pos_x * (width / 8)) + (width / 16) + x_off, (pos_y * (height / 8)) + (height / 16) + y_off));
+        count++;
     });
 };
 

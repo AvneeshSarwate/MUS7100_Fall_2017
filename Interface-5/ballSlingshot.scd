@@ -1,5 +1,5 @@
 (
-var launchPad, launchpadOut, pythonOSCport, controlHandler, ballSelector, numPadsDown, ballPosition;
+var launchPad, launchpadOut, nodeOSCport, controlHandler, ballSelector, numPadsDown, ballPosition;
 
 //quneo variables
 var ccX, ccY, ccP, ccToInd, isPadCC, quneoCCMap, isPadNote, noteToInd, quneo;
@@ -81,7 +81,7 @@ launchPad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
     && (elem.device == "Launchpad Pro")})[0];
 
 
-pythonOSCport = NetAddr("localhost", 7400);
+nodeOSCport = NetAddr("localhost", 7400);
 masterClockOSCport = NetAddr("localhost", 57120);
 
 ballSelector = List.fill(8, {false});
@@ -119,7 +119,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
         var messageData = [ballPosition[0], ballPosition[1], ballPos2[0], ballPos2[1], vel];
         messageData = messageData ++ ballSelector.collect({|val, ind| if(val, ind, nil)}).select({|val| val.isNil.not});
         messageData.postln;
-        pythonOSCport.sendRaw((["/slingshot"] ++ messageData).asArray.asRawOSC);
+        nodeOSCport.sendRaw((["/slingshot"] ++ messageData).asArray.asRawOSC);
     });
 
 }, nil, nil, launchPad.uid);
@@ -148,8 +148,8 @@ output messages
 
 the launchpad controller sends the following messages
 /slingshot
--    arg 0,1,2,3,4 - int,int,int,int,float - x1, y1, x2, y2, speed
--          args 0-3 are [0-3], arg[4] is [0,1]
+-    arg 0,1,2,3,4,5 - int,int,int,int,float - x1, y1, x2, y2, speed, balls
+-          args 0-3 are [0-7], arg[4] is [0,1]
 
 
 the quneo controller sends the following messages
@@ -196,13 +196,13 @@ y = ccY;
 
 MIDIFunc.noteOn({|vel, note, chan, port|
     if(isPadNote.(note), {
-        pythonOSCport.sendMsg("/gravity", "on", noteToInd.(note));
+        nodeOSCport.sendMsg("/gravity", "on", noteToInd.(note));
     });
 }, nil, nil, quneo.uid);
 
 MIDIFunc.noteOff({|vel, note, chan, port|
     if(isPadNote.(note), {
-        pythonOSCport.sendMsg("/gravity", "off", noteToInd.(note));
+        nodeOSCport.sendMsg("/gravity", "off", noteToInd.(note));
     });
 }, nil, nil, quneo.uid);
 
@@ -216,7 +216,7 @@ MIDIFunc.cc({|vel, note, chan, port|
         if(ccX.(note), {arr[0] = vel});
         if(ccY.(note), {arr[1] = vel});
         if(ccP.(note), {arr[2] = vel});
-        pythonOSCport.sendMsg("/gravity", "update", ccToInd.(note), arr[0], arr[1], arr[2]);
+        nodeOSCport.sendMsg("/gravity", "update", ccToInd.(note), arr[0], arr[1], arr[2]);
         ["GRAV", ccToInd.(note), arr].postln;
     });
 
