@@ -1,5 +1,5 @@
 //tempoclock with beat set to 1 cycle length
-(var midiOut, pythonOSCport, channelPatternMap, chanBackupPatMap, channelInd, drumTypes, startPattern, playStepGenerator, recieveBackupPattern, stopPattern, patternRead, timeListToDurationList, sendSample, midiChannel, masterTempoClock, tempoClockMap, loopStartFunctions, masterClockBeat, masterClockTempoHandler, channelTypeMap, python_FH_OSCport, channelMetaInfo, changeChannelTempo, syncClocks, instrumentMidiOut, maxPort, chanPhaseTrackerTasks;
+(var midiOut, pythonOSCport, channelPatternMap, chanBackupPatMap, channelInd, drumTypes, startPattern, playStepGenerator, recieveBackupPattern, stopPattern, patternRead, timeListToDurationList, sendSample, midiChannel, masterTempoClock, tempoClockMap, loopStartFunctions, masterClockBeat, masterClockTempoHandler, channelTypeMap, python_FH_OSCport, channelMetaInfo, changeChannelTempo, syncClocks, instrumentMidiOut, maxPort, chanPhaseTrackerTasks, ballVisualPort;
 
 midiOut = MIDIOut.newByName("IAC Driver", "Bus 3");
 instrumentMidiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
@@ -7,7 +7,6 @@ midiOut.latency = 0;
 pythonOSCport = NetAddr("localhost", 34345);
 python_FH_OSCport = NetAddr("localhost", 13371);
 maxPort = NetAddr("localhost", 5432);
-pythonBallPort = NetAddr("localhost", 7100);
 ballVisualPort = NetAddr("localhost", 7400);
 
 channelPatternMap = Dictionary();
