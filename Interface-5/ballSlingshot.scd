@@ -143,7 +143,23 @@ MIDIFunc.cc(controlHandlerWrapper, nil, nil, launchPad.uid);
 
 
 
+/*
+output messages
 
+the launchpad controller sends the following messages
+/slingshot
+-    arg 0,1,2,3,4 - int,int,int,int,float - x1, y1, x2, y2, speed
+-          args 0-3 are [0-3], arg[4] is [0,1]
+
+
+the quneo controller sends the following messages
+/gravity
+-     arg 0 - 'on'/'off'/'update'
+-     arg 1 - int - the index [0-15] of which pad is pressed, basically a gravityWellID
+-     arg 2,3,4 (only if arg[0]=='update' - int,int,int the x/y/pressure in range [0-127[
+
+
+*/
 
 
 
@@ -200,7 +216,7 @@ MIDIFunc.cc({|vel, note, chan, port|
         if(ccX.(note), {arr[0] = vel});
         if(ccY.(note), {arr[1] = vel});
         if(ccP.(note), {arr[2] = vel});
-        pythonOSCport.sendMsg("/gravity", "update", arr[0], arr[1], arr[2]);
+        pythonOSCport.sendMsg("/gravity", "update", ccToInd.(note), arr[0], arr[1], arr[2]);
         ["GRAV", ccToInd.(note), arr].postln;
     });
 
