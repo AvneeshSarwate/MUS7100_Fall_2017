@@ -1,6 +1,8 @@
 (
 var launchPad, launchpadOut, pythonOSCport, controlHandler, ballSelector, numPadsDown, ballPosition;
 
+//quneo variables
+var ccX, ccY, ccP, ccToInd, isPadCC, quneoCCMap, isPadNote, noteToInd, quneo;
 
 //light switching variables
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON, controlHandlerWrapper, masterClockOSCport;
@@ -78,13 +80,13 @@ lightIndex = if(~lightIndexes.size == 0,
 launchPad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
     && (elem.device == "Launchpad Pro")})[0];
 
+
 pythonOSCport = NetAddr("localhost", 7400);
 masterClockOSCport = NetAddr("localhost", 57120);
 
 ballSelector = List.fill(8, {false});
 numPadsDown = 0;
 ballPosition = [0, 0];
-
 
 controlHandler = {|vel, note, chan, port|
     if((1..8).includes(note) && (vel != 0), {
@@ -93,20 +95,20 @@ controlHandler = {|vel, note, chan, port|
             {setLight.(note, 10)},
             {setLight.(note, 0)}
         );
+        ["BALL", note, ballSelector[note-1]].postln;
     });
-    "NOT BALL".postln;
     if((note == cycleLight_BUTTON) && (vel !=0), {
         ["BALL SLINGSHOT CYCLE HIT", ~lightIndex, lightIndex].postln;
         if(~cycling, {cycleLight.()})
         // if(~truncateLoop, {setLight.(cycleLight_BUTTON, 45)}, {setLight.(cycleLight_BUTTON, 0)});
         // ~truncateLoop = ~truncateLoop.not; //light on means NOT TRUNCATING*/
     });
-    "NOT LIGHT CHANGE".postln;
+    ["NOT LIGHT CHANGE", note].postln;
 };
-
 
 MIDIFunc.noteOn({|vel, note, chan, port|
     numPadsDown = numPadsDown + 1;
+    ["NOTE ON lp", numPadsDown, note, vel].postln;
     if(numPadsDown == 1, {
         ballPosition = [((note%10)-1), (8-(note/10).floor)];
     });
@@ -114,15 +116,16 @@ MIDIFunc.noteOn({|vel, note, chan, port|
         var velocity = vel/127;
         var ballPos2 = [((note%10)-1), (8-(note/10).floor)];
         var messageData = [ballPosition[0], ballPosition[1], ballPos2[0], ballPos2[1], vel];
-        //messageData = messageData ++ (0..7).filter;
-        pythonOSCport.sendMsg("/slingshot", ballPosition[0], ballPosition[1], ballPos2[0], ballPos2[1]);
+        messageData = messageData ++ ballSelector.select({|val, ind| ind});
+        messageData.postln;
+        pythonOSCport.sendRaw((["/slingshot"] ++ messageData).asArray.asRawOSC);
     });
 
 }, nil, nil, launchPad.uid);
 
-MIDIFunc.noteOn({|vel, note, chan, port|
+MIDIFunc.noteOff({|vel, note, chan, port|
     numPadsDown = numPadsDown - 1;
-
+    ["NOTE OFF lp", numPadsDown, note, vel].postln;
 }, nil, nil, launchPad.uid);
 
 controlHandlerWrapper = {|vel, note, chan, port|
@@ -134,5 +137,72 @@ controlHandlerWrapper = {|vel, note, chan, port|
     ~lock.signal;
 };
 MIDIFunc.cc(controlHandlerWrapper, nil, nil, launchPad.uid);
+
+
+
+
+
+
+
+
+
+
+
+//QUNEO STUFF
+quneo = MIDIClient.sources.select({|elem| (elem.name == "QUNEO")
+    && (elem.device == "QUNEO")})[0];
+
+ccP = {|x| (x%3) == 2}; //check if cc is pressure value
+ccX = {|x| (x%3) == 0}; //check if cc is x position
+ccY = {|x| (x%3) == 1}; //check if cc is y position
+noteToInd = {|x| x - 36}; //convert note to pad index
+//noteToXY = {|x| [noteToInd.(x)%4, floor(noteToInd.(x)/4)]}; //convert note to pad xy (bottom left 0,0)
+ccToInd = {|x| floor((x-23)/3)}; //convert cc number to pad index
+//ccToXY = {|x| [(ccToInd.(x)%4), floor(ccToInd.(x)/4)]}; //convert cc number to pad xy
+isPadCC = {|x| (ccToInd.(x) >=0) && (ccToInd.(x) < 16)};
+isPadNote = {|x| (noteToInd.(x) >=0) && (noteToInd.(x) < 16)};
+//isBankNote = {|x| (x > 10) && (x < 19)};
+//bankToInd = {|x| x-11};
+quneoCCMap = Dictionary.new;
+
+~map = quneoCCMap;
+p = ccP;
+x = ccX;
+y = ccY;
+~ind = ccToInd;
+~printCC = {
+
+};
+
+
+MIDIFunc.noteOn({|vel, note, chan, port|
+    if(isPadNote.(note), {
+        pythonOSCport.sendMsg("/gravity", "on", noteToInd.(note));
+    });
+}, nil, nil, quneo.uid);
+
+MIDIFunc.noteOff({|vel, note, chan, port|
+    if(isPadNote.(note), {
+        pythonOSCport.sendMsg("/gravity", "off", noteToInd.(note));
+    });
+}, nil, nil, quneo.uid);
+
+MIDIFunc.cc({|vel, note, chan, port|
+    if(isPadCC.(note), {
+        var arr;
+        if(quneoCCMap[ccToInd.(note)].isNil, {
+           quneoCCMap[ccToInd.(note)] = [0, 0, 0];
+        });
+        arr = quneoCCMap[ccToInd.(note)];
+        if(ccX.(note), {arr[0] = vel});
+        if(ccY.(note), {arr[1] = vel});
+        if(ccP.(note), {arr[2] = vel});
+        pythonOSCport.sendMsg("/gravity", "update", arr[0], arr[1], arr[2]);
+        ["GRAV", ccToInd.(note), arr].postln;
+    });
+
+},nil, nil, quneo.uid);
+
+
 
 )
