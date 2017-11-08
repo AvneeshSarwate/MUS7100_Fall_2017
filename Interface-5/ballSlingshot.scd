@@ -106,6 +106,7 @@ controlHandler = {|vel, note, chan, port|
     ["NOT LIGHT CHANGE", note].postln;
 };
 
+
 MIDIFunc.noteOn({|vel, note, chan, port|
     numPadsDown = numPadsDown + 1;
     ["NOTE ON lp", numPadsDown, note, vel].postln;
@@ -116,17 +117,19 @@ MIDIFunc.noteOn({|vel, note, chan, port|
         var velocity = vel/127;
         var ballPos2 = [((note%10)-1), (8-(note/10).floor)];
         var messageData = [ballPosition[0], ballPosition[1], ballPos2[0], ballPos2[1], vel];
-        messageData = messageData ++ ballSelector.select({|val, ind| ind});
+        messageData = messageData ++ ballSelector.collect({|val, ind| if(val, ind, nil)}).select({|val| val.isNil.not});
         messageData.postln;
         pythonOSCport.sendRaw((["/slingshot"] ++ messageData).asArray.asRawOSC);
     });
 
 }, nil, nil, launchPad.uid);
 
+
 MIDIFunc.noteOff({|vel, note, chan, port|
     numPadsDown = numPadsDown - 1;
     ["NOTE OFF lp", numPadsDown, note, vel].postln;
 }, nil, nil, launchPad.uid);
+
 
 controlHandlerWrapper = {|vel, note, chan, port|
     ~lock.wait;
