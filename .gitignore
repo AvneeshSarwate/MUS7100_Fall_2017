@@ -5,5 +5,5 @@ Interface-5/web/bower_components
 .npmrc
 .vagrant
 *.pyc
-.ipynb_checkpoints*
+*ipynb_checkpoints*
 .DS_Store
