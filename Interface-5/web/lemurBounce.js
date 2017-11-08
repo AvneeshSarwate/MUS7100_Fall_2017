@@ -80,7 +80,7 @@ var massButton = new Nexus.Button('#massButton');
     OSC Communication and Handlers
 */
 var port = new osc.WebSocketPort({
-    url: "ws://192.168.0.127:8081" // *** CHANGE THIS TO LAPTOP IP ***
+    url: "ws://192.168.0.110:8081" // *** CHANGE THIS TO LAPTOP IP ***
 });
 
 port.on("message", function (oscMessage) {
@@ -90,6 +90,7 @@ port.on("message", function (oscMessage) {
     if (oscMessage.address == "/loadWorld") loadWorld(oscMessage.args[0]);
     if (oscMessage.address == "/setParam") setParam(oscMessage.args);
     if (oscMessage.address == "/slingshot") slingshot(oscMessage.args);
+    if (oscMessage.address == "/gravity") gravity(oscMessage.args);
 });
 
 port.open();
@@ -758,7 +759,7 @@ var stopBall = function(ballNumber) {
 };
 
 var slingshot = function(args) {
-    const MAX_VEL = 30;
+    const MAX_VEL = 0.5;
     var width = matterContext['canvas'].width;
     var height = matterContext['canvas'].height;
 
@@ -805,3 +806,67 @@ var getAngle = function(x1, y1, x2, y2) {
     var del_y = y2 - y1;
     return Math.atan2(del_y, del_x);
 };
+
+var gravity = function(args) {
+    var width = matterContext['canvas'].width;
+    var height = matterContext['canvas'].height;
+    var bodyStyle = {fillStyle: '#fff'};
+
+    var type = args[0];
+    var well_index = args[1];
+
+    if(type == "on"){
+        var wellComposite = getCompositeByLabel('Wells');
+        Matter.World.add(wellComposite, Matter.Bodies.circle(width/2, height/2, 50, {
+                restitution: 1,
+                render: bodyStyle,
+                label: 'Well ' + well_index,
+                collisionFilter: {group: -1, category: 1}
+            })
+        );
+        console.log("well...");
+    }
+    else if(type == "off"){
+        var wellComposite = getCompositeByLabel('Wells');
+        var well = getBodyByLabel("Well " + well_index);
+        Matter.Composite.remove(wellComposite, well);
+    }
+    else {
+        var well = getBodyByLabel("Well " + well_index);
+        var x = args[2] * 2 * (width / 270);
+        var y = height - (args[3] * 2 * (height / 270));
+        Matter.Body.setPosition(well, Matter.Vector.create(x, y));
+        var mass = (args[4] * 0.1) + 0.01;
+        Matter.Body.setMass(well, mass);
+        well.render.fillStyle = hslToHex(151 - (150 * (args[4]/135)), 100, 50);
+    }
+};
+
+var hslToHex = function(h, s, l) {
+  h /= 360;
+  s /= 100;
+  l /= 100;
+  let r, g, b;
+  if (s === 0) {
+    r = g = b = l; // achromatic
+  } else {
+    const hue2rgb = (p, q, t) => {
+      if (t < 0) t += 1;
+      if (t > 1) t -= 1;
+      if (t < 1 / 6) return p + (q - p) * 6 * t;
+      if (t < 1 / 2) return q;
+      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      return p;
+    };
+    const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+    const p = 2 * l - q;
+    r = hue2rgb(p, q, h + 1 / 3);
+    g = hue2rgb(p, q, h);
+    b = hue2rgb(p, q, h - 1 / 3);
+  }
+  const toHex = x => {
+    const hex = Math.round(x * 255).toString(16);
+    return hex.length === 1 ? '0' + hex : hex;
+  };
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
