@@ -758,6 +758,14 @@ var stopBall = function(ballNumber) {
     }
 };
 
+var stopAllBalls = function() {
+    var balls = getBalls();
+
+    _.each(balls, function(ball){
+        Matter.Body.setVelocity(ball, Matter.Vector.create(0, 0));
+    });
+};
+
 var slingshot = function(args) {
     const MAX_VEL = 0.5;
     var width = matterContext['canvas'].width;
