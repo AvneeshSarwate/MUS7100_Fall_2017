@@ -8,7 +8,7 @@ var ccX, ccY, ccP, ccToInd, isPadCC, quneoCCMap, isPadNote, noteToInd, quneo;
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON, controlHandlerWrapper, masterClockOSCport;
 
 masterClockOSCport = NetAddr("localhost", 57120);
-launchpadOut = MIDIOut.new(8); //MIDIOut.newByName("Launchpad Pro", "Standalone Port");
+launchpadOut = ~getLaunchpad.(0); //MIDIOut.newByName("Launchpad Pro", "Standalone Port");
 launchpadOut.latency = 0;
 //----------------------------------------------
 //light switching variables
