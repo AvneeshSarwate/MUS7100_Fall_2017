@@ -80,7 +80,7 @@ var massButton = new Nexus.Button('#massButton');
     OSC Communication and Handlers
 */
 var port = new osc.WebSocketPort({
-    url: "ws://192.168.0.110:8081" // *** CHANGE THIS TO LAPTOP IP ***
+    url: "ws://" + window.location.hostname + ":8081"
 });
 
 port.on("message", function (oscMessage) {
@@ -91,16 +91,20 @@ port.on("message", function (oscMessage) {
     if (oscMessage.address == "/setParam") setParam(oscMessage.args);
     if (oscMessage.address == "/slingshot") slingshot(oscMessage.args);
     if (oscMessage.address == "/gravity") gravity(oscMessage.args);
+    if (oscMessage.address == "/visualize") visualize(oscMessage.args);
 });
 
 port.open();
 
-var sayHello = function () {
-    port.send({
-        address: "/hello",
-        args: ["world"]
-    });
-};
+var port_viz = new osc.WebSocketPort({
+    url: "ws://" + window.location.hostname + ":8082"
+});
+
+port_viz.on("message", function (oscMessage) {
+    // Configure handlers here
+});
+
+port_viz.open();
 
 /*
     Matter.js content
@@ -457,11 +461,15 @@ $(window.matterContext = (function () {
     };
 })());
 
+var worlds = {};
+
 // Save the current world to a dictionary
 var saveWorld = function (worldName) {
-    worlds[worldName] = {};
-    worlds[worldName].world = _.cloneDeep(Matter.Composite.allComposites(matterContext['engine'].world));
-    worlds[worldName].gates = _.cloneDeep(gates);
+    newSave = {}
+    newSave.world = _.cloneDeep(Matter.Composite.allComposites(matterContext['engine'].world));
+    newSave.gates = _.cloneDeep(gates);
+    worlds[worldName] = newSave;
+    sendVisual(worldName, newSave);
 };
 
 // Load a world
@@ -495,8 +503,6 @@ var balls = getBalls();
 _.each(balls, function(ball, i){
     ball.render.fillStyle = colors[i];
 });
-
-var worlds = {};
 
 // Gets the composite for a given label
 var getCompositeByLabel = function (label) {
@@ -877,4 +883,28 @@ var hslToHex = function(h, s, l) {
     return hex.length === 1 ? '0' + hex : hex;
   };
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-}
+};
+
+var sendVisual = function(worldName){
+    var world = worlds[worldName];
+    var resurrect = new Resurrect();
+    var bodies = {};
+
+    _.each(world.world, function(composite){
+        bodies[composite.label] = [];        
+        _.each(composite.bodies, function(body){
+            bodies[composite.label].push(body);
+        });
+    });
+
+    var gates = getCompositeByLabel('Gates');
+    _.each(gates.bodies, function(body){
+        bodies['Gates'].push(body);
+    });
+
+    serializedBodies = resurrect.stringify(bodies);
+    port_viz.send({
+        address: "/visualize",
+        args: [worldName, serializedBodies]
+    });
+};

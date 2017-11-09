@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Lemur Bounce 2</title>
+    <title>Lemur Bounce Visualizer</title>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
@@ -26,13 +26,10 @@
 
 <body>
 <div class="container">
-    <p id='m'>Hi</p>
     <div class="row">
-        <div class="col-9">
+        <p id='world'></p>
+        <div class="col-12">
             <div id="matter"></div>
-        </div>
-        <div class="col-3">
-            <div id="matter_slow"></div>
         </div>
     </div>
     <div>
@@ -46,60 +43,9 @@
         <span style="background-color: #0075DC">8 </span>
         <span style="background-color: #740AFF">9 </span>
         <span style="background-color: #FFFFFF">10 </span>
-        <div>
-            <input type="text" id="stopBall" value="1" />
-            <input type="button" value="Stop Ball" onClick="stopBall(document.getElementById('stopBall').value)" />
-            <input type="button" value="Stop All Balls" onClick="stopAllBalls()" />
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-4 paramClass">
-            <div id="frict" class="paramSet">
-                <div>Friction</div>
-                <div id="frictNumber"></div>
-                <div id="frictSlider"></div>
-                <div id="frictButton"></div>
-            </div>
-            <div id="frictSliderLC" class="LCSlider"></div>
-        </div>
-
-        <div class="col-4 paramClass">
-            <div id="balls" class="paramSet">
-                <div>Balls</div>
-                <div id="ballsNumber"></div>
-                <div id="ballsSlider"></div>
-                <div id="ballsButton"></div>
-            </div>
-            <div id="ballsSliderLC" class="LCSlider"></div>
-        </div>
-
-        <div class="col-4 paramClass">
-            <div id="mass" class="paramSet">
-                <div>Mass</div>
-                <div id="massNumber"></div>
-                <div id="massSlider"></div>
-                <div id="massButton"></div>
-            </div>
-            <div id="massSliderLC" class="LCSlider"></div>
-        </div>
     </div>
 </div>
-<script src="lemurBounce.js"></script>
+<script src="visualize.js"></script>
 </body>
 
-<style type="text/css">
-    .paramSet div{
-        margin: 4px auto;
-        padding: 4px;
-        text-align: center;
-    }
-    .paramClass>div{
-        float: left;
-    }
-    .LCSlider {
-        margin-top: 78px;
-        pointer-events: none;
-    }
-</style>
 </html>
