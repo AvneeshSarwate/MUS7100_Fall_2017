@@ -807,7 +807,7 @@ Matter.Events.on(matterContext['slowEngine'], 'afterUpdate', function (event) {
     // Gate cross event handler
     _.each(balls, function(ball, index) {
         var dist = getDist({'position': { 'x': width/2, 'y': height/2 } }, ball) / radius;
-        if(effectBallList != dist){
+        if(Math.abs(effectBallList[index] - dist) > 0.001){
             effectBallList[index] = dist;
                 port.send({
                 address: "/toSC",
