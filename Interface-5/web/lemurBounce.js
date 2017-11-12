@@ -76,6 +76,18 @@ massNumber.link(massSlider);
 
 var massButton = new Nexus.Button('#massButton');
 
+var slowFrictSlider = new Nexus.Slider('#slowFrictSlider', {
+    'size': [60, 200],
+    'mode': 'relative',  // 'relative' or 'absolute'
+    'min': 0,
+    'max': 1,
+    'step': 0.01,
+    'value': 0
+});
+
+var slowFrictNumber = new Nexus.Number('#slowFrictNumber');
+slowFrictNumber.link(slowFrictSlider);
+
 /*
     OSC Communication and Handlers
 */
@@ -459,7 +471,9 @@ $(window.matterContext = (function () {
         stop: function () {
             Matter.Render.stop(render);
             Matter.Runner.stop(runner);
-        }
+        },
+        slowEngine: engine_slow,
+        slowCanvas: render_slow.canvas
     };
 })());
 
@@ -497,11 +511,24 @@ var getBalls = function () {
     return balls;
 };
 
+var getSlowBalls = function () {
+    var balls = [];
+    var composites = Matter.Composite.allComposites(matterContext['slowEngine'].world);
+    _.each(composites, function (composite) {
+        if (composite.label == "Balls") balls = composite.bodies;
+    })
+    return balls;
+};
+
 // https://en.wikipedia.org/wiki/Help:Distinguishable_colors
 // Wine, Red, Orange, Yellow, Jade, Green, Sky, Blue, Violet, White
 var colors =['#990000', '#FF0010', '#FFA405', '#FFFF00', '#94FFB5', '#2BCE48', '#5EF1F2', '#0075DC', '#740AFF', '#FFFFFF']
 var balls = getBalls();
+_.each(balls, function(ball, i){
+    ball.render.fillStyle = colors[i];
+});
 
+var balls = getSlowBalls();
 _.each(balls, function(ball, i){
     ball.render.fillStyle = colors[i];
 });
@@ -550,6 +577,25 @@ var setFriction = function (value) {
 
 frictSlider.on('change', function (value) {
     setFriction(value)
+});
+
+var setSlowFriction = function (value) {
+
+    var balls = getSlowBalls();
+
+    for (var i = 0; i < balls.length; i++) {
+        ball = balls[i];
+        ball.frictionAir = value / 10;
+    }
+
+    for (var i = 0; i < ballHistory.length; i++) {
+        ball = ballHistory[i];
+        ball.frictionAir = value / 10;
+    }
+};
+
+slowFrictSlider.on('change', function (value) {
+    setSlowFriction(value)
 });
 
 var setBalls = function (value) {
@@ -746,6 +792,22 @@ Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
                     y: (well.mass * ball.mass * (Math.sin(angle))) / Math.pow(dist, 2)
                 });
             }
+        });
+    });
+});
+
+Matter.Events.on(matterContext['slowEngine'], 'afterUpdate', function (event) {
+    var height = matterContext['slowCanvas'].height;
+    var width = matterContext['slowCanvas'].width;
+    var radius = Math.sqrt( Math.pow(height/2, 2) + Math.pow(width/2, 2) );
+    var balls = getSlowBalls();
+
+    // Gate cross event handler
+    _.each(balls, function(ball, index) {
+        var dist = getDist({'position': { 'x': width/2, 'y': height/2 } }, ball);
+        port.send({
+            address: "/toSC",
+            args: ["/effectBall", index, dist/radius]
         });
     });
 });

@@ -30,58 +30,74 @@
     <div class="row">
         <div class="col-9">
             <div id="matter"></div>
+            <div class="row">
+                <div class="col-4 paramClass">
+                    <div id="frict" class="paramSet">
+                        <div>Friction</div>
+                        <div id="frictNumber"></div>
+                        <div id="frictSlider"></div>
+                        <div id="frictButton"></div>
+                    </div>
+                    <div id="frictSliderLC" class="LCSlider"></div>
+                </div>
+
+                <div class="col-4 paramClass">
+                    <div id="balls" class="paramSet">
+                        <div>Balls</div>
+                        <div id="ballsNumber"></div>
+                        <div id="ballsSlider"></div>
+                        <div id="ballsButton"></div>
+                    </div>
+                    <div id="ballsSliderLC" class="LCSlider"></div>
+                </div>
+
+                <div class="col-4 paramClass">
+                    <div id="mass" class="paramSet">
+                        <div>Mass</div>
+                        <div id="massNumber"></div>
+                        <div id="massSlider"></div>
+                        <div id="massButton"></div>
+                    </div>
+                    <div id="massSliderLC" class="LCSlider"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div>
+                    <span style="background-color: #990000">1 </span>
+                    <span style="background-color: #FF0010">2 </span>
+                    <span style="background-color: #FFA405">3 </span>
+                    <span style="background-color: #FFFF00">4 </span>
+                    <span style="background-color: #94FFB5">5 </span>
+                    <span style="background-color: #2BCE48">6 </span>
+                    <span style="background-color: #5EF1F2">7 </span>
+                    <span style="background-color: #0075DC">8 </span>
+                    <span style="background-color: #740AFF">9 </span>
+                    <span style="background-color: #FFFFFF">10 </span>
+                    <div>
+                        <input type="text" id="stopBall" value="1" />
+                        <input type="button" value="Stop Ball" onClick="stopBall(document.getElementById('stopBall').value)" />
+                        <input type="button" value="Stop All Balls" onClick="stopAllBalls()" />
+                    </div>
+                </div>
+            </div>
         </div>
         <div class="col-3">
             <div id="matter_slow"></div>
-        </div>
-    </div>
-    <div>
-        <span style="background-color: #990000">1 </span>
-        <span style="background-color: #FF0010">2 </span>
-        <span style="background-color: #FFA405">3 </span>
-        <span style="background-color: #FFFF00">4 </span>
-        <span style="background-color: #94FFB5">5 </span>
-        <span style="background-color: #2BCE48">6 </span>
-        <span style="background-color: #5EF1F2">7 </span>
-        <span style="background-color: #0075DC">8 </span>
-        <span style="background-color: #740AFF">9 </span>
-        <span style="background-color: #FFFFFF">10 </span>
-        <div>
-            <input type="text" id="stopBall" value="1" />
-            <input type="button" value="Stop Ball" onClick="stopBall(document.getElementById('stopBall').value)" />
-            <input type="button" value="Stop All Balls" onClick="stopAllBalls()" />
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-4 paramClass">
-            <div id="frict" class="paramSet">
-                <div>Friction</div>
-                <div id="frictNumber"></div>
-                <div id="frictSlider"></div>
-                <div id="frictButton"></div>
+            <div class="row">
+                <div class="col-6 paramClass">
+                    <div id="slowFrict" class="paramSet">
+                        <div>Friction</div>
+                        <div id="slowFrictNumber"></div>
+                        <div id="slowFrictSlider"></div>
+                    </div>
+                </div>
             </div>
-            <div id="frictSliderLC" class="LCSlider"></div>
-        </div>
-
-        <div class="col-4 paramClass">
-            <div id="balls" class="paramSet">
-                <div>Balls</div>
-                <div id="ballsNumber"></div>
-                <div id="ballsSlider"></div>
-                <div id="ballsButton"></div>
+            <div class="row">
+                <span style="background-color: #990000">1 </span>
+                <span style="background-color: #FF0010">2 </span>
+                <span style="background-color: #FFA405">3 </span>
+                <span style="background-color: #FFFF00">4 </span>
             </div>
-            <div id="ballsSliderLC" class="LCSlider"></div>
-        </div>
-
-        <div class="col-4 paramClass">
-            <div id="mass" class="paramSet">
-                <div>Mass</div>
-                <div id="massNumber"></div>
-                <div id="massSlider"></div>
-                <div id="massButton"></div>
-            </div>
-            <div id="massSliderLC" class="LCSlider"></div>
         </div>
     </div>
 </div>
