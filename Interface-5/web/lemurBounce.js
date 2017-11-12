@@ -655,6 +655,13 @@ var setParam = function (args) {
             if (!frictButton.state) frictSlider.value = value;
             frictSliderLC.value = value;
             break;
+        case 'speed':
+            var balls = getBalls();
+
+            _.each(balls, function(ball){
+                var velocity = ball.velocity;
+                Matter.Body.setVelocity(ball, Matter.Vector.create(velocity.x * value, velocity.y*value));
+            });
 
         default:
             console.log("Unrecognized parameter " + param);
