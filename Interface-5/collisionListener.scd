@@ -21,7 +21,7 @@ masterClockTempoHandler = {|msg, time, addr, recvPort|
 };
 OSCFunc(masterClockTempoHandler, "/masterClockTempo");
 
-~quantizeBallBeats = true;
+~quantizeBallBeats = false;
 ~ballQuantizeValue = 0.25;
 
 //msg - [addr, ballInd, gateInd]
@@ -57,7 +57,17 @@ OSCFunc({|msg, time, addr, rectPort|
     msg.postln;
     tempoClock.sched(msg[1], {pythonOSCport.sendMsg(msg[2].asString, 1)});
 }, "/triggerDelayFunc");
+
+
+//msg - [addr, ballInd, dist]
+OSCFunc({|msg, time, addr, recvPort|
+    nodeMidOut.control(0, msg[1].asInt, (msg[2]*127).floor);
+}, "/effectBall");
+
+
 )
+
+
 
 
 OSCFunc.trace
