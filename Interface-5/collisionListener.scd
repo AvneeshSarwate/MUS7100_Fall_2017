@@ -61,7 +61,8 @@ OSCFunc({|msg, time, addr, rectPort|
 
 //msg - [addr, ballInd, dist]
 OSCFunc({|msg, time, addr, recvPort|
-    nodeMidOut.control(0, msg[1].asInt, (msg[2]*127).floor);
+    noteMidiOut.control(0, msg[1].asInt, (msg[2]*127).floor);
+    msg.postln;
 }, "/effectBall");
 
 
