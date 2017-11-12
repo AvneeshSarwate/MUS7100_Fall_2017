@@ -770,8 +770,8 @@ Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
                 var curVal = Math.sign(y - ((gate.m * x) + gate.b));
                 gate.status[j] = curVal;
 
-                if(Math.abs(prevVal - curVal) > 1 && xDist < 50 && yDist < 50){
-
+                if(Math.abs(prevVal - curVal) > 1 && xDist < 50 && yDist < 50 && x > 0 && y > 0){
+                    console.log(Math.abs(prevVal - curVal), x, y, xDist, yDist);
                     port.send({
                         address: "/toSC",
                         args: ["/gateCross", j, key]
