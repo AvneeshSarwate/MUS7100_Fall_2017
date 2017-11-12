@@ -1,5 +1,5 @@
 //tempoclock with beat set to 1 cycle length
-(var midiOut, pythonOSCport, channelPatternMap, chanBackupPatMap, channelInd, drumTypes, startPattern, playStepGenerator, recieveBackupPattern, stopPattern, patternRead, timeListToDurationList, sendSample, midiChannel, masterTempoClock, tempoClockMap, loopStartFunctions, masterClockBeat, masterClockTempoHandler, channelTypeMap, python_FH_OSCport, channelMetaInfo, changeChannelTempo, syncClocks, instrumentMidiOut, maxPort, chanPhaseTrackerTasks, ballVisualPort;
+(var midiOut, pythonOSCport, channelPatternMap, chanBackupPatMap, channelInd, drumTypes, startPattern, playStepGenerator, recieveBackupPattern, stopPattern, patternRead, timeListToDurationList, sendSample, midiChannel, masterTempoClock, tempoClockMap, loopStartFunctions, masterClockBeat, masterClockTempoHandler, channelTypeMap, python_FH_OSCport, channelMetaInfo, changeChannelTempo, syncClocks, instrumentMidiOut, maxPort, lemurBouncePort, chanPhaseTrackerTasks, ballVisualPort;
 
 midiOut = MIDIOut.newByName("IAC Driver", "Bus 3");
 instrumentMidiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
@@ -8,6 +8,7 @@ pythonOSCport = NetAddr("localhost", 34345);
 python_FH_OSCport = NetAddr("localhost", 13371);
 maxPort = NetAddr("localhost", 5432);
 ballVisualPort = NetAddr("localhost", 7400);
+lemurBouncePort = NetAddr("localhost", 7100);
 
 channelPatternMap = Dictionary();
 chanBackupPatMap = Dictionary();
@@ -289,6 +290,9 @@ sendSample = {|drumStr, chan, ind|
     });
     if(channelTypeMap[chan] == 'ballState', {
         ballVisualPort.sendMsg("/loadWorld", drumStr);
+    });
+    if(channelTypeMap[chan] == 'funcTrigger', {
+        lemurBouncePort.sendMsg("/funcTrigger", drumStr);
     });
 };
 

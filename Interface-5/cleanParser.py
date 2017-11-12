@@ -58,6 +58,8 @@ def isChordSeqSymbol(s):
     return re.match('^[a-h][a-h]$', s) or s == "~"
 def isBallState(s):
     return s in 'abcdefghijk' and len(s) == 1
+def isFuncTrigger(s):
+    return s in 'abcdefghijklmnopqrs' and len(s) == 1
 
 
 symbolMatchers = {}
@@ -67,6 +69,7 @@ symbolMatchers['arp'] = isArpeggiatorSymbol
 symbolMatchers['max'] = isMaxSymbol
 symbolMatchers['chord'] = isChordSeqSymbol
 symbolMatchers['ballState'] = isBallState
+symbolMatchers['funcTrigger'] = isFuncTrigger
 
 
 def parse(inputStr, symbolKey = 'pydal'):

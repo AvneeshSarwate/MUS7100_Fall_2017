@@ -1,4 +1,4 @@
-(var ballToDeviation, gateToNote, ballToChan, noteMidiOut, tempoClock, masterClockTempoHandler, pythonOSCport;
+(var ballToDeviation, gateToNote, ballToChan, noteMidiOut, tempoClock, masterClockTempoHandler, pythonOSCport, ballDecay;
 
 noteMidiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
 pythonOSCport = NetAddr("127.0.0.1", 7100);
@@ -6,6 +6,7 @@ pythonOSCport = NetAddr("127.0.0.1", 7100);
 gateToNote = [60, 64, 67, 79, 60, 60, 60, 60, 60];
 ballToDeviation = [-3, 5, -4, 9];
 ballToChan = [0,0,0,0,1,1,1,1];
+ballDecay = [1, 1, 1, 1, 1, 1, 1, 1];
 
 OSCFunc({|msg, time, addr, recvPort|
     //msg[1] is the new BEAT DURATION (not tempo)
@@ -30,7 +31,12 @@ OSCFunc({|msg, time, addr, rectPort|
     var gate = msg[2].asInt;
     var timeToNextHit = ~ballQuantizeValue - (tempoClock.beats % ~ballQuantizeValue);
     if(ball < ballToDeviation.size, {
-        var noteFunc = {noteMidiOut.noteOn(ballToChan[ball], ballToDeviation[ball]+gateToNote[gate], 70)};
+        var noteFunc = {
+            var chan = ballToChan[ball];
+            var note = ballToDeviation[ball]+gateToNote[gate];
+            noteMidiOut.noteOn(chan, note, 70);
+            tempoClock.sched(ballDecay[ball], {noteMidiOut.noteOff(chan, note, 70)});
+        };
         if(~quantizeBallBeats,
             {tempoClock.sched(timeToNextHit,noteFunc)},
             {noteFunc.()}
@@ -46,6 +52,13 @@ OSCFunc({|msg, time, addr, rectPort|
     msg[1..].do({|elem, ind| ballToDeviation[ind] = newDev[ind]});
     ["ballDeviations Changed", newDev, ballToDeviation].postln;
 }, "/changeBallDeviation");
+
+OSCFunc({|msg, time, addr, rectPort|
+    var newChan = msg[1..];
+    newChan.postln;
+    msg[1..].do({|elem, ind| ballToChan[ind] = newChan[ind]});
+    ["ballchan Changed", newChan, ballToChan].postln;
+}, "/changeBallChan");
 
 OSCFunc({|msg, time, addr, rectPort|
     var newNotes =  msg[1..];
