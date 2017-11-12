@@ -88,6 +88,8 @@ port.on("message", function (oscMessage) {
     $('#m').text(oscMessage.args[1]);
     if (oscMessage.address == "/saveWorld") saveWorld(oscMessage.args[0]);
     if (oscMessage.address == "/loadWorld") loadWorld(oscMessage.args[0]);
+    if (oscMessage.address == "/setGate") setGate(oscMessage.args[0], oscMessage.args[1], oscMessage.args[2]);
+    if (oscMessage.address == "/toggleGate") toggleGate(oscMessage.args[0]);
     if (oscMessage.address == "/setParam") setParam(oscMessage.args);
     if (oscMessage.address == "/slingshot") slingshot(oscMessage.args);
     if (oscMessage.address == "/gravity") gravity(oscMessage.args);

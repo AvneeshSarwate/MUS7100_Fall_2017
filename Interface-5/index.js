@@ -61,67 +61,67 @@ wss.on("connection", function (socket) {
     });
 });
 
-var udp_viz = new osc.UDPPort({
-    localAddress: "127.0.0.1",
-    localPort: 7410,
-    remoteAddress: "127.0.0.1",
-    remotePort: 7600
-});
+// var udp_viz = new osc.UDPPort({
+//     localAddress: "127.0.0.1",
+//     localPort: 7410,
+//     remoteAddress: "127.0.0.1",
+//     remotePort: 7600
+// });
 
-udp_viz.open();
+// udp_viz.open();
 
-var wss_viz = new WebSocket.Server({
-    port: 8082
-});
+// var wss_viz = new WebSocket.Server({
+//     port: 8082
+// });
 
-wss_viz.on("connection", function (socket) {
-    console.log("A Web Socket connection has been established! (Interface2Viz)");
-    var socketPort = new osc.WebSocketPort({
-        socket: socket
-    });
+// wss_viz.on("connection", function (socket) {
+//     console.log("A Web Socket connection has been established! (Interface2Viz)");
+//     var socketPort = new osc.WebSocketPort({
+//         socket: socket
+//     });
 
-    var relay = new osc.Relay(udp_viz, socketPort, {
-        raw: true
-    });
-});
+//     var relay = new osc.Relay(udp_viz, socketPort, {
+//         raw: true
+//     });
+// });
 
 
 /*
     OSC to/from Lemur Bounce Visuals
 */
-var udp_viz_server = new osc.UDPPort({
-    localAddress: "127.0.0.1",
-    localPort: 7600,
-    remoteAddress: "127.0.0.1",
-    remotePort: 7400
-});
+// var udp_viz_server = new osc.UDPPort({
+//     localAddress: "127.0.0.1",
+//     localPort: 7600,
+//     remoteAddress: "127.0.0.1",
+//     remotePort: 7400
+// });
 
-udp_viz_server.on("ready", function () {
-    var ipAddresses = getIPAddresses();
-    console.log("Visuals:");
-    ipAddresses.forEach(function (address) {
-        console.log("Listening on", address + ":" + udp_viz_server.options.localPort);
-    });
-    console.log("Sending to", udp_viz_server.options.remoteAddress + ":" + udp_viz_server.options.remotePort);
-    console.log("");
-});
+// udp_viz_server.on("ready", function () {
+//     var ipAddresses = getIPAddresses();
+//     console.log("Visuals:");
+//     ipAddresses.forEach(function (address) {
+//         console.log("Listening on", address + ":" + udp_viz_server.options.localPort);
+//     });
+//     console.log("Sending to", udp_viz_server.options.remoteAddress + ":" + udp_viz_server.options.remotePort);
+//     console.log("");
+// });
 
-udp_viz_server.open();
+// udp_viz_server.open();
 
-var wss_viz_server = new WebSocket.Server({
-    port: 8083
-});
+// var wss_viz_server = new WebSocket.Server({
+//     port: 8083
+// });
 
-wss_viz_server.on("connection", function (socket) {
-    console.log("A Web Socket connection has been established! (Visuals)");
-    var socketPort = new osc.WebSocketPort({
-        socket: socket
-    });
+// wss_viz_server.on("connection", function (socket) {
+//     console.log("A Web Socket connection has been established! (Visuals)");
+//     var socketPort = new osc.WebSocketPort({
+//         socket: socket
+//     });
 
-    var relay = new osc.Relay(udp_viz_server, socketPort, {
-        raw: true
-    });
-});
+//     var relay = new osc.Relay(udp_viz_server, socketPort, {
+//         raw: true
+//     });
+// });
 
 var express = require('express');
 var app = express();
