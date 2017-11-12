@@ -796,6 +796,8 @@ Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
     });
 });
 
+var effectBallList = [0, 0, 0, 0];
+
 Matter.Events.on(matterContext['slowEngine'], 'afterUpdate', function (event) {
     var height = matterContext['slowCanvas'].height;
     var width = matterContext['slowCanvas'].width;
@@ -804,11 +806,14 @@ Matter.Events.on(matterContext['slowEngine'], 'afterUpdate', function (event) {
 
     // Gate cross event handler
     _.each(balls, function(ball, index) {
-        var dist = getDist({'position': { 'x': width/2, 'y': height/2 } }, ball);
-        port.send({
-            address: "/toSC",
-            args: ["/effectBall", index, dist/radius]
-        });
+        var dist = getDist({'position': { 'x': width/2, 'y': height/2 } }, ball) / radius;
+        if(effectBallList != dist){
+            effectBallList[index] = dist;
+                port.send({
+                address: "/toSC",
+                args: ["/effectBall", index, dist]
+            });
+        }        
     });
 });
 
