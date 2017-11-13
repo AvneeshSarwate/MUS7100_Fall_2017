@@ -12,6 +12,8 @@ class LemurBounce2:
         self.superColliderClient = OSC.OSCClient()
         self.superColliderClient.connect(('127.0.0.1', 57120))
 
+        self.superColliderServer.addMsgHandler("/funcTrigger", self.funcTriggerResponder)
+
         self.visualsServer = OSC.OSCServer(('127.0.0.1', 57121))
         self.vizServerThread = threading.Thread(target=self.visualsServer.serve_forever)
         self.vizServerThread.daemon = False
@@ -24,6 +26,14 @@ class LemurBounce2:
         self.visualsServer.addMsgHandler("/toSC", self.toSCResponder)
 
         self.printLog = False;
+
+        self.triggerFunctions = {}
+
+
+    def funcTriggerResponder(self, addr, tags, stuff, source):
+        if stuff[0] in self.triggerFunctions:
+            self.triggerFunctions[stuff[0]]()
+
 
     def sendOSCMessage(self, addr, client=0, *msgArgs):
         msg = OSC.OSCMessage()
@@ -45,4 +55,4 @@ class LemurBounce2:
     def testResponder(self, addr, tags, stuff, source):
         print stuff
         self.sendOSCMessage('/test', 1, ['Did you get this message?', 'Didja?'])
-    
+

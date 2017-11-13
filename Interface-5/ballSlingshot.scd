@@ -108,26 +108,30 @@ controlHandler = {|vel, note, chan, port|
 
 
 MIDIFunc.noteOn({|vel, note, chan, port|
-    numPadsDown = numPadsDown + 1;
-    ["NOTE ON lp", numPadsDown, note, vel].postln;
-    if(numPadsDown == 1, {
-        ballPosition = [((note%10)-1), (8-(note/10).floor)];
-    });
-    if(numPadsDown == 2, {
-        var velocity = vel/127;
-        var ballPos2 = [((note%10)-1), (8-(note/10).floor)];
-        var messageData = [ballPosition[0], ballPosition[1], ballPos2[0], ballPos2[1], vel];
-        messageData = messageData ++ ballSelector.collect({|val, ind| if(val, ind, nil)}).select({|val| val.isNil.not});
-        messageData.postln;
-        nodeOSCport.sendRaw((["/slingshot"] ++ messageData).asArray.asRawOSC);
+    if((chan == 0) && (~lightIndex == lightIndex), {
+        numPadsDown = numPadsDown + 1;
+        ["NOTE ON lp", numPadsDown, note, vel].postln;
+        if(numPadsDown == 1, {
+            ballPosition = [((note%10)-1), (8-(note/10).floor)];
+        });
+        if(numPadsDown == 2, {
+            var velocity = vel/127;
+            var ballPos2 = [((note%10)-1), (8-(note/10).floor)];
+            var messageData = [ballPosition[0], ballPosition[1], ballPos2[0], ballPos2[1], vel];
+            messageData = messageData ++ ballSelector.collect({|val, ind| if(val, ind, nil)}).select({|val| val.isNil.not});
+            messageData.postln;
+            nodeOSCport.sendRaw((["/slingshot"] ++ messageData).asArray.asRawOSC);
+        });
     });
 
 }, nil, nil, launchPad.uid);
 
 
 MIDIFunc.noteOff({|vel, note, chan, port|
-    numPadsDown = numPadsDown - 1;
-    ["NOTE OFF lp", numPadsDown, note, vel].postln;
+    if((chan == 0) && (~lightIndex == lightIndex), {
+        numPadsDown = numPadsDown - 1;
+        ["NOTE OFF lp", numPadsDown, note, vel].postln;
+    });
 }, nil, nil, launchPad.uid);
 
 
@@ -140,6 +144,8 @@ controlHandlerWrapper = {|vel, note, chan, port|
     ~lock.signal;
 };
 MIDIFunc.cc(controlHandlerWrapper, nil, nil, launchPad.uid);
+
+
 
 
 

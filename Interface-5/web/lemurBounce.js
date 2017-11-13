@@ -32,7 +32,7 @@ var ballsSlider = new Nexus.Slider('#ballsSlider', {
     'min': 1,
     'max': 10,
     'step': 1,
-    'value': 10
+    'value': 4
 });
 
 var ballsSliderLC = new Nexus.Slider('#ballsSliderLC', {
@@ -621,6 +621,7 @@ ballsSlider.on('change', function (value) {
     setBalls(value);
 });
 
+setBalls(4);
 var setMass = function (value) {
 
     var balls = getBalls();
@@ -654,6 +655,13 @@ var setParam = function (args) {
             if (!frictButton.state) frictSlider.value = value;
             frictSliderLC.value = value;
             break;
+        case 'speed':
+            var balls = getBalls();
+
+            _.each(balls, function(ball){
+                var velocity = ball.velocity;
+                Matter.Body.setVelocity(ball, Matter.Vector.create(velocity.x * value, velocity.y*value));
+            });
 
         default:
             console.log("Unrecognized parameter " + param);
@@ -732,7 +740,7 @@ var addGate = function (key, points) {
     console.log(mid_x, mid_y, x_off, y_off, verts);
 
     var body = Matter.Bodies.fromVertices((width / 2) - x_off, (height / 2) - y_off, verts);
-    body.render.fillStyle = '#a01';
+    body.render.fillStyle = '#fff';
     body.collisionFilter = {group: -1, category: 1};
     body.label = "Gate #" + key;
     var gatesComposite = getCompositeByLabel('Gates');
@@ -774,7 +782,8 @@ Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
                 var curVal = Math.sign(y - ((gate.m * x) + gate.b));
                 gate.status[j] = curVal;
 
-                if(Math.abs(prevVal - curVal) > 1 && xDist < 50 && yDist < 50){
+                if(Math.abs(prevVal - curVal) > 1 && xDist < 50 && yDist < 50 && x > 0 && y > 0){
+                    console.log(Math.abs(prevVal - curVal), x, y, xDist, yDist);
                     port.send({
                         address: "/toSC",
                         args: ["/gateCross", j, key]
