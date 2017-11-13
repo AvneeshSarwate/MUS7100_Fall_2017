@@ -686,6 +686,11 @@ var setGate = function (key, m, b) {
 
     if (points.length == 2) {
         points = convertQuadrant(points);
+        if(gates[key]){
+            var body = getBodyByLabel("Gate #" + key);
+            var gatesComposite = getCompositeByLabel('Gates');
+            if(body) Matter.World.remove(gatesComposite, body);   
+        }
         gates[key] = {'m': m, 'b': b, 'status': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'show':true};
         return addGate(key, points);
     }
@@ -977,3 +982,25 @@ var sendVisual = function(worldName){
         args: [worldName, serializedBodies]
     });
 };
+
+var lispIt = function(input, output) {
+    output += "(";
+    
+    for(var i = 0; i < input.length; i++)
+    {
+        if(Array.isArray(input[i]))
+        {
+            output += lispIt(input[i], output);
+            output += " ";
+        }
+        else
+        {
+            output += input[i];
+            output += " ";
+        }
+    }
+    output += ")";
+    return output;
+}
+
+lispIt([[1,2,3,4]], "");
