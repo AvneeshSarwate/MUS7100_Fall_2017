@@ -1,5 +1,5 @@
 (
-var launchPad, launchpadOut, nodeOSCport, controlHandler, ballSelector, numPadsDown, ballPosition;
+var launchPad, launchpadOut, nodeOSCport, controlHandler, ballSelector, numPadsDown, ballPosition, effectBallFlag;
 
 //quneo variables
 var ccX, ccY, ccP, ccToInd, isPadCC, quneoCCMap, isPadNote, noteToInd, quneo;
@@ -87,6 +87,8 @@ masterClockOSCport = NetAddr("localhost", 57120);
 ballSelector = List.fill(8, {false});
 numPadsDown = 0;
 ballPosition = [0, 0];
+effectBallFlag = 0;
+effectFlag_BUTTON = 10;
 
 controlHandler = {|vel, note, chan, port|
     if((1..8).includes(note) && (vel != 0), {
@@ -103,6 +105,10 @@ controlHandler = {|vel, note, chan, port|
         // if(~truncateLoop, {setLight.(cycleLight_BUTTON, 45)}, {setLight.(cycleLight_BUTTON, 0)});
         // ~truncateLoop = ~truncateLoop.not; //light on means NOT TRUNCATING*/
     });
+    if((note == effectFlag_BUTTON) && (vel !=0), {
+        effectBallFlag = (effectBallFlag+1)%2;
+        setLight.(note, if(effectBallFlag == 1, 10, 0);
+    });
     ["NOT LIGHT CHANGE", note].postln;
 };
 
@@ -117,7 +123,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
         if(numPadsDown == 2, {
             var velocity = vel/127;
             var ballPos2 = [((note%10)-1), (8-(note/10).floor)];
-            var messageData = [ballPosition[0], ballPosition[1], ballPos2[0], ballPos2[1], vel];
+            var messageData = [effectBallFlag, ballPosition[0], ballPosition[1], ballPos2[0], ballPos2[1], vel];
             messageData = messageData ++ ballSelector.collect({|val, ind| if(val, ind, nil)}).select({|val| val.isNil.not});
             messageData.postln;
             nodeOSCport.sendRaw((["/slingshot"] ++ messageData).asArray.asRawOSC);
