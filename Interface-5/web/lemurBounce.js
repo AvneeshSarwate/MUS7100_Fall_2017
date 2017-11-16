@@ -856,16 +856,18 @@ var stopAllBalls = function() {
 };
 
 var slingshot = function(args) {
+    var world = args[0];
+
     const MAX_VEL = 0.5;
     var width = matterContext['canvas'].width;
     var height = matterContext['canvas'].height;
 
-    var pos_x = args[0];
-    var pos_y = args[1];
-    var des_x = args[2];
-    var des_y = args[3];
+    var pos_x = args[1];
+    var pos_y = args[2];
+    var des_x = args[3];
+    var des_y = args[4];
 
-    var mag = args[4];
+    var mag = args[5];
     var vel = mag * MAX_VEL;
 
     var del_x = des_x - pos_x;
@@ -876,9 +878,13 @@ var slingshot = function(args) {
     var vel_y = -(vel * Math.sin(angle_rads));
 
     var ballIndexes = [];
-    for(var i = 5; i < args.length; i++) ballIndexes.push(args[i]);
+    for(var i = 6; i < args.length; i++) ballIndexes.push(args[i]);
 
-    var balls = getBalls();
+    var balls;
+    if(world == 0) balls = getBalls();
+    else balls = getSlowBalls();
+    
+
     var count = 0;
     var x_off = 0;
     var y_off = 0;
