@@ -297,7 +297,7 @@ padOff = MIDIFunc.noteOff({|vel, note, chan, port|
 
 
 turnOnBank = {|thisBank, note|
-    ["TURNING ON", note].postln;
+    ["TURNING ON", note, tempoClock.beats].postln;
     if(false, {//with this as false, banks can be overlayed
         //for all other banks for this inst, stop playing and turn their lights on
         banks[thisBank[1]].do({|bNote|
@@ -346,6 +346,7 @@ OSCFunc.new({|msg, time, addr, recvPort|
             turnOffBank.(bank, bankKey);
         });
         if(msg[2].asSymbol == \on, {
+            ["SEQUENCER ON", bankKey, tempoClock.beats].postln;
             turnOnBank.(bank, bankKey);
         });
     });
@@ -588,6 +589,7 @@ createRecordedTask = {|oldRecBuf, isChannelTask=false, channelInd=0|
         var hit;
         var endWait = 0;
         {
+            if(ind == 0 , {["LOOP ROLLOVER", tempoClock.beats].postln});
             hit = recBuf[ind];
             //["HIT sceneBuilder", hit].postln;
 
