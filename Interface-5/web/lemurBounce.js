@@ -859,8 +859,6 @@ var slingshot = function(args) {
     var world = args[0];
 
     const MAX_VEL = 0.5;
-    var width = matterContext['canvas'].width;
-    var height = matterContext['canvas'].height;
 
     var pos_x = args[1];
     var pos_y = args[2];
@@ -881,9 +879,18 @@ var slingshot = function(args) {
     for(var i = 6; i < args.length; i++) ballIndexes.push(args[i]);
 
     var balls;
-    if(world == 0) balls = getBalls();
-    else balls = getSlowBalls();
-    
+    var width;
+    var height
+    if(world == 0) {
+        width = matterContext['canvas'].width;
+        height = matterContext['canvas'].height;
+        balls = getBalls();
+    }
+    else {
+        width = matterContext['slowCanvas'].width;
+        height = matterContext['slowCanvas'].height;
+        balls = getSlowBalls();
+    }
 
     var count = 0;
     var x_off = 0;
