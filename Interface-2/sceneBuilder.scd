@@ -461,7 +461,7 @@ quantize = {|oldRecBuf, quantDivArray, startBeat, endBeat|
     var populatedBeatsCount = -1;
     var melodyEndingBeat;
 
-0.05.rand
+
     recBuf.do({|hit| if(hit[0] < startBeat, {hit[0] = startBeat + 0.05.rand}) });
     recBuf.do({|elem|
         if(elem[4] == "on",
