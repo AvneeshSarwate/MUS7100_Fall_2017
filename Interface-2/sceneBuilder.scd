@@ -226,32 +226,34 @@ padOn = {|vel, note, chan, port|
                         //TODO audioRecording - stop/wipe midiLoop in the same slot?
                     },
                     {
-                        "MANUAL BANK PLAY/STOP".postln;
-                        if(thisBank[5] != nil, {
-                            //if algsList.size > 0, make OSC call to python alg module
-                            //args - algsList, inst chanel, bank numner, loopString
-                            //set recivedAlgTask[chanInd][bankNum] = null
-                            //if the python func crashes, this remains null and can be checked for
-                            if(algOrderList.size > 0, {
-                                pythonOSCport.sendMsg("/algRequest",  thisBank[1], thisBank[0],
-                                    roots[thisBank[1]], scales[thisBank[1]].join(","), thisBank[4])
-                            });
-                            if(playMode == 0, {
-                                tempoClock.sched(tempoClock.timeToNextBeat, {
-                                    if(thisBank[2].not,
-                                        {turnOnBank.(thisBank, note)},
-                                        {turnOffBank.(thisBank, note)}
-                                    ); //TODO sceneBuilder - issues if pressing the bank button twice before metronome?
-                                    "TEMPOCLOCK FUNC RUN".postln;
-                                    //setLight.(note, 0);
-                                    nil;
+                        if(recordingState == 0, {
+                            "MANUAL BANK PLAY/STOP".postln;
+                            if(thisBank[5] != nil, {
+                                //if algsList.size > 0, make OSC call to python alg module
+                                //args - algsList, inst chanel, bank numner, loopString
+                                //set recivedAlgTask[chanInd][bankNum] = null
+                                //if the python func crashes, this remains null and can be checked for
+                                if(algOrderList.size > 0, {
+                                    pythonOSCport.sendMsg("/algRequest",  thisBank[1], thisBank[0],
+                                        roots[thisBank[1]], scales[thisBank[1]].join(","), thisBank[4])
                                 });
-                            });
-                            if(playMode == 1, {
-                                turnOnBank.(thisBank);
-                            });
-                            if(playMode == 2, {
+                                if(playMode == 0, {
+                                    tempoClock.sched(tempoClock.timeToNextBeat, {
+                                        if(thisBank[2].not,
+                                            {turnOnBank.(thisBank, note)},
+                                            {turnOffBank.(thisBank, note)}
+                                        ); //TODO sceneBuilder - issues if pressing the bank button twice before metronome?
+                                        "TEMPOCLOCK FUNC RUN".postln;
+                                        //setLight.(note, 0);
+                                        nil;
+                                    });
+                                });
+                                if(playMode == 1, {
+                                    turnOnBank.(thisBank);
+                                });
+                                if(playMode == 2, {
 
+                                });
                             });
                         });
                     }
@@ -459,8 +461,8 @@ quantize = {|oldRecBuf, quantDivArray, startBeat, endBeat|
     var populatedBeatsCount = -1;
     var melodyEndingBeat;
 
-
-    recBuf.do({|hit| if(hit[0] < startBeat, {hit[0] = startBeat}) });
+0.05.rand
+    recBuf.do({|hit| if(hit[0] < startBeat, {hit[0] = startBeat + 0.05.rand}) });
     recBuf.do({|elem|
         if(elem[4] == "on",
             {hangingNotes.add([elem[1], elem[3]])},
