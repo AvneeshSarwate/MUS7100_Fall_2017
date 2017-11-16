@@ -22,7 +22,7 @@ masterClockTempoHandler = {|msg, time, addr, recvPort|
 };
 OSCFunc(masterClockTempoHandler, "/masterClockTempo");
 
-~quantizeBallBeats = false;
+~quantizeBallBeats = true;
 ~ballQuantizeValue = 0.25;
 
 //msg - [addr, ballInd, gateInd]

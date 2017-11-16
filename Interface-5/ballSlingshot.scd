@@ -1,5 +1,5 @@
 (
-var launchPad, launchpadOut, nodeOSCport, controlHandler, ballSelector, numPadsDown, ballPosition, effectBallFlag;
+var launchPad, launchpadOut, nodeOSCport, controlHandler, ballSelector, numPadsDown, ballPosition, effectBallFlag, effectFlag_BUTTON;
 
 //quneo variables
 var ccX, ccY, ccP, ccToInd, isPadCC, quneoCCMap, isPadNote, noteToInd, quneo;
@@ -107,7 +107,7 @@ controlHandler = {|vel, note, chan, port|
     });
     if((note == effectFlag_BUTTON) && (vel !=0), {
         effectBallFlag = (effectBallFlag+1)%2;
-        setLight.(note, if(effectBallFlag == 1, 10, 0);
+        setLight.(note, if(effectBallFlag == 1, 10, 0));
     });
     ["NOT LIGHT CHANGE", note].postln;
 };
