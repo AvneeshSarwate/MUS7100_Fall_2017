@@ -1,6 +1,6 @@
 (var ballToDeviation, gateToNote, ballToChan, noteMidiOut, tempoClock, masterClockTempoHandler, pythonOSCport, ballDecay;
 
-noteMidiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
+noteMidiOut = MIDIOut.newByName("IAC Driver", "Bus 3");
 pythonOSCport = NetAddr("127.0.0.1", 7100);
 
 gateToNote = [60, 64, 67, 79, 60, 60, 60, 60, 60];

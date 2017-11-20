@@ -765,6 +765,7 @@ var toggleGate = function(key) {
 
 Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
     var height = matterContext['canvas'].height;
+    var width = matterContext['canvas'].width;
     var balls = getBalls();
 
     // Gate cross event handler
@@ -782,8 +783,10 @@ Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
                 var curVal = Math.sign(y - ((gate.m * x) + gate.b));
                 gate.status[j] = curVal;
 
-                if(Math.abs(prevVal - curVal) > 1 && xDist < 50 && yDist < 50 && x > 0 && y > 0){
-                    console.log(Math.abs(prevVal - curVal), x, y, xDist, yDist);
+
+
+                if(Math.abs(prevVal - curVal) >= 1 && xDist < 50 && yDist < 50 && x > 0 && y > 0 && x < width && y < height){
+                    //console.log(Math.abs(prevVal - curVal), x, y, xDist, yDist);
                     port.send({
                         address: "/toSC",
                         args: ["/gateCross", j, key]
