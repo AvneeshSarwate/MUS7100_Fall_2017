@@ -69,7 +69,7 @@ OSCFunc({|msg, time, addr, rectPort|
 OSCFunc({|msg, time, addr, rectPort|
     var newDecay =  msg[1..];
     newDecay.do({|elem, ind| ballDecay[ind] = newDecay[ind]});
-    ["ballDecay Changed", newNotes, gateToNote].postln;
+    ["ballDecay Changed", newDecay, gateToNote].postln;
 }, "/changeBallDecay");
 
 OSCFunc({|msg, time, addr, rectPort|
