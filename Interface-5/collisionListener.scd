@@ -4,7 +4,7 @@ noteMidiOut = MIDIOut.newByName("IAC Driver", "Bus 3");
 pythonOSCport = NetAddr("127.0.0.1", 7100);
 
 gateToNote = [60, 64, 67, 79, 60, 60, 60, 60, 60];
-ballToDeviation = [-3, 5, -4, 9];
+ballToDeviation = [-3, 5, -4, 9, 0, 0, 0, 0];
 ballToChan = [0,0,0,0,1,1,1,1];
 ballDecay = [1, 1, 1, 1, 1, 1, 1, 1];
 
@@ -65,6 +65,12 @@ OSCFunc({|msg, time, addr, rectPort|
     newNotes.do({|elem, ind| gateToNote[ind] = newNotes[ind]});
     ["gateNotes Changed", newNotes, gateToNote].postln;
 }, "/changeGateNotes");
+
+OSCFunc({|msg, time, addr, rectPort|
+    var newDecay =  msg[1..];
+    newDecay.do({|elem, ind| ballDecay[ind] = newDecay[ind]});
+    ["ballDecay Changed", newNotes, gateToNote].postln;
+}, "/changeBallDecay");
 
 OSCFunc({|msg, time, addr, rectPort|
     msg.postln;
