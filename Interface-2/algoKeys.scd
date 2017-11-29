@@ -14,7 +14,7 @@ var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON
 
 //MIDIClient.init;
 //MIDIIn.connectAll;
-launchpadOut = MIDIOut.newByName("Launchpad Pro", "Standalone Port");
+launchpadOut = ~getLaunchpad.(0);
 launchpadOut.latency = 0;
 midiOut = MIDIOut.newByName("IAC Driver", "Bus 7");
 metronomeOut = MIDIOut.newByName("IAC Driver", "Bus 3");
