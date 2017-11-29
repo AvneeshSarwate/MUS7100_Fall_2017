@@ -672,6 +672,14 @@ var gates = {};
 
 var setGate = function (key, m, b) {
 
+    if(b == "v") {
+        // Vertical line, where m is x-intercept
+        slope = 10000;
+        x_int = m;
+        b = -slope * x_int;
+        m = slope;
+    }
+
     var width = matterContext['canvas'].width;
     var height = matterContext['canvas'].height;
 
@@ -792,7 +800,6 @@ Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
                         args: ["/gateCross", j, key]
                     });  
                 } 
-                ballHistory[j] = [x, y];
             });
         }   
     });
@@ -810,6 +817,10 @@ Matter.Events.on(matterContext['engine'], 'afterUpdate', function (event) {
                 });
             }
         });
+    });
+
+    _.each(balls, function(ball, j){
+        ballHistory[j] = [ball.position.x, height - ball.position.y];
     });
 });
 

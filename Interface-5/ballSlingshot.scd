@@ -235,5 +235,4 @@ MIDIFunc.cc({|vel, note, chan, port|
 },nil, nil, quneo.uid);
 
 
-
 )

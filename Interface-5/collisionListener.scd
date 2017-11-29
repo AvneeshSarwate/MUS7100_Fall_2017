@@ -8,6 +8,9 @@ ballToDeviation = [-3, 5, -4, 9, 0, 0, 0, 0];
 ballToChan = [0,0,0,0,1,1,1,1];
 ballDecay = [1, 1, 1, 1, 1, 1, 1, 1];
 
+~gn = gateToNote;
+~bd = ballToDeviation;
+
 OSCFunc({|msg, time, addr, recvPort|
     //msg[1] is the new BEAT DURATION (not tempo)
     tempoClock = TempoClock.new(1/msg[1], 0);
@@ -28,7 +31,7 @@ OSCFunc(masterClockTempoHandler, "/masterClockTempo");
 //msg - [addr, ballInd, gateInd]
 OSCFunc({|msg, time, addr, rectPort|
     var ball = msg[1].asInt;
-    var gate = msg[2].asInt;
+    var gate = msg[2].asInt-1;
     var timeToNextHit = ~ballQuantizeValue - (tempoClock.beats % ~ballQuantizeValue);
     if(ball < ballToDeviation.size, {
         var noteFunc = {
@@ -41,7 +44,7 @@ OSCFunc({|msg, time, addr, rectPort|
             {tempoClock.sched(timeToNextHit,noteFunc)},
             {noteFunc.()}
         );
-        [ball, gate, ballToChan[ball], ballToDeviation[ball]+gateToNote[gate]].postln;
+        [ball, gate, ballToChan[ball], ballToDeviation[ball], gateToNote[gate]].postln;
     });
 }, "/gateCross");
 
@@ -88,7 +91,7 @@ OSCFunc({|msg, time, addr, recvPort|
 )
 
 
-
+~bd[0]+~gn[2]
 
 OSCFunc.trace
 

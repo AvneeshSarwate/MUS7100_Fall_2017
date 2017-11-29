@@ -198,7 +198,7 @@ padOn = {|vel, note, chan, port|
                         thisBank[3].free;
                     });
                     "B sceneBuilder".postln;
-                    thisBank[1] = calculateMajorityChannel.(stringToBuf.(tempLoopString));
+                    thisBank[1] = calculateMajorityChannel.(stringToBuf.(tempLoopString)); //Todo: something breaks here sometimes (probably string-loop serialization with "-" for very small numbers
                     "C sceneBuilder".postln;
                     thisBank[2] = true;
                     thisBank[3] = tempLoopTask;
