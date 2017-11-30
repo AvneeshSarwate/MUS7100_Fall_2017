@@ -17,7 +17,7 @@ recorded short you don't roll-over and play the starting bit twice. )
 */
 
 (
-var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, indToNote, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc;
+var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, indToNote, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc, tempRecordBuffer;
 
 
 //light switching variables
@@ -198,7 +198,7 @@ padOn = {|vel, note, chan, port|
                         thisBank[3].free;
                     });
                     "B sceneBuilder".postln;
-                    thisBank[1] = calculateMajorityChannel.(stringToBuf.(tempLoopString)); //Todo: something breaks here sometimes (probably string-loop serialization with "-" for very small numbers
+                    thisBank[1] = calculateMajorityChannel.(tempRecordBuffer); //Todo: something breaks here sometimes (probably string-loop serialization with "-" for very small numbers
                     "C sceneBuilder".postln;
                     thisBank[2] = true;
                     thisBank[3] = tempLoopTask;
@@ -663,7 +663,7 @@ recordButtonFunc = {
             },
             {
                 recBuf = quantize.(recordBuffer, quantizationLevels, recordingStartBeat, recordingEndBeat);
-
+                tempRecordBuffer = recBuf;
                 tempLoopString = recBuf.collect({|item| item.join(",")}).join("-");
                 tempLoopTask = createRecordedTask.(recBuf);
                 tempoClock.sched(tempoClock.timeToNextBeat, {tempLoopTask.start; nil;});
@@ -928,6 +928,7 @@ resetRecordingState = {
     recordBuffer.clear();
     tempLoopTask = nil;
     tempLoopString = nil;
+    tempRecordBuffer = List.new;
     masterClockOSCport.sendMsg("/resetRecordingState_algKeys", 1);
     r
 };
