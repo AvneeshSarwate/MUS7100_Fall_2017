@@ -1,5 +1,5 @@
 (
-var midiOut, channelMap, startWaveHandler, stopWaveHandler, startWave, stopWave, masterTempoClock, maxOSCport, scPort, lemurOSCport, lemurFunc, noteMidiOut, wallStates, ballToNote;
+var midiOut, channelMap, startWaveHandler, stopWaveHandler, startWave, stopWave, masterTempoClock, maxOSCport, scPort, gateOSCport, gateFunc, noteMidiOut, wallStates, ballToNote, masterClockTempoHandler;
 var sinwav = {|fr,ph,am,sh, time| (sin((pi*fr*time)+ph)*am)+sh};
 var coswav = {|fr,ph,am,sh, time| (cos((pi*fr*time)+ph)*am)+sh};
 
@@ -141,78 +141,35 @@ stopWaveHandler = OSCFunc(stopWave, "/stopWave");
 
 
 
-lemurOSCport = NetAddr("127.0.0.1", 7400);
+gateOSCport = NetAddr("127.0.0.1", 7100);
 
-lemurFunc = {|calcFunc, attr|
-	var lemurTask = Task({
+gateFunc = {|calcFunc, key|
+	var gateTask = Task({
         {
 			var rawVal = calcFunc.(masterTempoClock.beats);
-            var val = rawVal + 0.5;
-            if(attr == 0) {lemurOSCport.sendMsg("/setParam", "friction",  val)};
-			if(attr == 1) {lemurOSCport.sendMsg("/setAttraction", val)};
-			if(attr == 2) {lemurOSCport.sendMsg("/setBalls", val)};
-			if(attr == 3) {lemurOSCport.sendMsg("/setSpeed", val)};
-			0.02.wait;
+            var val = (rawVal + 1)/2;
+            gateOSCport.sendMsg("/gateVal"++key, val);
+			0.1.wait;
+            ["gateWave", key, val].postln;
         }.loop;
     }, masterTempoClock);
-	channelMap[attr].stop;
-	channelMap[attr] = lemurTask;
-	channelMap[attr].start;
+	channelMap[key].stop;
+	channelMap[key] = gateTask;
+	channelMap[key].start;
 };
 
 OSCFunc.new({|msg, time, addr, recvPort|
 	// msg[1] is calc string
-	// msg[2] is the lemur attribute to change (0-3)
+	// msg[2] is the gate key
 	[msg].postln;
-	lemurFunc.(createCalcFunc.(msg[1].asString), msg[2].asInt);
-}, "/setLemur");
-
-
-ballToNote = [60, 62, 64, 65, 67, 69, 71, 72, 74, 76];
-
-~quantizeBallBeats = true;
-~ballQuantizeValue = 2;
-
-~collisionHandler = {|msg, time, addr, recvPort|
-	// msg[1] ballIndex
-    // msg[2] is wallIndex
-	// msg[3] is start/end collision
-
-    if(~quantizeBallBeats,
-        {
-            var timeToNextHit = ~ballQuantizeValue - (masterTempoClock.beats % ~ballQuantizeValue);
-            var collisionFunc = {
-                if((msg[3].asString == "start") && wallStates[msg[2].asInt],
-                {noteMidiOut.noteOn(msg[2].asInt, ballToNote.wrapAt(msg[1].asInt), 64)});
-                ["COLLIDE DELAY",timeToNextHit, msg, (msg[3].asString == "on") && wallStates[msg[2].asInt]].postln;
-            };
-            masterTempoClock.sched(timeToNextHit, collisionFunc);
-        },
-        {
-            if((msg[3].asString == "start") && wallStates[msg[2].asInt],
-                {noteMidiOut.noteOn(msg[2].asInt, ballToNote.wrapAt(msg[1].asInt), 64)});
-            ["COLLIDE", msg, (msg[3].asString == "on") && wallStates[msg[2].asInt]].postln;
-        }
-    );
-
-
-
-};
-
-OSCFunc.new(~collisionHandler, "/collision");
-
-wallStates = [true, true, true, true];
-OSCFunc.new({|msg, time, addr, recvPort|
-	// msg[1] wall index
-	// msg[2] state
-    wallStates[msg[1].asInt] = msg[2].asInt == 1;
-}, "/wallState");
+	gateFunc.(createCalcFunc.(msg[1].asString), msg[2].asInt);
+}, "/gateWave");
 
 OSCFunc.new({|msg, time, addr, recvPort|
-	// msg[1..] is list of notes for the chord
-    ballToNote = msg[1..];
-    ["ballToNote", msg, ballToNote].postln;
-}, "/ballChord");
+	// msg[1] is the gate key
+	[msg].postln;
+    channelMap[msg[1]].stop;
+}, "/stopGateWave");
 
 )
 

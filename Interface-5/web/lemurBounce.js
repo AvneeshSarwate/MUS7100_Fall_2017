@@ -707,7 +707,16 @@ var setGate = function (key, m, b) {
             var gatesComposite = getCompositeByLabel('Gates');
             if(body) Matter.World.remove(gatesComposite, body);   
         }
-        gates[key] = {'m': m, 'b': b, 'status': [0, 0, 0, 0, 0, 0, 0, 0, 0, 0], 'show':true};
+        var status = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        var balls = getBalls();
+
+        _.each(balls, function(ball, i) {
+            var x = ball.position.x;
+            var y = height - ball.position.y;    
+            status[i] = Math.sign(y - ((m * x) + b));
+          });
+
+        gates[key] = {'m': m, 'b': b, 'status': status, 'show':true};
         return addGate(key, points);
     }
 };

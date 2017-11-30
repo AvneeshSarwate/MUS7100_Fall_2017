@@ -73,9 +73,9 @@ class WavePlayer:
 		msg.append(ccNumOrWaveAddr)
 		self.superColliderClient.send(msg)
 
-	def lemurWave(self, wave, attr):
+	def gateWave(self, wave, attr):
 		msg = OSC.OSCMessage()
-		msg.setAddress("/setLemur")
+		msg.setAddress("/gateWave")
 		msg.append(str(wave))
 		msg.append(attr)
 		self.superColliderClient.send(msg)
