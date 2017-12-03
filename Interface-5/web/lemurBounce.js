@@ -858,10 +858,21 @@ var getDist = function(well, ball) {
     return Math.sqrt( Math.pow(ball.position.x - well.position.x, 2) + Math.pow(ball.position.y - well.position.y, 2) )
 }
 
-var stopBall = function(ballNumber) {
-    var balls = getBalls();
-    var width = matterContext['canvas'].width;
-    var height = matterContext['canvas'].height;
+var stopBall = function(ballNumber, set) {
+    var balls;
+    var width;
+    var height;
+    
+    if(set == "note"){
+        balls = getBalls();
+        width = matterContext['canvas'].width;
+        height = matterContext['canvas'].height; 
+    } 
+    else { 
+        balls = getSlowBalls();
+        width = matterContext['slowCanvas'].width;
+        height = matterContext['slowCanvas'].height;
+    }
 
     if(ballNumber <= balls.length){
         var ball = balls[ballNumber - 1];
