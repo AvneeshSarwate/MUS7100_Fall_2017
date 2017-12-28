@@ -17,7 +17,7 @@ recorded short you don't roll-over and play the starting bit twice. )
 */
 
 (
-var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, indToNote, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc, tempRecordBuffer;
+var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, indToNote, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc, tempRecordBuffer, truncateLoop_BUTTON;
 
 
 //light switching variables
@@ -109,6 +109,7 @@ lightIndex = if(~lightIndexes.size == 0,
 //OPTIONS
 preRecordLength = 0;
 ~truncateLoop = true;
+truncateLoop_BUTTON = 97;
 quantizationLevels = [3,4];
 
 algOrderList = List.new();
@@ -145,7 +146,7 @@ z = bankMap;
 bankSet.do({|i| setLight.(i, 0)});
 playingBanks = Set.new();
 
-quantizeButton = 8;
+quantizeButton = 96;
 quantizeColor = 8;
 quantized = false;
 
@@ -718,14 +719,18 @@ controlHandler = {|vel, note, chan, port|
         setLight.(sceneRecordButton, recordingScene.if(recordColor, notRecordingColor));
     });
     if((note == quantizeButton) && (vel == 127), {
-        /*quantized = quantized.not;
+        quantized = quantized.not;
         if(quantized,
-        {setLight.(quantizeButton, quantizeColor)},
-        {setLight.(quantizeButton, 0)}
-        );*/
+            {setLight.(quantizeButton, quantizeColor)},
+            {setLight.(quantizeButton, 0)}
+        );
     });
     if(arrowButtons.includes(note) && (vel == 127), {
 
+    });
+    if((note == truncateLoop_BUTTON) && (vel != 0), {
+        if(~truncateLoop, {setLight.(truncateLoop_BUTTON, 45)}, {setLight.(truncateLoop_BUTTON, 0)});
+        ~truncateLoop = ~truncateLoop.not; //light on means NOT TRUNCATING*/
     });
     //MULTIPLE ALG BUTTONS CAN BE HELD DOWN
     //THEIR ORDER WILL SPECIFY A "pipeline" of transformations
@@ -733,8 +738,6 @@ controlHandler = {|vel, note, chan, port|
     if((note == cycleLight_BUTTON) && (vel !=0), {
         // ["MULTILOOP BUTTON CYCLE HIT", ~lightIndex, lightIndex].postln;
         if(~cycling, {cycleLight.()})
-        // if(~truncateLoop, {setLight.(cycleLight_BUTTON, 45)}, {setLight.(cycleLight_BUTTON, 0)});
-        // ~truncateLoop = ~truncateLoop.not; //light on means NOT TRUNCATING*/
     });
 };
 controlHandlerWrapper = {|vel, note, chan, port|

@@ -446,13 +446,6 @@ controlHandler = {|vel, note, chan, port|
 			}
 		);
 	});
-	if((note == quantizeButton) && (vel == 127), {
-		quantized = quantized.not;
-		if(quantized,
-			{setLight.(quantizeButton, quantizeColor)},
-			{setLight.(quantizeButton, 0)}
-		);
-	});
 	if(arrowButtons.includes(note) && (vel == 127), {
 		//todo: note off all for that instrument
 		//Todo newKeys - lighting shift
