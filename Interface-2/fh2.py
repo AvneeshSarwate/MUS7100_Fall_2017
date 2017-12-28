@@ -272,7 +272,7 @@ class FH2:
             keyVal = scale
             if len(keyval) == 0:
                 raise StopIteration("malformed scale string")
-            keyval = ','.join(str(keyval))
+            keyval = ','.join(map(str,keyval))
         msg.append(keyval)
         msg.append(chan)
         self.superColliderClient.send(msg)

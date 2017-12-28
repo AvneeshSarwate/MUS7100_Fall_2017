@@ -767,10 +767,10 @@ playScene = {|bankMapInstance, sceneInd|
                 var bank = bankMap[padInd];
                 //turn on/off light
                 setLight.(padInd, bank[3].isNil.if(0, color1[bank[1]]));
-                ["SCENE d sceneBuilder", padInd].postln;
+                // ["SCENE d sceneBuilder", padInd].postln;
                 //recreate task from string (maybe there's closure issues when trying to play the old task?)
                 if(bank[4].isNil.not, { bank[3] = createRecordedTask.(stringToBuf.(bank[4])) });
-                ["SCENE e sceneBuilder", padInd].postln;
+                // ["SCENE e sceneBuilder", padInd].postln;
                 //play and add to playing banks
                 if(bank[2], {
                     //TODO sceneBuilder - recreate task?
