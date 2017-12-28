@@ -169,6 +169,7 @@ onDeckBuffers = List.fill(16, {nil;});
 algChannelsInfo = List.fill(16, {[nil, nil];});
 
 scenes = List.fill(32, nil);
+~scenes = scenes;
 scenePads = (21..28);
 sceneRecordButton = 59;
 recordingScene = false;
@@ -318,7 +319,7 @@ turnOnBank = {|thisBank, note|
     );
     thisBank[2] = true;
     playingBanks.add(note);
-    pythonOSCport.sendMsg("/loopPlay", thisBank[1], thisBank[0], true); //mark python loop-info as playing
+    pythonOSCport.sendMsg("/loopPlay", thisBank[1], thisBank[0], 1); //mark python loop-info as playing
 };
 
 turnOffBank = {|thisBank, note|
@@ -332,7 +333,7 @@ turnOffBank = {|thisBank, note|
     thisBank[2] = false;
     setLight.(note, switch(thisBank[5], \midi, {color1[thisBank[1]]}, \sample, {audioClipColor}));
     playingBanks.remove(note);
-    pythonOSCport.sendMsg("/loopPlay", thisBank[1], thisBank[0], false); //mark python loop-info as stopped
+    pythonOSCport.sendMsg("/loopPlay", thisBank[1], thisBank[0], 0); //mark python loop-info as stopped
 
 };
 
@@ -614,8 +615,8 @@ r = createRecordedTask;
 //TODO: move variable instations to near the functions that use them
 OSCFunc({|msg, time, addr, recvPort|
     //msg[1] is the new BEAT DURATION (not tempo)
-    tempoClock = TempoClock.new(1/msg[1], 0);
-    //t = tempoClock;
+    tempoClock = TempoClock.new(1/msg[1], 0, queueSize:2056);
+    ~sceneBuilderClock = tempoClock;
     tempoClock.schedAbs(1, metronomeFunc);
     "MULTILOOP ONE SHOT".postln;
 }, "/masterClockBeat").oneShot;
@@ -754,11 +755,11 @@ playScene = {|bankMapInstance, sceneInd|
             //todo sceneBuilder - turn off current scene
             "SCENE a sceneBuilder".postln;
             (0..3).do({|i| midiOut.allNotesOff(i)});
-            //"SCENE b sceneBuilder".postln;
+            "SCENE b sceneBuilder".postln;
             bankMap.values.do({|bank|
                 if(bank[3].isNil.not, {bank[3].stop; bank[3].free});
             });
-            //"SCENE c sceneBuilder".postln;
+            "SCENE c sceneBuilder".postln;
             bankMap = bankMapInstance.deepCopy;
             playingBanks.clear;
             //midiNote -> [bankButton, bankChan, isOn, loopTask/nil, loopString, playType, algMelodyString]
@@ -766,10 +767,10 @@ playScene = {|bankMapInstance, sceneInd|
                 var bank = bankMap[padInd];
                 //turn on/off light
                 setLight.(padInd, bank[3].isNil.if(0, color1[bank[1]]));
-                //["SCENE d sceneBuilder", padInd].postln;
+                ["SCENE d sceneBuilder", padInd].postln;
                 //recreate task from string (maybe there's closure issues when trying to play the old task?)
                 if(bank[4].isNil.not, { bank[3] = createRecordedTask.(stringToBuf.(bank[4])) });
-                //["SCENE e sceneBuilder", padInd].postln;
+                ["SCENE e sceneBuilder", padInd].postln;
                 //play and add to playing banks
                 if(bank[2], {
                     //TODO sceneBuilder - recreate task?
@@ -780,6 +781,7 @@ playScene = {|bankMapInstance, sceneInd|
             });
             sceneIsOnDeck = false;
             //pythonOSCport.sendMsg("/scenePlayed", sceneInd); what is this for?
+            nil;
         });
     });
 };
@@ -852,14 +854,14 @@ OSCFunc({|msg, time, addr, recvPort|
 //msg = [/address, melody/info-strList, sceneNumber] - melodyInfoStr
 
 receiveScene = {|msg, time, addr, recvPort|
-    ["RECIEVED SCENE", msg[2]].postln;
+    ["RECIEVED SCENE", msg[2], msg[1]].postln;
     if(msg[1].asSymbol != \none,
         {
             //set roots and scales
             var count = 0;
             var bankMapInstance = bankMap.deepCopy;
 
-            ["SCENE IS NON NULL", msg[2]].postln;
+            ["SCENE IS NON NULL", msg[2], tempoClock.queue.size, bankMapInstance.keys.size].postln;
             bankMapInstance.keys.do({|button|
                 var bank = bankMapInstance[button];
                 var stopFunc = {
@@ -881,7 +883,7 @@ receiveScene = {|msg, time, addr, recvPort|
                 tempoClock.sched(tempoClock.timeToNextBeat-0.01, stopFunc);
             });
 
-            ["ALL LOOPS STOPPED FOR SCENE", msg[2]].postln;
+            ["ALL LOOPS STOPPED FOR SCENE", msg[2], tempoClock.queue.size].postln;
 
             //split string and set banks
             msg[1].asString.split($:).do({|bankStr|
@@ -1012,8 +1014,8 @@ metronomeFunc = {
 // ================================================================================================
 // ================================================================================================
 //FILE SAVE/LOAD
-
-
+~scenes[3].do({|loop| loop.postln;})
+5
 
 (
 w = Window.new.front;

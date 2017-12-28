@@ -165,19 +165,20 @@ playColumn = {|colInd|
 
         0.001.wait;
 
-        (0..3).do({|i| masterClockOSCport.sendMsg("/turnOffChannel", i)});
 
         0.001.wait;
 
         (0..7).do({|i|
             if(grid[i][colInd],
-                {masterClockOSCport.sendMsg("/toggleBank", i, "on")});
+                {
+                    masterClockOSCport.sendMsg("/toggleBank", i, "on");
+                    masterClockOSCport.sendMsg("/turnOffChannel", chanPerLoop[colInd]);
+            });
         });
         //
     }).play;
 
 };
-
 
 
 //msg[1] is a string of 0/1s in row-major order, separated by commas
