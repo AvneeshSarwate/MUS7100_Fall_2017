@@ -143,7 +143,7 @@ MIDIFunc.cc(controlHandlerWrapper, nil, nil, launchpad.uid);
 //msg[1] is bankIndex (eg buttonNote in sceneBuilder), msg[4] is bankChan
 OSCFunc({|msg, time, addr, recvPort|
     if(msg[1].asInt > 40, { //top row in scene builder has bank indexes 41-48
-        var loopInd = ((msg[1].asInt)%8) - 1;
+        var loopInd = ((msg[1].asInt)%10) - 1;
         var chanInd = msg[4].asInt;
 
         ["/saveLoop loop seq", loopInd, chanInd].postln;
@@ -163,10 +163,7 @@ playColumn = {|colInd|
     Task({
         (0..7).do({|i| masterClockOSCport.sendMsg("/toggleBank", i, "off")});
 
-        0.001.wait;
-
-
-        0.001.wait;
+        0.0005.wait;
 
         (0..7).do({|i|
             if(grid[i][colInd],
