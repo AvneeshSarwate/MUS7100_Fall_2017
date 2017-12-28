@@ -95,6 +95,23 @@ pythonOSCport = NetAddr("localhost", 7100);
 masterClockOSCport = NetAddr("127.0.0.1", 57120);
 
 
+//TODO: move variable instations to near the functions that use them
+OSCFunc({|msg, time, addr, recvPort|
+    //msg[1] is the new BEAT DURATION (not tempo)
+    tempoClock = TempoClock.new(1/msg[1], 0, queueSize:2056);
+    ~sceneBuilderClock = tempoClock;
+    "SCENE BUILDER ONE SHOT".postln;
+}, "/masterClockBeat").oneShot;
+
+//msg[1] is the new BEAT DURATION (not tempo)
+//msg[2] is whether the beat is being realigned
+
+OSCFunc({|msg, time, addr, recvPort|
+    tempoClock.tempo = 1/msg[1].asFloat;
+    if(msg[2].asBoolean, {tempoClock.beats = tempoClock.beats.floor + 1});
+}, "/masterClockTempo");
+
+
 
 color1 = [39, 112, 4, 83]; //colorVal
 grid = Array.fill2D(8, 8, {false});
@@ -113,6 +130,10 @@ MIDIFunc.noteOn({|vel, note, chan, port|
         ["STEP SEQ PRESS", row, col, chanPerRow[row], color1[chanPerRow[row]]].postln;
         grid[row][col] = grid[row][col].not;
         setLight.(note, if(grid[row][col], color1[chanPerRow[row]], 0));
+
+        if(grid[row].any({|v| v}).not,
+            {tempoClock.sched(((4-beatNum%4)-1)%4 + tempoClock.timeToNextBeat,
+                {masterClockOSCport.sendMsg("/toggleBank", row, "off")})});
 
         pythonOSCport.sendMsg("/sendLoopGrid", grid.flat.collect({|el| if(el, 1, 0)}).join(","));
     })
@@ -161,7 +182,12 @@ OSCFunc({|msg, time, addr, recvPort|
 playColumn = {|colInd|
 
     Task({
-        (0..7).do({|i| masterClockOSCport.sendMsg("/toggleBank", i, "off")});
+        (0..7).do({|i|
+            if(grid[i][(colInd-1)%8],
+                {
+                    masterClockOSCport.sendMsg("/toggleBank", i, "off");
+            });
+        });
 
         0.0005.wait;
 
@@ -169,7 +195,6 @@ playColumn = {|colInd|
             if(grid[i][colInd],
                 {
                     masterClockOSCport.sendMsg("/toggleBank", i, "on");
-                    masterClockOSCport.sendMsg("/turnOffChannel", chanPerLoop[colInd]);
             });
         });
         //
@@ -238,5 +263,11 @@ OSCFunc({|msg, time, addr, recvPort|
 note - top row is row "0" and indexes in increasing order down
 
 */
+
+(
+var grid = Array.fill2D(8, 8, {false});
+grid[0]
+
+)
 
 ~lightIndex
