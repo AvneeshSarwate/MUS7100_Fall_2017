@@ -782,6 +782,10 @@ playScene = {|bankMapInstance, sceneInd|
                 });
                 //["SCENE f sceneBuilder", padInd].postln;
             });
+            (81..88).do({|key|
+                var thisBank = bankMap[key];
+                masterClockOSCport.sendMsg("/saveLoop", thisBank[0], thisBank[4], key, thisBank[1]);
+            });
             sceneIsOnDeck = false;
             //pythonOSCport.sendMsg("/scenePlayed", sceneInd); what is this for?
             nil;

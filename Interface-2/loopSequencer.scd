@@ -165,15 +165,15 @@ MIDIFunc.cc(controlHandlerWrapper, nil, nil, launchpad.uid);
 OSCFunc({|msg, time, addr, recvPort|
     if(msg[1].asInt > 40, { //top row in scene builder has bank indexes 41-48
         var loopInd = ((msg[1].asInt)%10) - 1;
-        var chanInd = msg[4].asInt;
+        var chanInd = if(msg[4].isNil, -1, msg[4].asInt);
 
         ["/saveLoop loop seq", loopInd, chanInd].postln;
 
-        setLight.((8-loopInd)*10, color1[chanInd]);
+        setLight.((8-loopInd)*10, if(chanInd < 0, 0, color1[chanInd]));
         chanPerRow[loopInd] = chanInd;
 
-        (0..7).do({|i| grid[loopInd][i] = true});
-        (1..8).do({|i| setLight.(((8-loopInd)*10)+i, color1[chanInd])});
+        /*(0..7).do({|i| grid[loopInd][i] = true});
+        (1..8).do({|i| setLight.(((8-loopInd)*10)+i, color1[chanInd])});*/
     });
 
 }, "/saveLoop");
