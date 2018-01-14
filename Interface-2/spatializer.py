@@ -62,11 +62,15 @@ class Spatializer:
 				return
 			newChannel = self.getChan(note, channel, onOff)
 			msg = OSC.OSCMessage()
-			self.sendNote(newChannel, note, vel, onOff) #todo: should this be in the handling conditional?
+			 #todo: should this be in the handling conditional?
 			if handlingChord:
 				return (newChannel, note, vel, onOff)
 			else:
-				self.broadcastNote(newChannel, note, vel, onOff)
+				if self.broadcasting:
+					self.broadcastNote(newChannel, note, vel, onOff)
+				else:
+					self.sendNote(newChannel, note, vel, onOff)
+				
 
 	def heldNotesOff(self, chan):
 		for note in self.onNotes:
@@ -141,11 +145,15 @@ class Spatializer:
 				info = self.handle(channel, note, 64, "on", chrd[note], handlingChord=True)
 				noteChangeInfo.append(info)
 			msg = OSC.OSCMessage()
-			msg.setAddress("/broadcastNoteSelector-"+str(self.chanInd))
-			msg.append(0) #swappingChords Flag
-			for i in noteChangeInfo:
-				msg.append(i)
-			self.broadcastClient.send(msg)
+			if self.broadcasting :
+				msg.setAddress("/broadcastNoteSelector-"+str(self.chanInd))
+				msg.append(0) #swappingChords Flag
+				for i in noteChangeInfo:
+					msg.append(i)
+				self.broadcastClient.send(msg)
+			else:
+				for info in noteChangeInfo:
+					self.sendNote(*info)
 		if self.debug:
 			print "broadcasted", noteChangeInfo
 
@@ -159,11 +167,15 @@ class Spatializer:
 				info = self.handle(channel, note, 64, "on", chrd[note], handlingChord=True)
 				noteChangeInfo.append(info)
 			msg = OSC.OSCMessage()
-			msg.setAddress("/broadcastNoteSelector-"+str(self.chanInd))
-			msg.append(1) #swapping chords flag
-			for i in noteChangeInfo:
-				msg.append(i)
-			self.broadcastClient.send(msg)
+			if self.broadcasting :
+				msg.setAddress("/broadcastNoteSelector-"+str(self.chanInd))
+				msg.append(1) #swapping chords flag
+				for i in noteChangeInfo:
+					msg.append(i)
+				self.broadcastClient.send(msg)
+			else:
+				for info in noteChangeInfo:
+					self.sendNote(*info)
 		if self.debug:
 			print "broadcasted", noteChangeInfo
 
