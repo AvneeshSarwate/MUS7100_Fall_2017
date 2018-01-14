@@ -33,7 +33,7 @@ indToNote = {|x|
 };
 
 isPadNote = {|x| noteToInd.(x) != -1};
-isChordNote = {|x| isPadNote.(x) && (noteToInd.(x) >= 20)}; //bottom two rows are for scenes
+isChordNote = {|x| isPadNote.(x) && (noteToInd.(x) >= -1)}; //bottom two rows used to be for scenes
 isSceneNote = {|x| isPadNote.(x) && (noteToInd.(x) < 20)};
 record_BUTTON = 8;
 green_LIGHT = 48;
@@ -125,10 +125,10 @@ recording = false;
 
 chordButtonChanMap = Dictionary.new;
 ~chordButtonChanMap = chordButtonChanMap;
-divider = 80;
+divider = 40;
 (0..128).do({|i| chordButtonChanMap[i] = ""});
-(20..(divider-1)).do({|i| chordButtonChanMap[i] = "-1"});
-//(divider..79).do({|i| chordButtonChanMap[i] = "-1"});
+(0..(divider-1)).do({|i| chordButtonChanMap[i] = "-1"});
+(divider..79).do({|i| chordButtonChanMap[i] = "-0"});
 
 miniOut.noteOn(0, record_BUTTON, green_LIGHT);
 miniOut.noteOn(0, loopRecord_BUTTON, green_LIGHT);
@@ -223,6 +223,7 @@ noteOnFunc = {|vel, note, chan, port|
         //TODO - refactor this to simply use chordButtonChanMap as whole address,
         //removing chord/scene distinction. this will allow you to also record scene changes
         var ind = noteToInd.(note);
+        [ind, chordButtonChanMap[ind]].postln;
 		if(isChordNote.(note), {
 			if(recording, {
                 pythonOSCport.sendMsg("/saveChord"++chordButtonChanMap[ind], ind);
@@ -265,7 +266,7 @@ noteOffFunc = {|vel, note, chan, port|
         {
             if(recording.not && releaseChords, {numChordPadsPlaying = numChordPadsPlaying-1});
             //["NUM CHORDS PLAYING", numChordPadsPlaying].postln;
-            if((numChordPadsPlaying == 0) && releaseChords && recording.not, {
+            if(/*(numChordPadsPlaying == 0) &&*/ releaseChords && recording.not, {
                 pythonOSCport.sendMsg("/stopChord"++chordButtonChanMap[noteToInd.(note)]);
                 if([1,2].includes(recordingLoop), {
                     loopRecordBuffer.add([tempoClock.beats, "/stopChord"++chordButtonChanMap[noteToInd.(note)]]);
