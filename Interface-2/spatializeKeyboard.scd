@@ -1,7 +1,7 @@
 (
 var handler, midiOut;
 
-midiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
+midiOut = MIDIOut.newByName("IAC Driver", "Bus 7");
 midiOut.latency = 0;
 
 handler= {|msg, time, addr, recvPort|
