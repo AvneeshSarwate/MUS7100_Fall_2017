@@ -52,6 +52,7 @@ class FH2:
         self.superColliderServer.addMsgHandler("/pedalButton", self.pedalButtonHandler)
         self.superColliderServer.addMsgHandler("/saveMetaInfo", self.saveMetaInfo)
         self.superColliderServer.addMsgHandler("/metaInfoLoadRequest", self.metaInfoLoadRequestHandler)
+        self.superColliderServer.addMsgHandler("/utilityButton", lambda a, b, c, d : None)
 
         self.pedalButtonFunc = lambda: 0
 
