@@ -50,7 +50,7 @@ OSCFunc(noteForwardHandler, "/forwardNotes");
 //msg is [addr, midiChannel, [note, vel, onOff.. ]
 noteForwardHandler = {|msg, time, addr, recvPort|
 
-    var midiChan = msg[0].asInt;
+    var midiChan = msg[1].asInt;
 	["onOff message", msg].postln;
     lock.wait;
     (0..(((msg.size-2)/3)-1)).do({|i|

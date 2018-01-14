@@ -151,6 +151,7 @@ class Spatializer:
 				for i in noteChangeInfo:
 					msg.append(i)
 				self.broadcastClient.send(msg)
+				#print msg
 			else:
 				for info in noteChangeInfo:
 					self.sendNote(*info)
@@ -173,6 +174,7 @@ class Spatializer:
 				for i in noteChangeInfo:
 					msg.append(i)
 				self.broadcastClient.send(msg)
+				#print msg
 			else:
 				for info in noteChangeInfo:
 					self.sendNote(*info)
