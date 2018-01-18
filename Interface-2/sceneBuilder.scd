@@ -667,7 +667,7 @@ recordButtonFunc = {
             {
                 recBuf = quantize.(recordBuffer, quantizationLevels, recordingStartBeat, recordingEndBeat);
                 tempRecordBuffer = recBuf;
-                tempLoopString = recBuf.collect({|item| item.join(",")}).join("-");
+                tempLoopString = recBuf.collect({|item| item.join(",")}).join("_");
                 tempLoopTask = createRecordedTask.(recBuf);
                 tempoClock.sched(tempoClock.timeToNextBeat, {tempLoopTask.start; nil;});
             }
@@ -799,7 +799,7 @@ playScene = {|bankMapInstance, sceneInd|
 };
 
 stringToBuf = {|melString|
-    var buf = melString.split($-).collect({|hitString|
+    var buf = melString.split($_).collect({|hitString|
         var sp = hitString.split($,);
         [sp[0].asFloat, sp[1].asInt, sp[2].asInt, sp[3].asInt, sp[4]]
     });

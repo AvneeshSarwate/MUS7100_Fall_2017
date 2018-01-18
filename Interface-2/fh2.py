@@ -148,13 +148,13 @@ class FH2:
             s = hitString.split(",")
             return [float(s[0]), int(s[1]), int(s[2]), int(s[3]), s[4]]
 
-        recBuf = map(splitHit, loopString.split("-"))
+        recBuf = map(splitHit, loopString.split("_"))
         return recBuf
 
     @staticmethod
     def hitListToString(hitList, button, startBeat, playing=0):
         hitToStringList = lambda h: ['%f' % h[0]] + map(str, h[1:])
-        return str(button) + " " + "-".join(map(lambda h: ",".join(hitToStringList(h)), hitList)) + " " + str(playing)
+        return str(button) + " " + "_".join(map(lambda h: ",".join(hitToStringList(h)), hitList)) + " " + str(playing)
 
     def sceneToString(self, loops, loopInfo):
         sceneStringList = []
