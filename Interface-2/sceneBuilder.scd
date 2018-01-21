@@ -110,7 +110,7 @@ lightIndex = if(~lightIndexes.size == 0,
 preRecordLength = 0;
 ~truncateLoop = true;
 truncateLoop_BUTTON = 97;
-quantizationLevels = [3,4];
+~quantizationLevels = [6];
 
 algOrderList = List.new();
 
@@ -665,7 +665,7 @@ recordButtonFunc = {
                 resetRecordingState.();
             },
             {
-                recBuf = quantize.(recordBuffer, quantizationLevels, recordingStartBeat, recordingEndBeat);
+                recBuf = quantize.(recordBuffer, ~quantizationLevels, recordingStartBeat, recordingEndBeat);
                 tempRecordBuffer = recBuf;
                 tempLoopString = recBuf.collect({|item| item.join(",")}).join("_");
                 tempLoopTask = createRecordedTask.(recBuf);

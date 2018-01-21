@@ -34,7 +34,7 @@ indToNote = {|x|
 
 isPadNote = {|x| noteToInd.(x) != -1};
 isChordNote = {|x| isPadNote.(x) && (noteToInd.(x) >= -1)}; //bottom two rows used to be for scenes
-isSceneNote = {|x| isPadNote.(x) && (noteToInd.(x) < 20)};
+isSceneNote = {|x| false};
 record_BUTTON = 8;
 green_LIGHT = 48;
 red_LIGHT = 3;
