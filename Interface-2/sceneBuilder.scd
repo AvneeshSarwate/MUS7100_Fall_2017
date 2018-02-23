@@ -675,18 +675,23 @@ recordButtonFunc = {
         recordingEndBeat = tempoClock.beats.ceil;
 
         //TODO: handle cases where multiple inst hits in a recBuf, or when there's no noteOns recorded
-        if(recordBuffer.size == 0,
-            {
-                resetRecordingState.();
-            },
-            {
+        if((recordBuffer.size != 0) && (ccRecordBuffer.size == 0), {
                 recBuf = quantize.(recordBuffer, ~quantizationLevels, recordingStartBeat, recordingEndBeat);
                 tempRecordBuffer = recBuf;
                 tempLoopString = recBuf.collect({|item| item.join(",")}).join("_");
                 tempLoopTask = createRecordedTask.(recBuf);
                 tempoClock.sched(tempoClock.timeToNextBeat, {tempLoopTask.start; nil;});
-            }
-        );
+        });
+        if((ccRecordBuffer.size != 0) && (recordBuffer.size == 0), {
+                recBuf = quantize.(ccRecordBuffer, ~quantizationLevels, recordingStartBeat, recordingEndBeat, true);
+                tempRecordBuffer = recBuf;
+                tempLoopString = recBuf.collect({|item| item.join(",")}).join("_");
+                tempLoopTask = createRecordedTask.(recBuf);
+                tempoClock.sched(tempoClock.timeToNextBeat, {tempLoopTask.start; nil;});
+        });
+        if(((ccRecordBuffer.size == 0) && (recordBuffer.size == 0)) || ((ccRecordBuffer.size != 0) && (recordBuffer.size != 0)), {
+                resetRecordingState.();
+        });
     });
 };
 
@@ -955,6 +960,7 @@ resetRecordingState = {
     recordingState = 0;
     setLight.(recordButton, recordColor);
     recordBuffer.clear();
+    ccRecordBuffer.clear();
     tempLoopTask = nil;
     tempLoopString = nil;
     tempRecordBuffer = List.new;
