@@ -14,9 +14,9 @@
 ~lightVector = [0, 0, 0, 0];
 
 ~colorVectors = [
+    [0, 0, 1],
     [1, 0, 0],
-    [1, 0, 1],
-    [1, 1, 0],
+    [0, 1, 0],
     [0, 1, 1]
 ];
 
@@ -43,7 +43,8 @@
 }, nil, nil, ~midiIn.uid);
 
 ~calcDMX = {|lightVector, colorVectors|
-    var dmxBuf = lightVector.collect({|lightVal, ind| lightVal*colorVectors[ind]}).flat;
+    var dmxBuf = lightVector.collect({|lightVal, ind| lightVal*colorVectors[ind]*255}).flat;
+    dmxBuf = dmxBuf.collect({|lightChanVal, ind| [ind+1, lightChanVal]}).flat;
     ~maxPort.sendRaw((["/dmxVals"]++dmxBuf).asArray.asRawOSC);
     (["/dmxVals"]++dmxBuf).postln
 };
