@@ -383,6 +383,7 @@ MIDIFunc.cc({|vel, note, chan, port|
             recordButtonFunc.();
         },
         {
+            midiOut.control(chan, note, vel);
             if(recordingMetronome, {ccRecordBuffer.add([tempoClock.beats, note, vel, chan, "cc"])})
         }
     );

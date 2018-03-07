@@ -17,27 +17,26 @@
 ~blends = [0, 0, 0, 0];
 
 ~colors1 = [
-    [0, 0, 0],
-    [1, 0, 0],
+    [1, 0, 0], //bottom row color
     [0, 1, 0],
-    [0, 1, 1]
+    [0, 0, 1],
+    [0, 1, 1]  //top row color
 ];
 
 ~colors2 = [
-    [0, 0, 0],
+    [0, 1, 0], //bottom row color
+    [1, 1, 0],
     [0, 1, 0],
-    [0, 1, 0],
-    [0, 1, 1]
+    [0, 1, 1]  //top row color
 ];
-
-a.wrapAt(-1)
-a = []
 
 ~midiOn = MIDIFunc.noteOn({|vel, note, chan, port|
     if(note < 16, {
         var col = note%4;
         var row = (note/4).floor;
         ~buttons[col].add(row);
+        ~buttons.postln;
+        ~calcDMX.();
     });
 
 }, nil, nil, ~midiIn.uid);
@@ -47,21 +46,30 @@ a = []
         var col = note%4;
         var row = (note/4).floor;
         ~buttons[col].remove(row);
+        ~buttons.postln;
+        ~calcDMX.();
     });
 
 }, nil, nil, ~midiIn.uid);
 
 ~midiCC = MIDIFunc.cc({|vel, note, chan, port|
+    if((0..3).includes(note), {
+        ~blends[(0..3).indexOf(note)] = vel/127;
+    });
+    if((4..7).includes(note), {
+        ~fades[(4..7).indexOf(note)] = vel/127;
+    });
 
 }, nil, nil, ~midiIn.uid);
 
-~calcDMX = {|lightVector, colorVectors|
+~calcDMX = {
     var dmxBuf = List.new;
     (0..3).do({|col|
-        var row = a.wrapAt(-1);
+        var row = ~buttons[col].wrapAt(-1);
+        ["ROW COL", row, col].postln;
         if(row.isNil,
             {
-                dmxBuff.add([0, 0, 0]);
+                dmxBuf.add([0, 0, 0]);
             },
             {
                 dmxBuf.add(255 * ~fades[col] * ((~blends[row]*~colors1[row]) + ((1-~blends[row])*~colors2[row])))
@@ -83,6 +91,7 @@ a = List.new
 
 ~midiOn.free
 ~midiOff.free
+~midiCC.free
 
 [1, 2].collect({|a, b, c| [a, b, c].postln})
 
