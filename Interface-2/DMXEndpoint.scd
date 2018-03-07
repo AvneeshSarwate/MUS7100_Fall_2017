@@ -11,29 +11,42 @@
     [0, 0, 0, 1]
 ];
 
-~lightVector = [0, 0, 0, 0];
+~buttons = List.fill(4, {List.new});
 
-~colorVectors = [
-    [0, 0, 1],
+~fades = [1, 1, 1, 1];
+~blends = [0, 0, 0, 0];
+
+~colors1 = [
+    [0, 0, 0],
     [1, 0, 0],
     [0, 1, 0],
     [0, 1, 1]
 ];
 
+~colors2 = [
+    [0, 0, 0],
+    [0, 1, 0],
+    [0, 1, 0],
+    [0, 1, 1]
+];
+
+a.wrapAt(-1)
+a = []
+
 ~midiOn = MIDIFunc.noteOn({|vel, note, chan, port|
-    if(note > 11, {
-        ~lightVector = ~lightVector + ~lightSets[note-12];
-        ~calcDMX.(~lightVector, ~colorVectors);
-        ["on", note].postln;
+    if(note < 16, {
+        var col = note%4;
+        var row = (note/4).floor;
+        ~buttons[col].add(row);
     });
 
 }, nil, nil, ~midiIn.uid);
 
 ~midiOff = MIDIFunc.noteOff({|vel, note, chan, port|
-    if(note > 11, {
-        ~lightVector = ~lightVector - ~lightSets[note-12];
-        ~calcDMX.(~lightVector, ~colorVectors);
-        ["off", note].postln;
+    if(note < 16, {
+        var col = note%4;
+        var row = (note/4).floor;
+        ~buttons[col].remove(row);
     });
 
 }, nil, nil, ~midiIn.uid);
@@ -43,12 +56,27 @@
 }, nil, nil, ~midiIn.uid);
 
 ~calcDMX = {|lightVector, colorVectors|
-    var dmxBuf = lightVector.collect({|lightVal, ind| lightVal*colorVectors[ind]*255}).flat;
-    dmxBuf = dmxBuf.collect({|lightChanVal, ind| [ind+1, lightChanVal]}).flat;
-    ~maxPort.sendRaw((["/dmxVals"]++dmxBuf).asArray.asRawOSC);
+    var dmxBuf = List.new;
+    (0..3).do({|col|
+        var row = a.wrapAt(-1);
+        if(row.isNil,
+            {
+                dmxBuff.add([0, 0, 0]);
+            },
+            {
+                dmxBuf.add(255 * ~fades[col] * ((~blends[row]*~colors1[row]) + ((1-~blends[row])*~colors2[row])))
+            }
+        );
+    });
+    ~maxPort.sendRaw((["/dmxVals"]++dmxBuf.flat).asArray.asRawOSC);
     (["/dmxVals"]++dmxBuf).postln
 };
 
+)
+
+
+(var row=1;var col=1;
+~fades[col] * ((~blends[row]*~colors1[row]) + ((1-~blends[row])*~colors2[row]))
 )
 ~midiIn.uid
 a = List.new
@@ -57,3 +85,5 @@ a = List.new
 ~midiOff.free
 
 [1, 2].collect({|a, b, c| [a, b, c].postln})
+
+[1, 1, 0] | [1, 0, 1]
