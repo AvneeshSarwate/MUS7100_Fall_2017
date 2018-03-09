@@ -1,4 +1,6 @@
 (
+~deb = false;
+
 ~maxPort = NetAddr.new("127.0.0.1", 5555);
 
 ~midiIn = MIDIClient.sources.select({|elem| (elem.name == "Bus 2")
@@ -20,14 +22,14 @@
     [1, 0, 0], //bottom row color
     [0, 1, 0],
     [0, 0, 1],
-    [0, 1, 1]  //top row color
+    [1, 1, 0]  //top row color
 ];
 
 ~colors2 = [
     [0, 1, 0], //bottom row color
     [1, 1, 0],
     [0, 1, 0],
-    [0, 1, 1]  //top row color
+    [0, 0, 1]  //top row color
 ];
 
 ~midiOn = MIDIFunc.noteOn({|vel, note, chan, port|
@@ -35,7 +37,7 @@
         var col = note%4;
         var row = (note/4).floor;
         ~buttons[col].add(row);
-        ~buttons.postln;
+        //~buttons.postln;
         ~calcDMX.();
     });
 
@@ -46,7 +48,7 @@
         var col = note%4;
         var row = (note/4).floor;
         ~buttons[col].remove(row);
-        ~buttons.postln;
+        //~buttons.postln;
         ~calcDMX.();
     });
 
@@ -54,10 +56,13 @@
 
 ~midiCC = MIDIFunc.cc({|vel, note, chan, port|
     if((0..3).includes(note), {
-        ~blends[(0..3).indexOf(note)] = vel/127;
+        [note, 3-(0..3).indexOf(note)].postln;
+        ~blends[(0..3).indexOf(note)] = 1 - (vel/127);
+        ~calcDMX.();
     });
     if((4..7).includes(note), {
         ~fades[(4..7).indexOf(note)] = vel/127;
+        ~calcDMX.();
     });
 
 }, nil, nil, ~midiIn.uid);
@@ -66,28 +71,31 @@
     var dmxBuf = List.new;
     (0..3).do({|col|
         var row = ~buttons[col].wrapAt(-1);
-        ["ROW COL", row, col].postln;
+        if(~deb, {["ROW COL", row, col].postln});
         if(row.isNil,
             {
                 dmxBuf.add([0, 0, 0]);
             },
             {
+                if(true, {[~blends[row], ((~blends[row]*~colors1[row]) + ((1-~blends[row])*~colors2[row]))].postln});
                 dmxBuf.add(255 * ~fades[col] * ((~blends[row]*~colors1[row]) + ((1-~blends[row])*~colors2[row])))
             }
         );
     });
-    ~maxPort.sendRaw((["/dmxVals"]++dmxBuf.flat).asArray.asRawOSC);
-    (["/dmxVals"]++dmxBuf).postln
+    dmxBuf = dmxBuf.flat.collect({|elem, ind| [ind+1, elem.asInt]}).flat;
+    ~maxPort.sendRaw((["/dmxVals"]++dmxBuf).asArray.asRawOSC);
+    if(~deb, {(["/dmxVals"]++dmxBuf).postln})
 };
 
 )
-
 
 (var row=1;var col=1;
 ~fades[col] * ((~blends[row]*~colors1[row]) + ((1-~blends[row])*~colors2[row]))
 )
 ~midiIn.uid
 a = List.new
+
+~blends
 
 ~midiOn.free
 ~midiOff.free

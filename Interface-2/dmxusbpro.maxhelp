@@ -39,14 +39,14 @@
 		"boxes" : [ 			{
 				"box" : 				{
 					"id" : "obj-83",
-					"linecount" : 8,
+					"linecount" : 2,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 596.0, 537.0, 50.0, 116.0 ],
+					"patching_rect" : [ 596.0, 537.0, 235.0, 35.0 ],
 					"style" : "",
-					"text" : "/dmxVals 1 0 2 0 3 0 4 0 5 0 6 0 7 0 8 0 9 0 10 0 11 0 12 0"
+					"text" : "/dmxVals 0 0 1 0 2 0 3 0 4 0 5 0 6 0 7 0 8 0 9 0 10 0 11 0"
 				}
 
 			}
@@ -4214,6 +4214,15 @@
 				"patchline" : 				{
 					"destination" : [ "obj-67", 0 ],
 					"midpoints" : [ 57.5, 152.0, 36.5, 152.0 ],
+					"order" : 1,
+					"source" : [ "obj-37", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-83", 1 ],
+					"order" : 0,
 					"source" : [ "obj-37", 0 ]
 				}
 
