@@ -1,8 +1,9 @@
 //env vars for control
 (
 ~truncateLoop = false;
+~vjQuadPad = true;
 )
-
+if(~vjQuadPad.isNil.not &&  ~vjQuadPad , 5, 6)
 //ACTIVE TODO TAGS: sceneBuilderInterop
 //
 
@@ -318,7 +319,10 @@ a = {|vel, note, chan, port|
 			);
 			if(buttonForwarding && (controlChanInd == chan),
 				{pythonOSCport.sendMsg("/buttonForwarding", chan, newNote, vel, "on", note)},
-				{midiOut.noteOn(chan, newNote, vel)}
+				{
+                    if(~vjQuadPad.isNil.not &&  ~vjQuadPad, {midiOut.noteOn(chan, padMap[note][0], vel)}, {midiOut.noteOn(chan, padMap[note][0], vel)})
+
+                }
 			);
 			if(recordingMetronome, {recordBuffer.add([tempoClock.beats, newNote, vel, chan, "on"])});
 		});
@@ -345,7 +349,9 @@ b = {|vel, note, chan, port|
 
 			if(buttonForwarding && (controlChanInd == chan),
 				{pythonOSCport.sendMsg("/buttonForwarding", chan, newNote, vel, "off", note)},
-				{midiOut.noteOff(chan, newNote, vel)}
+				{
+                    if(~vjQuadPad.isNil.not &&  ~vjQuadPad, {midiOut.noteOff(chan, padMap[note][0], vel)}, {midiOut.noteOff(chan, padMap[note][0], vel)})
+                }
 			);
 			if(recordingMetronome, {recordBuffer.add([tempoClock.beats, newNote, vel, chan, "off"])});
 		});

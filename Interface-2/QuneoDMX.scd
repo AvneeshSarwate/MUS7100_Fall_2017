@@ -1,5 +1,5 @@
 (
-var ccP, ccX, ccY, padX, padXY, ccToInd, ccToXY, noteToInd, noteToXY, isPadCC, isPadNote, isBankNote, bankToInd, sliderToInd, quneo, midiOut;
+var ccP, ccX, ccY, padX, padXY, ccToInd, ccToXY, noteToInd, noteToXY, isPadCC, isPadNote, isBankNote, bankToInd, sliderToInd, quneo, midiOut, td_port;
 
 ccP = {|x| (x%3) == 2}; //check if cc is pressure value
 ccX = {|x| (x%3) == 0}; //check if cc is x position
@@ -13,6 +13,7 @@ isPadNote = {|x| (noteToInd.(x) >=0) && (noteToInd.(x) < 16)};
 isBankNote = {|x| (x > 10) && (x < 19)};
 bankToInd = {|x| x-11};
 sliderToInd = {|x| [0,1,2,3,6,7,8,9].indexOf(x)};
+td_port = NetAddr("localhost", 10000);
 
 quneo = MIDIClient.sources.select({|elem| (elem.name == "QUNEO")
 	&& (elem.device == "QUNEO")})[0];
@@ -20,16 +21,17 @@ midiOut = MIDIOut.newByName("IAC Driver", "Bus 7");
 midiOut.latency = 0;
 quneo.postln;
 MIDIFunc.noteOn({|vel, note, chan, port|
-    midiOut.noteOn(chan, noteToInd.(note), vel);
+    midiOut.noteOn(4, noteToInd.(note), vel);
 }, nil, nil, quneo.uid);
 
 MIDIFunc.noteOff({|vel, note, chan, port|
-    midiOut.noteOn(chan, noteToInd.(note), vel);
+    midiOut.noteOn(4, noteToInd.(note), vel);
 }, nil, nil, quneo.uid);
 
 MIDIFunc.cc({|vel, note, chan, port|
     if(sliderToInd.(note).isNil.not && (chan == 0), {
         //[chan, note, sliderToInd.(note), vel].postln;
+        if(sliderToInd.(note) == 0, {td_port.sendMsg("/cameraMix", vel/127)});
         midiOut.control(chan, sliderToInd.(note), vel);
     });
 }, nil, nil, quneo.uid);
@@ -44,5 +46,13 @@ var midiIn = MIDIClient.sources.select({|elem| (elem.name == "Bus 7")
 MIDIFunc.cc({|vel, note, chan, port|
     ["cc", chan, note, vel].postln;
 }, nil, nil, midiIn.uid);
+
+)
+
+
+(
+var midiOut = MIDIOut.newByName("IAC Driver", "Bus 7");
+
+midiOut.noteOn(4, 60, 60)
 
 )
