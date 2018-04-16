@@ -17,7 +17,7 @@ recorded short you don't roll-over and play the starting bit twice. )
 */
 
 (
-var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, colorCC, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, indToNote, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc, tempRecordBuffer, truncateLoop_BUTTON, playMode_BUTTON, ccRecordBuffer, colorQuneoPad, loopToAlgs_BUTTON, loopToAlgs;
+var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, colorCC, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, indToNote, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc, tempRecordBuffer, truncateLoop_BUTTON, playMode_BUTTON, ccRecordBuffer, colorQuneoPad, loopToAlgs_BUTTON, loopToAlgs,deantoniPadColor;
 var launchpadIndex = 0;
 //light switching variables
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON;
@@ -113,7 +113,7 @@ truncateLoop_BUTTON = 97;
 
 algOrderList = List.new();
 
-recordBuffer = List.new(200);
+recordBuffer = List.new(2000);
 ccRecordBuffer = List.new(2000);
 
 colorTL1 = 39;
@@ -122,7 +122,8 @@ colorBL1 = 4;
 colorBR1 = 83;
 
 colorQuneoPad = 9;
-color1 = [colorTL1, colorTR1, colorBL1, colorBR1, colorQuneoPad]; //colorVal
+deantoniPadColor = 53;
+color1 = [colorTL1, colorTR1, colorBL1, colorBR1, colorQuneoPad, deantoniPadColor]; //colorVal
 colorCC = 22;
 
 
@@ -387,7 +388,7 @@ MIDIFunc.cc({|vel, note, chan, port|
         },
         {
             midiOut.control(chan, note, vel);
-            if(recordingMetronome, {ccRecordBuffer.add([tempoClock.beats, note, vel, chan, "cc"])})
+            if(recordingMetronome, {recordBuffer.add([tempoClock.beats, note, vel, chan, "cc"])})
         }
     );
 }, nil, nil, instrumentInput.uid);
@@ -465,7 +466,7 @@ z = noteListToHitList;
 //{hit[0] = hit[0].floor + ((hit[0]%1 * 6).round / 6)}
 //NOTE - translates hitTime -> duration-before-hit for each beat
 ~quantizeDebugPrint = false;
-quantize = {|oldRecBuf, quantDivArray, startBeat, endBeat, isCC=false|
+quantize = {|oldRecBuf, quantDivArray, startBeat, endBeat|
 
     //divide array into hits-per-beat
     //apply calc-error-for-hits-and-div
@@ -483,14 +484,12 @@ quantize = {|oldRecBuf, quantDivArray, startBeat, endBeat, isCC=false|
 
     recBuf.do({|hit| if(hit[0] < startBeat, {hit[0] = startBeat + 0.05.rand}) });
 
-    if(isCC.not, {
-        recBuf.do({|elem|
-            if(elem[4] == "on",
-                {hangingNotes.add([elem[1], elem[3]])},
-                {hangingNotes.remove([elem[1], elem[3]])})
-        });
-        hangingNotes.do({|elem| recBuf.add([endBeat-0.01, elem[0], 0, elem[1], "off"])});
+    recBuf.do({|elem|
+        if(elem[4] == "on",
+            {hangingNotes.add([elem[1], elem[3]])},
+            {hangingNotes.remove([elem[1], elem[3]])})
     });
+    hangingNotes.do({|elem| recBuf.add([endBeat-0.01, elem[0], 0, elem[1], "off"])});
 
     melodyEndingBeat = recBuf[recBuf.size-1][0].ceil;
 
@@ -686,21 +685,21 @@ recordButtonFunc = {
         recordingEndBeat = tempoClock.beats.ceil;
 
         //TODO: handle cases where multiple inst hits in a recBuf, or when there's no noteOns recorded
-        if((recordBuffer.size != 0) && (ccRecordBuffer.size == 0), {
+        if((recordBuffer.size != 0)/* && (ccRecordBuffer.size == 0)*/, {
             recBuf = quantize.(recordBuffer, ~quantizationLevels, recordingStartBeat, recordingEndBeat);
             tempRecordBuffer = recBuf;
             tempLoopString = recBuf.collect({|item| item.join(",")}).join("_");
             tempLoopTask = createRecordedTask.(recBuf);
             tempoClock.sched(tempoClock.timeToNextBeat, {tempLoopTask.start; nil;});
         });
-        if((ccRecordBuffer.size != 0) && (recordBuffer.size == 0), {
+        /*if((ccRecordBuffer.size != 0) && (recordBuffer.size == 0), {
             recBuf = quantize.(ccRecordBuffer, ~quantizationLevels, recordingStartBeat, recordingEndBeat, true);
             tempRecordBuffer = recBuf;
             tempLoopString = recBuf.collect({|item| item.join(",")}).join("_");
             tempLoopTask = createRecordedTask.(recBuf);
             tempoClock.sched(tempoClock.timeToNextBeat, {tempLoopTask.start; nil;});
-        });
-        if(((ccRecordBuffer.size == 0) && (recordBuffer.size == 0)) || ((ccRecordBuffer.size != 0) && (recordBuffer.size != 0)), {
+        });*/
+        if(((ccRecordBuffer.size == 0) && (recordBuffer.size == 0)) /*|| ((ccRecordBuffer.size != 0) && (recordBuffer.size != 0))*/, {
             resetRecordingState.();
         });
     });
@@ -845,10 +844,20 @@ stringToBuf = {|melString|
 calculateMajorityChannel = {|buffer|
     var chanCount = Dictionary.new;
     var maxChan = [-1, -1]; //chan, count
-    buffer.do({|hit| if(chanCount[hit[3]].isNil,
-        {chanCount[hit[3]] = 1}, {chanCount[hit[3]] = chanCount[hit[3]]+1})});
+    var containsNotes = false;
+    var containsCC = false;
+    buffer.do({|hit|
+        if(hit[4] == "cc", {containsCC = containsCC || true});
+        if((hit[4] == "on") || (hit[4] == "off"), {
+            containsNotes = containsNotes || true;
+            if(chanCount[hit[3]].isNil,
+                {chanCount[hit[3]] = 1},
+                {chanCount[hit[3]] = chanCount[hit[3]]+1}
+            );
+        });
+    });
     chanCount.keys.do({|key| if(chanCount[key] > maxChan[1], {maxChan = [key, chanCount[key]]})});
-    if(buffer[0][4] == "cc", 100+maxChan[0], maxChan[0]);
+    if(containsNotes.not, 100+maxChan[0], maxChan[0]);
 };
 
 //msg[1] is the new BEAT DURATION (not tempo)
