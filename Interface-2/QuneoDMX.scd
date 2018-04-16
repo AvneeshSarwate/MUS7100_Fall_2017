@@ -32,7 +32,7 @@ MIDIFunc.cc({|vel, note, chan, port|
     if(sliderToInd.(note).isNil.not && (chan == 0), {
         //[chan, note, sliderToInd.(note), vel].postln;
         if(sliderToInd.(note) == 0, {td_port.sendMsg("/cameraMix", vel/127)});
-        midiOut.control(chan, sliderToInd.(note), vel);
+        midiOut.control(chan, 16+sliderToInd.(note), vel);
     });
 }, nil, nil, quneo.uid);
 
@@ -53,6 +53,8 @@ MIDIFunc.cc({|vel, note, chan, port|
 (
 var midiOut = MIDIOut.newByName("IAC Driver", "Bus 7");
 
-midiOut.noteOn(4, 60, 60)
+midiOut.control(0, 0, 120)
 
 )
+
+OSCFunc.trace

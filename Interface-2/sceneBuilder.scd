@@ -17,15 +17,14 @@ recorded short you don't roll-over and play the starting bit twice. )
 */
 
 (
-var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, colorCC, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, indToNote, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc, tempRecordBuffer, truncateLoop_BUTTON, playMode_BUTTON, ccRecordBuffer, colorQuneoPad;
-
-
+var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, colorCC, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, indToNote, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc, tempRecordBuffer, truncateLoop_BUTTON, playMode_BUTTON, ccRecordBuffer, colorQuneoPad, loopToAlgs_BUTTON, loopToAlgs;
+var launchpadIndex = 0;
 //light switching variables
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON;
 
 //MIDIClient.init;
 //MIDIIn.connectAll;
-launchpadOut = ~getLaunchpad.(0);
+launchpadOut = ~getLaunchpadOut.(0);
 launchpadOut.latency = 0;
 midiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
 metronomeOut = MIDIOut.newByName("IAC Driver", "Bus 3");
@@ -51,7 +50,7 @@ ccLights = List.new;
 });
 
 setLight = {|note, color, lightIndexOverride=false|
-    if((~lightIndex == lightIndex) || lightIndexOverride, {
+    if((~lightIndex[launchpadIndex] == lightIndex) || lightIndexOverride, {
         if(ccLights.includes(note),
             {launchpadOut.control(0, note, color)},
             {launchpadOut.noteOn(0, note, color)}
@@ -69,10 +68,10 @@ setLight = {|note, color, lightIndexOverride=false|
 cycleLight = {
     //TODO: change name of this port to something like SCOSCport
     Task({
-        ["NEW LIGHT INDEX TRIGGER FROM SCENEBUILDER", ~lightIndex].postln;
-        masterClockOSCport.sendMsg("/lightsChange", (~lightIndex+1)%~lightIndexes.size);
+        ["NEW LIGHT INDEX TRIGGER FROM SCENEBUILDER", ~lightIndex[launchpadIndex]].postln;
+        masterClockOSCport.sendMsg("/lightsChange", (~lightIndex[launchpadIndex]+1)%~lightIndexes[launchpadIndex].size);
         0.01.wait;
-        ~lightIndex = (~lightIndex+1)%~lightIndexes.size;
+        ~lightIndex[launchpadIndex] = (~lightIndex[launchpadIndex]+1)%~lightIndexes[launchpadIndex].size;
     }).play;
 };
 
@@ -87,19 +86,19 @@ OSCFunc({|msg, time, addr, recvPort|
     });
 
 }, "/lightsChange");
-lightIndex = if(~lightIndexes.size == 0,
+lightIndex = if(~lightIndexes[launchpadIndex].size == 0,
     {
-        ~lightIndexes.add(0);
+        ~lightIndexes[launchpadIndex].add(0);
         0
     },
     {
-        ~lightIndexes.add(~lightIndexes.maxItem+1);
-        ~lightIndexes.maxItem
+        ~lightIndexes[launchpadIndex].add(~lightIndexes[launchpadIndex].maxItem+1);
+        ~lightIndexes[launchpadIndex].maxItem
     }
 );
-~lightIndex = lightIndex;
-["LIGHT INDEX SCENEBUILDER", ~lightIndex, lightIndex].postln;
-//TODO - add ~lightIndex == lightIndex condition to all launchpad note/cc hanlders
+~lightIndex[launchpadIndex] = lightIndex;
+["LIGHT INDEX SCENEBUILDER", ~lightIndex[launchpadIndex], lightIndex].postln;
+//TODO - add ~lightIndex[launchpadIndex] == lightIndex condition to all launchpad note/cc hanlders
 //----------------------------------------------
 
 
@@ -187,13 +186,15 @@ sceneColor = 3; //colorVal
 playMode = 0;
 playMode_BUTTON = 98;
 
-launchPad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
-    && (elem.device == "Launchpad Pro")})[0];
+loopToAlgs_BUTTON = 10;
+loopToAlgs = false;
+
+launchPad = ~getLaunchpadIn.(0);
 instrumentInput = MIDIClient.sources.select({|elem| (elem.name == "Bus 7")
     && (elem.device == "IAC Driver")})[0];
 [launchPad, MIDIClient.sources[2]].postln;
 padOn = {|vel, note, chan, port|
-    if((chan == 0) && (~lightIndex == lightIndex), {
+    if((chan == 0) && (~lightIndex[launchpadIndex] == lightIndex), {
         if(bankSet.includes(note), {
             var thisBank = bankMap[note];
             if((recordingState == 3) ,{
@@ -292,14 +293,14 @@ OSCFunc.new({|msg, time, addr, recvPort|
 }, "/padHit");
 
 padOff = MIDIFunc.noteOff({|vel, note, chan, port|
-	if((chan == 0) && (~lightIndex == lightIndex), {
-		if(bankSet.includes(note), {
-			var thisBank = bankMap[note];
-			if(playMode == 1, {
-				if(thisBank[2], {turnOffBank.(thisBank, note)});
-			});
-		});
-	});
+    if((chan == 0) && (~lightIndex[launchpadIndex] == lightIndex), {
+        if(bankSet.includes(note), {
+            var thisBank = bankMap[note];
+            if(playMode == 1, {
+                if(thisBank[2], {turnOffBank.(thisBank, note)});
+            });
+        });
+    });
 }, nil, nil, launchPad.uid);
 
 
@@ -380,7 +381,7 @@ b = {|vel, note, chan, port|
 MIDIFunc.noteOff(b, nil, nil, instrumentInput.uid);
 
 MIDIFunc.cc({|vel, note, chan, port|
-	if((note == recordButton) && (vel == 127),
+    if((note == recordButton) && (vel == 127),
         {
             recordButtonFunc.();
         },
@@ -616,9 +617,16 @@ createRecordedTask = {|oldRecBuf, isChannelTask=false, channelInd=0|
             hit[0].wait;
 
             if(interruptLooping[chan].not, {
-                if(hit[4] == "on", {midiOut.noteOn(hit[3], hit[1], hit[2]);});
-                if(hit[4] == "off", {midiOut.noteOff(hit[3], hit[1], hit[2])});
-                if(hit[4] == "cc", {midiOut.control(hit[3], hit[1], hit[2])});
+                if(loopToAlgs,
+                    {
+                        pythonOSCport.sendMsg("/buttonForwarding", hit[3], hit[1], hit[2], hit[4], -1);
+                    },
+                    {
+                        if(hit[4] == "on", {midiOut.noteOn(hit[3], hit[1], hit[2]);});
+                        if(hit[4] == "off", {midiOut.noteOff(hit[3], hit[1], hit[2])});
+                        if(hit[4] == "cc", {midiOut.control(hit[3], hit[1], hit[2])});
+                    }
+                );
             });
             ind = ind+1; //TODO - should this be after the switch to the ondeck buffer?
 
@@ -679,21 +687,21 @@ recordButtonFunc = {
 
         //TODO: handle cases where multiple inst hits in a recBuf, or when there's no noteOns recorded
         if((recordBuffer.size != 0) && (ccRecordBuffer.size == 0), {
-                recBuf = quantize.(recordBuffer, ~quantizationLevels, recordingStartBeat, recordingEndBeat);
-                tempRecordBuffer = recBuf;
-                tempLoopString = recBuf.collect({|item| item.join(",")}).join("_");
-                tempLoopTask = createRecordedTask.(recBuf);
-                tempoClock.sched(tempoClock.timeToNextBeat, {tempLoopTask.start; nil;});
+            recBuf = quantize.(recordBuffer, ~quantizationLevels, recordingStartBeat, recordingEndBeat);
+            tempRecordBuffer = recBuf;
+            tempLoopString = recBuf.collect({|item| item.join(",")}).join("_");
+            tempLoopTask = createRecordedTask.(recBuf);
+            tempoClock.sched(tempoClock.timeToNextBeat, {tempLoopTask.start; nil;});
         });
         if((ccRecordBuffer.size != 0) && (recordBuffer.size == 0), {
-                recBuf = quantize.(ccRecordBuffer, ~quantizationLevels, recordingStartBeat, recordingEndBeat, true);
-                tempRecordBuffer = recBuf;
-                tempLoopString = recBuf.collect({|item| item.join(",")}).join("_");
-                tempLoopTask = createRecordedTask.(recBuf);
-                tempoClock.sched(tempoClock.timeToNextBeat, {tempLoopTask.start; nil;});
+            recBuf = quantize.(ccRecordBuffer, ~quantizationLevels, recordingStartBeat, recordingEndBeat, true);
+            tempRecordBuffer = recBuf;
+            tempLoopString = recBuf.collect({|item| item.join(",")}).join("_");
+            tempLoopTask = createRecordedTask.(recBuf);
+            tempoClock.sched(tempoClock.timeToNextBeat, {tempLoopTask.start; nil;});
         });
         if(((ccRecordBuffer.size == 0) && (recordBuffer.size == 0)) || ((ccRecordBuffer.size != 0) && (recordBuffer.size != 0)), {
-                resetRecordingState.();
+            resetRecordingState.();
         });
     });
 };
@@ -760,18 +768,22 @@ controlHandler = {|vel, note, chan, port|
         playMode = (playMode+1)%2;
         setLight.(playMode_BUTTON, if(playMode == 1, 55, 0));
     });
+    if((note == loopToAlgs_BUTTON) && (vel != 0), {
+        loopToAlgs = loopToAlgs.not;
+        setLight.(loopToAlgs_BUTTON, if(loopToAlgs, 32, 0));
+    });
     //MULTIPLE ALG BUTTONS CAN BE HELD DOWN
     //THEIR ORDER WILL SPECIFY A "pipeline" of transformations
     //if alg button, add/remove from list depending on button up/down
     if((note == cycleLight_BUTTON) && (vel !=0), {
-        // ["MULTILOOP BUTTON CYCLE HIT", ~lightIndex, lightIndex].postln;
+        // ["MULTILOOP BUTTON CYCLE HIT", ~lightIndex[launchpadIndex], lightIndex].postln;
         if(~cycling, {cycleLight.()})
     });
 };
 controlHandlerWrapper = {|vel, note, chan, port|
     ~lock.wait;
-    if((chan == 0) && (~lightIndex == lightIndex) && (vel != 0), {
-        //["LIGHT INDEX MULTILOOP", ~lightIndex, lightIndex, SystemClock.beats].postln;
+    if((chan == 0) && (~lightIndex[launchpadIndex] == lightIndex) && (vel != 0), {
+        //["LIGHT INDEX MULTILOOP", ~lightIndex[launchpadIndex], lightIndex, SystemClock.beats].postln;
         controlHandler.(vel, note, chan, port)
     });
     ~lock.signal;

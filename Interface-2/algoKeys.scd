@@ -3,19 +3,21 @@
 ~truncateLoop = false;
 ~vjQuadPad = true;
 )
+~vjQuadPad.isNil.not &&  ~vjQuadPad
 if(~vjQuadPad.isNil.not &&  ~vjQuadPad , 5, 6)
 //ACTIVE TODO TAGS: sceneBuilderInterop
 //
 
 (
 var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, indToNote, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort;
-
+var launchpadIndex = 1;
 //light switching variables
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON;
 
 //MIDIClient.init;
 //MIDIIn.connectAll;
-launchpadOut = ~getLaunchpad.(0);
+launchpadOut = ~getLaunchpadOut.(launchpadIndex);
+["GOT LAUNCHPAD", launchpadOut].postln;
 launchpadOut.latency = 0;
 midiOut = MIDIOut.newByName("IAC Driver", "Bus 7");
 metronomeOut = MIDIOut.newByName("IAC Driver", "Bus 3");
@@ -40,7 +42,7 @@ ccLights = List.new;
 });
 
 setLight = {|note, color, lightIndexOverride=false|
-    if((~lightIndex == lightIndex) || lightIndexOverride, {
+    if((~lightIndex[launchpadIndex] == lightIndex) || lightIndexOverride, {
         if(ccLights.includes(note),
             {launchpadOut.control(0, note, color)},
             {launchpadOut.noteOn(0, note, color)}
@@ -58,10 +60,10 @@ setLight = {|note, color, lightIndexOverride=false|
 cycleLight = {
     //TODO: change name of this port to something like SCOSCport
     Task({
-        ["NEW LIGHT INDEX TRIGGER FROM ALGKEYS", ~lightIndex].postln;
-        masterClockOSCport.sendMsg("/lightsChange", (~lightIndex+1)%~lightIndexes.size);
+        ["NEW LIGHT INDEX TRIGGER FROM ALGKEYS", ~lightIndex[launchpadIndex]].postln;
+        masterClockOSCport.sendMsg("/lightsChange", (~lightIndex[launchpadIndex]+1)%~lightIndexes[launchpadIndex].size);
         0.01.wait;
-        ~lightIndex = (~lightIndex+1)%~lightIndexes.size;
+        ~lightIndex[launchpadIndex] = (~lightIndex[launchpadIndex]+1)%~lightIndexes[launchpadIndex].size;
     }).play;
 };
 
@@ -76,19 +78,19 @@ OSCFunc({|msg, time, addr, recvPort|
     });
 
 }, "/lightsChange");
-lightIndex = if(~lightIndexes.size == 0,
+lightIndex = if(~lightIndexes[launchpadIndex].size == 0,
     {
-        ~lightIndexes.add(0);
+        ~lightIndexes[launchpadIndex].add(0);
         0
     },
     {
-        ~lightIndexes.add(~lightIndexes.maxItem+1);
-        ~lightIndexes.maxItem
+        ~lightIndexes[launchpadIndex].add(~lightIndexes[launchpadIndex].maxItem+1);
+        ~lightIndexes[launchpadIndex].maxItem
     }
 );
-~lightIndex = lightIndex;
-["LIGHT INDEX ALGOKEYS", ~lightIndex, lightIndex].postln;
-//TODO - add ~lightIndex == lightIndex condition to all launchpad note/cc hanlders
+~lightIndex[launchpadIndex] = lightIndex;
+["LIGHT INDEX ALGOKEYS", ~lightIndex[launchpadIndex], lightIndex].postln;
+//TODO - add ~lightIndex[launchpadIndex] == lightIndex condition to all launchpad note/cc hanlders
 //----------------------------------------------
 
 
@@ -298,12 +300,11 @@ setPadLights.(padTR, colorTR1, colorTR2, 1);
 setPadLights.(padBL, colorBL1, colorBL2, 2);
 setPadLights.(padBR, colorBR1, colorBR2, 3);
 
-launchPad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
-	&& (elem.device == "Launchpad Pro")})[0];
+launchPad = ~getLaunchpadIn.(launchpadIndex);
 [launchPad, MIDIClient.sources[2]].postln;
 a = {|vel, note, chan, port|
-    if((chan == 0) && (~lightIndex == lightIndex), {
-        //["LIGHT INDEX MULTILOOP", ~lightIndex, lightIndex].postln;
+    if((chan == 0) && (~lightIndex[launchpadIndex] == lightIndex), {
+        //["LIGHT INDEX MULTILOOP", ~lightIndex[launchpadIndex], lightIndex].postln;
 		if(pads.includes(note), {
 			var chan, newNote;
 			if(playingNewKeys,
@@ -320,7 +321,7 @@ a = {|vel, note, chan, port|
 			if(buttonForwarding && (controlChanInd == chan),
 				{pythonOSCport.sendMsg("/buttonForwarding", chan, newNote, vel, "on", note)},
 				{
-                    if(~vjQuadPad.isNil.not &&  ~vjQuadPad, {midiOut.noteOn(chan, padMap[note][0], vel)}, {midiOut.noteOn(chan, padMap[note][0], vel)})
+                    if(~vjQuadPad.isNil.not &&  ~vjQuadPad, {midiOut.noteOn(chan, padMap[note][0], vel)}, {midiOut.noteOn(chan, newNote, vel)})
 
                 }
 			);
@@ -331,8 +332,8 @@ a = {|vel, note, chan, port|
 padOn = MIDIFunc.noteOn(a, nil, nil, launchPad.uid);
 
 b = {|vel, note, chan, port|
-	if((chan == 0) && (~lightIndex == lightIndex), {
-        //["LIGHT INDEX MULTILOOP", ~lightIndex, lightIndex].postln;
+	if((chan == 0) && (~lightIndex[launchpadIndex] == lightIndex), {
+        //["LIGHT INDEX MULTILOOP", ~lightIndex[launchpadIndex], lightIndex].postln;
 		if(pads.includes(note), {
 			var chan, newNote;
 			if(playingNewKeys,
@@ -350,7 +351,7 @@ b = {|vel, note, chan, port|
 			if(buttonForwarding && (controlChanInd == chan),
 				{pythonOSCport.sendMsg("/buttonForwarding", chan, newNote, vel, "off", note)},
 				{
-                    if(~vjQuadPad.isNil.not &&  ~vjQuadPad, {midiOut.noteOff(chan, padMap[note][0], vel)}, {midiOut.noteOff(chan, padMap[note][0], vel)})
+                    if(~vjQuadPad.isNil.not &&  ~vjQuadPad, {midiOut.noteOff(chan, padMap[note][0], vel)}, {midiOut.noteOff(chan, newNote, vel)})
                 }
 			);
 			if(recordingMetronome, {recordBuffer.add([tempoClock.beats, newNote, vel, chan, "off"])});
@@ -414,7 +415,7 @@ controlHandler = {|vel, note, chan, port|
 			{setLight.(buttonForwardingButton, 81)},
 			{setLight.(buttonForwardingButton, 0)}
 		);
-        ["MULTI LOOP 96", ~lightIndex].postln;
+        ["MULTI LOOP 96", ~lightIndex[launchpadIndex]].postln;
 	});
 	if((note == tapTempoToggle) && (vel == 127), {playMetronome = playMetronome.not});
 	if((note == recordButton) && (vel == 127), {
@@ -478,7 +479,7 @@ controlHandler = {|vel, note, chan, port|
 	//THEIR ORDER WILL SPECIFY A "pipeline" of transformations
 	//if alg button, add/remove from list depending on button up/down
 	if((note == cycleLight_BUTTON) && (vel !=0), {
-        // ["MULTILOOP BUTTON CYCLE HIT", ~lightIndex, lightIndex].postln;
+        // ["MULTILOOP BUTTON CYCLE HIT", ~lightIndex[launchpadIndex], lightIndex].postln;
         if(~cycling, {cycleLight.()})
         // if(~truncateLoop, {setLight.(cycleLight_BUTTON, 45)}, {setLight.(cycleLight_BUTTON, 0)});
         // ~truncateLoop = ~truncateLoop.not; //light on means NOT TRUNCATING
@@ -486,8 +487,8 @@ controlHandler = {|vel, note, chan, port|
 };
 controlHandlerWrapper = {|vel, note, chan, port|
     ~lock.wait;
-    if((chan == 0) && (~lightIndex == lightIndex) && (vel != 0), {
-        //["LIGHT INDEX MULTILOOP", ~lightIndex, lightIndex, SystemClock.beats].postln;
+    if((chan == 0) && (~lightIndex[launchpadIndex] == lightIndex) && (vel != 0), {
+        //["LIGHT INDEX MULTILOOP", ~lightIndex[launchpadIndex], lightIndex, SystemClock.beats].postln;
         controlHandler.(vel, note, chan, port)
     });
     ~lock.signal;

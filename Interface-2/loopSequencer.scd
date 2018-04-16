@@ -1,16 +1,16 @@
 (var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport, playColumn, masterClockOSCport, chanPerRow, lightIndex, launchpadIndex, controlHandler, controlHandlerWrapper, useLoopMidi;
-
+var launchpadIndex = 0;
 useLoopMidi = false;
 
 launchpadIndex = [8, 0, 3]; //8,0 if "first launchpad", 11,1 if 2nd
 
 if(useLoopMidi,
-{
-	launchpadOut = MIDIOut.new();},
-{
-	launchpadOut = MIDIOut.new(8);
-	/*launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
-	&& (elem.device == "Launchpad Pro")})[0];*/
+    {
+        launchpadOut = MIDIOut.new();},
+    {
+        launchpadOut = ~getLaunchpadOut.(0);
+        /*launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
+        && (elem.device == "Launchpad Pro")})[0];*/
 });
 
 launchpadOut.latency = 0;
@@ -27,7 +27,7 @@ ccLights = List.new;
 });
 
 setLight = {|note, color, lightIndexOverride=false|
-    if((~lightIndex == lightIndex) || lightIndexOverride, {
+    if((~lightIndex[launchpadIndex] == lightIndex) || lightIndexOverride, {
         if(ccLights.includes(note),
             {launchpadOut.control(0, note, color)},
             {launchpadOut.noteOn(0, note, color)}
@@ -45,10 +45,10 @@ setLight = {|note, color, lightIndexOverride=false|
 cycleLight = {
     //TODO: change name of this port to something like SCOSCport
     Task({
-        ["NEW LIGHT INDEX TRIGGER FROM LOOPSEQUENCER", ~lightIndex].postln;
-        masterClockOSCport.sendMsg("/lightsChange", (~lightIndex+1)%~lightIndexes.size);
+        ["NEW LIGHT INDEX TRIGGER FROM LOOPSEQUENCER", ~lightIndex[launchpadIndex]].postln;
+        masterClockOSCport.sendMsg("/lightsChange", (~lightIndex[launchpadIndex]+1)%~lightIndexes[launchpadIndex].size);
         0.01.wait;
-        ~lightIndex = (~lightIndex+1)%~lightIndexes.size;
+        ~lightIndex[launchpadIndex] = (~lightIndex[launchpadIndex]+1)%~lightIndexes[launchpadIndex].size;
     }).play;
 };
 
@@ -63,31 +63,30 @@ OSCFunc({|msg, time, addr, recvPort|
     });
 
 }, "/lightsChange");
-lightIndex = if(~lightIndexes.size == 0,
+lightIndex = if(~lightIndexes[launchpadIndex].size == 0,
     {
-        ~lightIndexes.add(0);
+        ~lightIndexes[launchpadIndex].add(0);
         0
     },
     {
-        ~lightIndexes.add(~lightIndexes.maxItem+1);
-        ~lightIndexes.maxItem
+        ~lightIndexes[launchpadIndex].add(~lightIndexes[launchpadIndex].maxItem+1);
+        ~lightIndexes[launchpadIndex].maxItem
     }
 );
-~lightIndex = lightIndex;
-["LIGHT INDEX LOOP SEQUENCER", ~lightIndex, lightIndex].postln;
+~lightIndex[launchpadIndex] = lightIndex;
+["LIGHT INDEX LOOP SEQUENCER", ~lightIndex[launchpadIndex], lightIndex].postln;
 
 
 
 (1..99).do({|i| setLight.(i, 0)});
 
 if(useLoopMidi,
-{
-		["SETTING LAUNCHPAD"].postln;
-	launchpad = MIDIClient.sources.select({|elem| (elem.name == "MIDIIN2 (2- Launchpad Pro)")
-	&& (elem.device == "MIDIIN2 (2- Launchpad Pro)")})[0];},
-{
-	launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
-	&& (elem.device == "Launchpad Pro")})[0];
+    {
+        ["SETTING LAUNCHPAD"].postln;
+        launchpad = MIDIClient.sources.select({|elem| (elem.name == "MIDIIN2 (2- Launchpad Pro)")
+            && (elem.device == "MIDIIN2 (2- Launchpad Pro)")})[0];},
+    {
+        launchpad = ~getLaunchpadIn.(0);
 });
 
 ["LAUNCHPAD", launchpad ].postln;
@@ -124,7 +123,7 @@ chanPerRow = List.fill(8, {-1});
 
 
 MIDIFunc.noteOn({|vel, note, chan, port|
-    if((chan == 0) && (~lightIndex == lightIndex), {
+    if((chan == 0) && (~lightIndex[launchpadIndex] == lightIndex), {
         var row = (8-(note/10).floor);
         var col = (note%10) - 1;
         ["STEP SEQ PRESS", row, col, chanPerRow[row], color1[chanPerRow[row]]].postln;
@@ -153,8 +152,8 @@ controlHandler = {|vel, note, chan, port|
 
 controlHandlerWrapper = {|vel, note, chan, port|
     ~lock.wait;
-    if((chan == 0) && (~lightIndex == lightIndex) && (vel != 0), {
-        //["LIGHT INDEX MULTILOOP", ~lightIndex, lightIndex, SystemClock.beats].postln;
+    if((chan == 0) && (~lightIndex[launchpadIndex] == lightIndex) && (vel != 0), {
+        //["LIGHT INDEX MULTILOOP", ~lightIndex[launchpadIndex], lightIndex, SystemClock.beats].postln;
         controlHandler.(vel, note, chan, port)
     });
     ~lock.signal;
@@ -205,18 +204,18 @@ playColumn = {|colInd|
 
 //msg[1] is a string of 0/1s in row-major order, separated by commas
 OSCFunc({|msg, time, addr, recvPort|
-	var vals;
+    var vals;
     vals = msg[1].asString.split($,);
-	vals.do({|v, i|
-		var col, row;
-		col = ((i/8)%8).floor;
-		row = i%8;
-		grid[((i/8)%8).floor][i%8] = v.asSymbol == \1;
-		if(v.asSymbol == \1,
-			{setLight.((8-(i/8).floor)*10 + ((row)+1), color1[chanPerRow[col]])},
-			{setLight.((8-(i/8).floor)*10 + ((row)+1), 0)});
-	});
-	"Grid changed!".postln;
+    vals.do({|v, i|
+        var col, row;
+        col = ((i/8)%8).floor;
+        row = i%8;
+        grid[((i/8)%8).floor][i%8] = v.asSymbol == \1;
+        if(v.asSymbol == \1,
+            {setLight.((8-(i/8).floor)*10 + ((row)+1), color1[chanPerRow[col]])},
+            {setLight.((8-(i/8).floor)*10 + ((row)+1), 0)});
+    });
+    "Grid changed!".postln;
 }, "/setGrid");
 
 
@@ -270,4 +269,4 @@ grid[0]
 
 )
 
-~lightIndex
+~lightIndex[launchpadIndex]
