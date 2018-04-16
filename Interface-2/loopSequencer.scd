@@ -1,14 +1,13 @@
-(var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport, playColumn, masterClockOSCport, chanPerRow, lightIndex, launchpadIndex, controlHandler, controlHandlerWrapper, useLoopMidi;
+(var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport, playColumn, masterClockOSCport, chanPerRow, lightIndex, controlHandler, controlHandlerWrapper, useLoopMidi;
 var launchpadIndex = 0;
 useLoopMidi = false;
 
-launchpadIndex = [8, 0, 3]; //8,0 if "first launchpad", 11,1 if 2nd
 
 if(useLoopMidi,
     {
         launchpadOut = MIDIOut.new();},
     {
-        launchpadOut = ~getLaunchpadOut.(0);
+        launchpadOut = ~getLaunchpadOut.(launchpadIndex);
         /*launchpad = MIDIClient.sources.select({|elem| (elem.name == "Standalone Port")
         && (elem.device == "Launchpad Pro")})[0];*/
 });
@@ -86,7 +85,7 @@ if(useLoopMidi,
         launchpad = MIDIClient.sources.select({|elem| (elem.name == "MIDIIN2 (2- Launchpad Pro)")
             && (elem.device == "MIDIIN2 (2- Launchpad Pro)")})[0];},
     {
-        launchpad = ~getLaunchpadIn.(0);
+        launchpad = ~getLaunchpadIn.(launchpadIndex);
 });
 
 ["LAUNCHPAD", launchpad ].postln;
