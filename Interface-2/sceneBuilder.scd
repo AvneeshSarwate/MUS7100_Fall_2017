@@ -1057,10 +1057,10 @@ metronomeFunc = {
             {
                 Task({ //TODO - refactor duration note on/off stuff into functions
                     var drum = recordingInterim.if(37, 38);
-                    metronomeOut.noteOn(4, drum, 64); 0.05.wait; midiOut.noteOff(4, drum, 64);}).play;
+                    metronomeOut.noteOn(4, drum, 64); 0.05.wait; metronomeOut.noteOff(4, drum, 64);}).play;
             },
             {
-                Task({metronomeOut.noteOn(4, 36, 64); 0.05.wait; midiOut.noteOff(4, 36, 64); }).play;
+                Task({metronomeOut.noteOn(4, 36, 64); 0.05.wait; metronomeOut.noteOff(4, 36, 64); }).play;
         });
     });
     //["beat", tempoClock.beats, tempoClock.beatDur].postln;
