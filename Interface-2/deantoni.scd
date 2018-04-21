@@ -5,7 +5,7 @@ var midiOut = MIDIOut.newByName("IAC Driver", "Bus 7");
 var offColor = 53;
 var onColor = 27;
 
-var launchpadIndex = 0;
+var launchpadIndex = 1;
 var launchpadOut = ~getLaunchpadOut.(launchpadIndex);
 var launchPad = ~getLaunchpadIn.(launchpadIndex);
 var controlHandler, controlHandlerWrapper;
@@ -15,6 +15,9 @@ var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON
 var drumNotes = List.new;
 var masterClockOSCport = NetAddr("localhost", 57120);
 var velAndCCParamCoordinator = Dictionary.new;
+var buttonForwardingButton = 96;
+var buttonForwarding = false;
+var pythonOSCport = NetAddr("localhost", 13371);
 
 (0..127).do({|i|
     velAndCCParamCoordinator[i] = [false, 0];
@@ -102,17 +105,24 @@ drumNotes.do({|i| setLight.(i, offColor)});
 a = {|vel, note, chan, port|
     if(drumNotes.includes(note), {
         setLight.(note, onColor);
-        if(~ccPressureLearn.not, {
-            var pressureNote = (note/10).floor;
-            var ccId = if(pressureNote == 4, pressureNote, 48+drumNotes.indexOf(note));
-            var ccChan = if(pressureNote == 4, 3, 2);
-            velAndCCParamCoordinator[ccId] = [false, vel];
-            midiOut.control(ccChan, ccId, vel)
-        });
-        if(~ccVelLearn.not && ~ccPressureLearn.not, {
-            midiOut.noteOn(5, 48+drumNotes.indexOf(note), vel);
+        if(buttonForwarding,
+            {pythonOSCport.sendMsg("/buttonForwarding", 5, 48+drumNotes.indexOf(note), vel, "on", note)},
+            {
+                if(~ccPressureLearn.not, {
 
-        });
+
+                    var pressureNote = (note/10).floor;
+                    var ccId = if(pressureNote == 4, pressureNote, 48+drumNotes.indexOf(note));
+                    var ccChan = if(pressureNote == 4, 3, 2);
+                    velAndCCParamCoordinator[ccId] = [false, vel];
+                    midiOut.control(ccChan, ccId, vel);
+                });
+                if(~ccVelLearn.not && ~ccPressureLearn.not, {
+                    midiOut.noteOn(5, 48+drumNotes.indexOf(note), vel);
+
+                });
+            }
+        );
     });
 };
 MIDIFunc.noteOn(a, nil, nil, launchPad.uid);
@@ -122,12 +132,16 @@ b = {|vel, note, chan, port|
     // midiOut.control(chan, 1, vel);
     if(drumNotes.includes(note), {
         setLight.(note, offColor);
-        if(~ccVelLearn.not && ~ccPressureLearn.not, {midiOut.noteOff(5, 48+drumNotes.indexOf(note), vel)});
+        if(buttonForwarding,
+            {pythonOSCport.sendMsg("/buttonForwarding", 5, 48+drumNotes.indexOf(note), vel, "off", note)},
+            {if(~ccVelLearn.not && ~ccPressureLearn.not, {midiOut.noteOff(5, 48+drumNotes.indexOf(note), vel)})}
+        );
     });
 };
 MIDIFunc.noteOff(b, nil, nil, launchPad.uid);
 
-c = {|vel, note, chan, port|
+
+d = {|vel, note, chan, port|
     if(drumNotes.includes(note), {
         var pressureNote = (note/10).floor;
         if(~ccVelLearn.not, {
@@ -145,7 +159,9 @@ c = {|vel, note, chan, port|
         });
     });
 };
-MIDIFunc.polytouch(c, nil, nil, launchPad.uid);
+MIDIFunc.polytouch(d, nil, nil, launchPad.uid);
+
+
 
 
 
@@ -157,6 +173,13 @@ controlHandler = {|vel, note, chan, port|
         // ["MULTILOOP BUTTON CYCLE HIT", ~lightIndex[launchpadIndex], lightIndex].postln;
         if(~cycling, {cycleLight.()})
     });
+    if((note == buttonForwardingButton) && (vel == 127), {
+		buttonForwarding = buttonForwarding.not;
+		if(buttonForwarding,
+			{setLight.(buttonForwardingButton, 81)},
+			{setLight.(buttonForwardingButton, 0)}
+		);
+	});
 };
 controlHandlerWrapper = {|vel, note, chan, port|
     ~lock.wait;

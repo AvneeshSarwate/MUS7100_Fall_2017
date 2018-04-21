@@ -23,7 +23,7 @@ class FH2:
 
         self.topRowFunctions = [0] * 8
 
-        n = 4
+        n = 6
 
         self.loops = [0 for i in range(100)]
         self.loopInfo = [{} for i in range(100)]

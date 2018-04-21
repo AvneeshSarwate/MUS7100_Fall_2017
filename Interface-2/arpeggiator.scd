@@ -22,7 +22,7 @@ onNotesList = Dictionary.new;
 (0..16).do({|i| onNotesList[i] = List()});
 
 noteDuration = 0.25;
-(0..3).do({|i| midiChanToDur[i] = 0.25});
+(0..6).do({|i| midiChanToDur[i] = 0.25});
 
 //TODO - should this be midiChannel or arpeggiatorChannelInd?
 //msg is [addr, note, vel, onOff, midiChannel]
