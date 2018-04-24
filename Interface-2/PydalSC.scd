@@ -311,6 +311,10 @@ sendSample = {|drumStr, chan, ind|
     if(channelTypeMap[chan] == 'funcTrigger', {
         lemurBouncePort.sendMsg("/funcTrigger", drumStr);
     });
+    if(channelTypeMap[chan] == 'roboDrum', {
+        var hitInd = ['a', 'b', 'c', 'd', 'e'].indexOf(drumStr.asSymbol);
+        if(hitInd.isNil.not,  {maxPort.sendMsg("/roboDrum", hitInd)});
+    });
 };
 
 )
@@ -329,7 +333,7 @@ j = 5;
 t.beats.postln;
 j
 )
-
+['a', 'b', 'c', 'd', 'e'].indexOf("c")
 (
 var patternSplit = {|patternStr|
 	var patternList = List.new;
