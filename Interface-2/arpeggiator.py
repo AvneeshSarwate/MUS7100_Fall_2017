@@ -74,7 +74,7 @@ class Arpeggiator:
                 self.sendNoteUpdate(note, vel, onOff)
 
                 if len(self.onNotes) == 1:
-                    print "playing channel"
+                    #print "playing channel"
                     self.channel.play(self.pattern)
             if onOff == "off" and note in self.onNotes:
                 del self.onNotes[note]

@@ -33,6 +33,13 @@ OSCFunc({|msg, time, addr, recvPort|
 	masterTempoClock.tempo = 1/msg[1].asFloat;
 	broadcastOSCport.sendMsg("/masterClockTempo", msg[1].asFloat, msg[2].asBoolean)
 }, "/uploadTempo");
+
+
+
+~getMidiIn = {|device, name|
+    MIDIClient.sources.select({|elem| (elem.device == device) && (elem.name == name)})[0]
+};
+
 )
 
 ~lightIndex=0
@@ -47,3 +54,5 @@ MIDIClient.destinations.collect({|elem, ind| if(((elem.name == "Standalone Port"
 "aa" == ("a"++"a")
 
 "Launchpad Pro 2" == "Launchpad Pro 2"
+
+~getMidiIn.("Xkey  ", "Xkey  ")
