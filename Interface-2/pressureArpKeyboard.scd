@@ -11,9 +11,9 @@ var generatePattern = {|note, vel|
         \play, {
             Task.new({
                 midiOut.noteOn(0, note, noteVel[note]);
-                ((2.125 - ((notePoly[note]/127) * 2))*0.95).wait;
+                (~delta*0.5).wait;
                 midiOut.noteOff(0, note, noteVel[note]);
-        }).play},
+        }, clocks[0]).play},
         \delta, Pfunc({(2.125 - ((notePoly[note]/127) * 2))});
     );
     pat.play(clocks[0]);
