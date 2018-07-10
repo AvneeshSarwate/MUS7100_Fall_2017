@@ -216,18 +216,19 @@ padOn = {|vel, note, chan, port|
                     thisBank[2] = true;
                     thisBank[3] = tempLoopTask;
                     thisBank[4] = tempLoopString;
-                    thisBank[5] = if(thisBank[1] < 100, \midi, \cc);
+                    thisBank[5] = if(thisBank[1] < 17, \midi, \cc);
 
                     playingBanks.add(note);
-
-                    pythonOSCport.sendMsg("/saveLoop", thisBank[0], thisBank[4], note, thisBank[1]);
-                    masterClockOSCport.sendMsg("/saveLoop", thisBank[0], thisBank[4], note, thisBank[1]);
+                    ["NEW BANK", thisBank].postln;
+                    pythonOSCport.sendMsg("/saveLoop", thisBank[0], if(thisBank[2] == 17, "senselLoop", thisBank[4]), note, thisBank[1]); //TODO - sensel loop string larger than 1 OSC message maxSize
+                    masterClockOSCport.sendMsg("/saveLoop", thisBank[0], if(thisBank[2] == 17, "senselLoop", thisBank[4]), note, thisBank[1]);
                     masterClockOSCport.sendMsg("/metaInfoSaveRequest", thisBank[0], thisBank[2]);
 
                     numSavedLoops = numSavedLoops + 1;
 
                     "D sceneBuilder".postln;
                     resetRecordingState.();
+                    "E sceneBuilder".postln;
                 });
                 //TODO audioRecording - stop audioLoop in the same slot?
             },
