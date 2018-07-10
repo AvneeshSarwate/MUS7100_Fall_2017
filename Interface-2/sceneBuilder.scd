@@ -634,7 +634,7 @@ createRecordedTask = {|oldRecBuf, isChannelTask=false, channelInd = -1|
                         if(hit[4] == "cc", {midiOut.control(hit[3], hit[1], hit[2])});
                         if(hit[1].isString && {hit[1][0].asSymbol == '/'}, {
                             // ["sensel", hit].postln;
-                            theForcePort.sendRaw(hit[1..].asArray.asRawOSC);
+                            masterClockOSCport.sendRaw(hit[1..].asArray.asRawOSC);
                         });
                     }
                 );
@@ -891,9 +891,9 @@ OSCFunc({|msg, time, addr, recvPort|
             senselData[1+(i*4)] = senselData[1+(i*4)] + (16*numSavedLoops);
         });
     });
-    newOSCData = [if(tempoClock.isNil, {0}, {tempoClock.beats}), "/senselDraw"] ++ senselData;
+    newOSCData = [if(tempoClock.isNil, {0}, {tempoClock.beats}), "/senselDrawFwd", "loop"] ++ senselData;
     if(recordingState == 2, recordBuffer.add(newOSCData));
-    theForcePort.sendRaw(msg.asArray.asRawOSC);
+    masterClockOSCport.sendRaw((["/senselDrawFwd", "live"]++msg[1..]).asArray.asRawOSC); //use [msg..1] because live input doesn't have modified touchIDs
 }, "/senselDraw");
 
 ////midiNote -> [bankInd, bankChan, isOn, loopTask/nil, loopString, loopType, playType]
