@@ -127,8 +127,8 @@ chordButtonChanMap = Dictionary.new;
 ~chordButtonChanMap = chordButtonChanMap;
 divider = 40;
 (0..128).do({|i| chordButtonChanMap[i] = ""});
-(0..(divider-1)).do({|i| chordButtonChanMap[i] = "-3"});
-(divider..79).do({|i| chordButtonChanMap[i] = "-1"});
+(0..(divider-1)).do({|i| chordButtonChanMap[i] = "-1"});
+(divider..79).do({|i| chordButtonChanMap[i] = "-0"});
 
 miniOut.noteOn(0, record_BUTTON, green_LIGHT);
 miniOut.noteOn(0, loopRecord_BUTTON, green_LIGHT);
