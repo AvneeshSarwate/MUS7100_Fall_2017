@@ -1,4 +1,5 @@
-(var miniOut, mini, pythonOSCport, noteToInd, noteToXY, isPadNote, record_BUTTON, green_LIGHT, red_LIGHT, amber_LIGHT, savedScenes, recording, noteOnFunc, loadSavedSceneLights, indToNote, miniFwdOut, noteOffFunc, isChordNote, ccFunc, utilityButtons, isSceneNote, chordButtonChanMap, numChordPadsPlaying, releaseChords, releaseChords_BUTTON, tempoClock, loopRecordBuffer, tempLoopTask, createLoopTask, recordingLoop, metronomeFunc, bankNotes, recordingStartBeat, recordingEndBeat, bankInfo, loopRecord_BUTTON, masterClockTempoHandler, divider, resetButtonDestinations;
+(
+var miniOut, mini, pythonOSCport, noteToInd, noteToXY, isPadNote, record_BUTTON, green_LIGHT, red_LIGHT, amber_LIGHT, savedScenes, recording, noteOnFunc, loadSavedSceneLights, indToNote, miniFwdOut, noteOffFunc, isChordNote, ccFunc, utilityButtons, isSceneNote, chordButtonChanMap, numChordPadsPlaying, releaseChords, releaseChords_BUTTON, tempoClock, loopRecordBuffer, tempLoopTask, createLoopTask, recordingLoop, metronomeFunc, bankNotes, recordingStartBeat, recordingEndBeat, bankInfo, loopRecord_BUTTON, masterClockTempoHandler, divider, resetButtonDestinations;
 
 
 miniOut = MIDIOut.newByName("Launchpad Mini", "Launchpad Mini");
@@ -324,79 +325,4 @@ loadSavedSceneLights = {|msg, time, addr, recvPort|
 	});
 };
 OSCFunc(loadSavedSceneLights, "/loadScenes");
-)
-
-
-///////////////===================
-
-
-(
-~cr = {|oldRecBuf, startBeat, endBeat|
-    var recBuf = List.newFrom(oldRecBuf);
-    var timeAfterLastHit;
-    var newTask;
-
-    ["START CHORD TIMING RECALC"].postln;
-
-    recBuf.do({|hit| if(hit[0] < startBeat, {hit[0] = startBeat}) });
-    ["BBB", recBuf].postln;
-    if(~truncateLoop,
-		{timeAfterLastHit = (recBuf[recBuf.size-1][0].ceil - recBuf[recBuf.size-1][0])},
-		{timeAfterLastHit = endBeat - recBuf[recBuf.size-1][0]}
-	);
-    ["CCC", recBuf].postln;
-    (recBuf.size-1..1).do({|i| recBuf[i][0] = recBuf[i][0] - recBuf[i-1][0]});
-	recBuf[0][0] = recBuf[0][0] - startBeat;
-    ["DDD", recBuf].postln;
-    recBuf.add([timeAfterLastHit]);
-
-    newTask = Task({
-        var ind = 0;
-        {
-            recBuf[ind].postln;
-            recBuf[ind][0].wait;
-            if(recBuf.size > 1, {
-                [ind, recBuf[ind]].postln;
-                pythonOSCport.sendRaw(recBuf[ind][1..].asArray.asRawOSC);
-            });
-            ind = (ind+1) % recBuf.size;
-        }.loop;
-    }, ~tc);
-    newTask.play;
-    "EEE".postln;
-    newTask
-};
-)
-
-
-
-(
-var indToNote = {|x|
-	var note = -1;
-	var col = x % 10;
-	var row = ((x - col)/10).asInt;
-	var midiRow = (7-row) * 16;
-	if((col < 8) && (row < 8), {note = midiRow + col});
-	note;
-};
-(0..7).do({|i|
-    (0..7).do({|j|
-        var ind = (i*10)+j;
-        [ind, ~cbm[ind]].postln;
-    });
-});
-)
-
-
-
-(
-var indToNote = {|x|
-	var note = -1;
-	var col = x % 10;
-	var row = ((x - col)/10).asInt;
-	var midiRow = (7-row) * 16;
-	if((col < 8) && (row < 8), {note = midiRow + col});
-	note;
-};
-indToNote.(7);
 )

@@ -1,7 +1,6 @@
 //env vars for control
-(
-~truncateLoop = false;
-)
+// ~truncateLoop = false;
+
 
 //ACTIVE TODO TAGS: audioRecording
 
@@ -15,7 +14,7 @@ recorded short you don't roll-over and play the starting bit twice. )
 3. need to handle pad interaction edge cases of hitting other/same pads while in intermediate recording states
 4. need to handle various ways of "clearing" loops when overwriting new loop to same pad.
 */
-~recBuf
+
 (
 var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, colorCC, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, indToNote, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc, tempRecordBuffer, truncateLoop_BUTTON, playMode_BUTTON, ccRecordBuffer, colorQuneoPad, loopToAlgs_BUTTON, loopToAlgs,deantoniPadColor, oscRecordBuffer, numSavedLoops, theForcePort;
 var launchpadIndex = 0;
@@ -1094,51 +1093,3 @@ metronomeFunc = {
 };
 
 )
-
-// ================================================================================================
-// ================================================================================================
-//FILE SAVE/LOAD
-~scenes[3].do({|loop| loop.postln;})
-5
-
-(
-w = Window.new.front;
-c = CompositeView(w, Rect(10, 10, 300, 300));
-d = DragSink(c, Rect(0, 0, 80, 80)).action_({|v|
-    var files = [];
-    var pathString = v.object;
-    pathString.postln;
-    p = PathName( pathString );
-    m = SimpleMIDIFile.read(p.fullPath);
-});
-d.name = "aaa";
-d.keyDownAction = {|view, char, modifier, unicode, keycode, key|
-    [view.name, char, modifier, unicode, keycode, key].postln;
-    false;
-};
-t = TextField(c, Rect(20, 10, 40, 20)); //length of loop
-u = TextField(c, Rect(4, 50, 70, 20)); //filename
-u.keyDownAction = {|view, char, modifier, unicode, keycode, key|
-    [view.name, char, modifier, unicode, keycode, key].postln;
-    //if(key =
-    false;
-};
-)
-d.dump
-
-(
-a = [1, 2, 3];
-b = a[1..];
-b[1] = 10;
-b.postln;
-a.postln;
-)
-
-
-m.midiEvents
-m.dump
-m.endOfTrack
-m.adjustEndOfTrack(0, 96*4)
-m.midiTracks
-m.division
-(m.metaEvents[3].asString).postln

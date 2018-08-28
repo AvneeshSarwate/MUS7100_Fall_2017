@@ -1,4 +1,5 @@
-(var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport, playColumn, masterClockOSCport, chanPerRow, lightIndex, controlHandler, controlHandlerWrapper, useLoopMidi;
+(
+var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport, playColumn, masterClockOSCport, chanPerRow, lightIndex, controlHandler, controlHandlerWrapper, useLoopMidi;
 var launchpadIndex = 0;
 useLoopMidi = false;
 
@@ -243,29 +244,3 @@ OSCFunc({|msg, time, addr, recvPort|
 }, "/loopLength");
 
 )
-
-//when you record a loop, it will default be looping over all steps (makes things simpler technically)
-//when you turn off a loop,
-
-//TODO
-/*
-- The only thing this module will do is control the sequencing of loops.
-- All recording and saving of loops will happen on the secenBuilder pad (into the first column) .
-- When you record a loop, THE USER IS RESPONSIBLE for making sure it lines up with the beat count (every 4 or whatever).
-- When a loop is saved in sceneBuilder, its color will light up in the corresponding colummn in loopSequencer.
-- When a loop column is reached, it will turn off the loop, all notes on the channel, and then turn on the loop (1 ms lag between off/on).
------ Thus, if your initial recording is off the beat count, there will be a "skip", but it won't break.
-- algoKeys and sceneBuilder will be on the same launchpad, loopSequencer on another.
-
-
-note - top row is row "0" and indexes in increasing order down
-
-*/
-
-(
-var grid = Array.fill2D(8, 8, {false});
-grid[0]
-
-)
-
-~lightIndex[launchpadIndex]

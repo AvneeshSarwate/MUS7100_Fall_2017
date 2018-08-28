@@ -252,15 +252,3 @@ sendSample = {|noteStr, midiChannel, ind|
 
 
 )
-//===========================================================================
-//scratch code below
-
-
-(
-
-a = List.new;
-a.add(5);
-a.add(6);
-a.remove(5);
-a.size
-)

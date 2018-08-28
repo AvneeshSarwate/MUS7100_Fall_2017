@@ -41,18 +41,3 @@ OSCFunc({|msg, time, addr, recvPort|
 };
 
 )
-
-~lightIndex=0
-
-SuperDirt.start
-
-MIDIClient.destinations.collect({|elem, ind| if(((elem.name == "Standalone Port") && (elem.device == ("Launchpad Pro"++" 2"))), ind, nil)}).select({|elem| elem.isNil.not})[0]
-
-
-~getLaunchpadOut.(1)
-
-"aa" == ("a"++"a")
-
-"Launchpad Pro 2" == "Launchpad Pro 2"
-
-~getMidiIn.("Xkey  ", "Xkey  ")
