@@ -316,5 +316,5 @@ sendSample = {|drumStr, chan, ind|
         if(hitInd.isNil.not,  {maxPort.sendMsg("/roboDrum", hitInd)});
     });
 };
-
+~testEnvVar.postln;
 )

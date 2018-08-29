@@ -14,8 +14,6 @@ var launchpadIndex = 0;
 //light switching variables
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON;
 
-//MIDIClient.init;
-//MIDIIn.connectAll;
 launchpadOut = ~getLaunchpadOut.(launchpadIndex);
 ["GOT LAUNCHPAD", launchpadOut].postln;
 launchpadOut.latency = 0;

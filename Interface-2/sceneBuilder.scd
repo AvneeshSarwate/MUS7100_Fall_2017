@@ -21,8 +21,6 @@ var launchpadIndex = 0;
 //light switching variables
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON;
 
-//MIDIClient.init;
-//MIDIIn.connectAll;
 launchpadOut = ~getLaunchpadOut.(launchpadIndex);
 launchpadOut.latency = 0;
 midiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
