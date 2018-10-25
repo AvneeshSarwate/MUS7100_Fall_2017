@@ -40,4 +40,33 @@ OSCFunc({|msg, time, addr, recvPort|
     MIDIClient.sources.select({|elem| (elem.device == device) && (elem.name == name)})[0]
 };
 
+~getMidiOut = {|device, name|
+    var ind = MIDIClient.destinations.collect({|elem, ind| (device: elem.device, name: elem.name, idx: ind)}).select({|elem| (elem.device == device) && (elem.name == name)})[0].idx;
+    ind.postln;
+    MIDIOut.new(ind);
+};
+
+)
+
+
+(
+var lp;
+~getMidiOut = {|device, name|
+    var ind = MIDIClient.destinations.collect({|elem, ind| (device: elem.device, name: elem.name, idx: ind)}).select({|elem| (elem.device == device) && (elem.name == name)})[0].idx;
+    ind.postln;
+    MIDIOut.new(ind);
+};
+lp = ~getMidiOut.("Launchpad Mini", "Launchpad Mini");
+lp.noteOn(0, 8, 3);
+)
+
+(
+var noteToInd = {|x|
+	var row = 7 - (x / 16).asInt;
+	var col = x % 16;
+	var retVal = -1;
+	if(col < 8, {retVal = row*10 + col});
+	retVal
+}; //convert note to pad index
+noteToInd.
 )

@@ -16,7 +16,7 @@ recorded short you don't roll-over and play the starting bit twice. )
 */
 
 (
-var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, colorCC, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc, tempRecordBuffer, truncateLoop_BUTTON, playMode_BUTTON, ccRecordBuffer, colorQuneoPad, loopToAlgs_BUTTON, loopToAlgs,deantoniPadColor, oscRecordBuffer, numSavedLoops, theForcePort, red_LIGHT, green_LIGHT, amber_LIGHT, noteToInd, indToNote;
+var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, colorCC, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc, tempRecordBuffer, truncateLoop_BUTTON, playMode_BUTTON, ccRecordBuffer, colorQuneoPad, loopToAlgs_BUTTON, loopToAlgs,deantoniPadColor, oscRecordBuffer, numSavedLoops, theForcePort, red_LIGHT, green_LIGHT, amber_LIGHT, noteToInd, indToNote, chanSwitchButtons, looperHijackChan;
 var launchpadIndex = 1;
 //light switching variables
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON;
@@ -48,13 +48,14 @@ ccLights = List.new;
 });
 
 setLight = {|note, color, lightIndexOverride=false|
-    if((~lightIndex[launchpadIndex] == lightIndex) || lightIndexOverride, {
+    /*if((~lightIndex[launchpadIndex] == lightIndex) || lightIndexOverride, {
         if(ccLights.includes(note),
             {launchpadOut.control(0, note, color)},
             {launchpadOut.noteOn(0, note, color)}
         );
     });
-    padColorState[note] = color;
+    padColorState[note] = color;*/
+    launchpadOut.noteOn(0, note, color);
 };
 (1..98).do({|note|
     if(ccLights.includes(note),
@@ -128,7 +129,6 @@ amber_LIGHT = 51;
 color1 = [amber_LIGHT, amber_LIGHT, amber_LIGHT, amber_LIGHT, colorQuneoPad, deantoniPadColor]; //colorVal
 colorCC = 22;
 
-
 padIndToColor = Dictionary.new();
 
 colorON = 13;
@@ -184,6 +184,10 @@ down = 92;
 right = 93;
 left = 94;
 
+chanSwitchButtons = [72, 88, 104, 120];
+looperHijackChan = 0;
+setLight.(chanSwitchButtons[0], green_LIGHT);
+
 interruptLoopButtons = [1, 2, 3, 4];
 interruptLooping = [false, false, false, false, false];
 
@@ -199,7 +203,6 @@ sceneRecordButton = 59;
 recordingScene = false;
 //setLight  TODO: sceneBuiler set scene record button initial light
 notRecordingColor = 17; //colorVal
-setLight.(sceneRecordButton, notRecordingColor);
 sceneIsOnDeck = false; //prevents wierd race conditions/overlap from hitting play scene twice before metronome tick
 sceneColor = 3; //colorVal
 
@@ -223,8 +226,13 @@ padOn = {|vel, note, chan, port|
     });
     if((note == tapTempoToggle) && (vel == 127), {playMetronome = playMetronome.not});
     if((note == recordButton) && (vel == 127), {recordButtonFunc.()});
+    if(chanSwitchButtons.includes(note) && (vel == 127), {
+        looperHijackChan = chanSwitchButtons.indexOf(note);
+        chanSwitchButtons.do({|btn| setLight.(btn, 0)});
+        setLight.(note, green_LIGHT);
+    });
 
-    if((chan == 0) && (~lightIndex[launchpadIndex] == lightIndex) && (~noteToInd.(note) > -1), {
+    if((chan == 0) && (~lightIndex[launchpadIndex] == lightIndex) && (noteToInd.(note) > -1), {
         if(bankSet.includes(note), {
             var thisBank = bankMap[note];
             if((recordingState == 3) ,{
@@ -340,14 +348,14 @@ turnOffBank = {|thisBank, note|
 
 
 a = {|vel, note, chan, port|
-    midiOut.noteOn(chan, note, vel);
-    if(recordingMetronome, {recordBuffer.add([tempoClock.beats, note, vel, chan, "on"])});
+    midiOut.noteOn(looperHijackChan, note, vel);
+    if(recordingMetronome, {recordBuffer.add([tempoClock.beats, note, vel, looperHijackChan, "on"])});
 };
 MIDIFunc.noteOn(a, nil, nil, instrumentInput.uid);
 
 b = {|vel, note, chan, port|
-    midiOut.noteOff(chan, note, vel);
-    if(recordingMetronome, {recordBuffer.add([tempoClock.beats, note, vel, chan, "off"])});
+    midiOut.noteOff(looperHijackChan, note, vel);
+    if(recordingMetronome, {recordBuffer.add([tempoClock.beats, note, vel, looperHijackChan, "off"])});
 };
 MIDIFunc.noteOff(b, nil, nil, instrumentInput.uid);
 
@@ -664,11 +672,12 @@ OSCFunc.new({|msg, time, addr, recvPort|
 
 
 OSCFunc(masterClockBeatHandler, "/masterClockBeat");
-tapTempoSetButton = 69;
-tapTempoToggle = 79;
+tapTempoSetButton = 40;
+tapTempoToggle = 24;
 recordButton = 8;
 recordColor = red_LIGHT; //colorVal
 setLight.(recordButton, recordColor);
+["RECORD BUTTON LIGHT", recordButton, recordColor].postln;
 //setLight.(quantizeButton, 0);
 lastTap = TempoClock.beats;
 playMetronome = false;
