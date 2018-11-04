@@ -16,7 +16,7 @@ recorded short you don't roll-over and play the starting bit twice. )
 */
 
 (
-var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, colorCC, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc, tempRecordBuffer, truncateLoop_BUTTON, playMode_BUTTON, ccRecordBuffer, colorQuneoPad, loopToAlgs_BUTTON, loopToAlgs,deantoniPadColor, oscRecordBuffer, numSavedLoops, theForcePort, red_LIGHT, green_LIGHT, amber_LIGHT, noteToInd, indToNote, chanSwitchButtons, looperHijackChan;
+var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, colorCC, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc, tempRecordBuffer, truncateLoop_BUTTON, playMode_BUTTON, ccRecordBuffer, colorQuneoPad, loopToAlgs_BUTTON, loopToAlgs,deantoniPadColor, oscRecordBuffer, numSavedLoops, theForcePort, red_LIGHT, green_LIGHT, amber_LIGHT, noteToProInd, proIndToNote, chanSwitchButtons, looperHijackChan;
 var launchpadIndex = 0;
 //light switching variables
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON;
@@ -136,17 +136,37 @@ colorON = 13;
 bankSet = Set.new();
 
 
+//bottom left is 11 (rows from bottom up are 10, 20... columns are 11, 12,... like launchpad pro)
+noteToProInd = {|x|
+    var row = 7 - (x / 16).asInt + 1;
+    var col = (x % 16) + 1;
+    var retVal = -1;
+    if(col < 9, {retVal = row*10 + col});
+    retVal
+}; //convert note to pad index
+
+proIndToNote = {|x|
+    var note = -1;
+    var col = (x-1) % 10;
+    var row = ((x - col)/10).asInt - 1;
+    var midiRow = (7-row) * 16;
+    if((col < 8) && (row < 8), {note = midiRow + col});
+    note;
+};
+
 //midiNote -> [bankInd, bankChan, isOn, loopTask/nil, loopString, loopType, playType]
 //TODO: sceneBuilderplayType indicates none, loop, holdDown, or splice (-1, 0, 1, 2)
 //loopType is either nil, \midi or \sample (a bank is playable IFF it has a loopType)
 bankMap = Dictionary.new();
 ~tempCounter = 1;
-(0..127).do({|i|
-    bankSet.add(i);
-    //setLight.(j, color1[i]);
-    bankMap.put(i, [~tempCounter, -1, false, nil, nil, nil, nil]);
-    ~tempCounter = ~tempCounter + 1;
-});
+(3..8).do({|i|
+    (1..8).do({|j|
+        var note = proIndToNote.((i*10)+j);
+        bankSet.add(note);
+        //setLight.(j, color1[i]);
+        bankMap.put(note, [~tempCounter, -1, false, nil, nil, nil, nil]);
+        ~tempCounter = ~tempCounter + 1;
+})});
 z = bankMap;
 bankSet.do({|i| setLight.(i, 0)});
 playingBanks = Set.new();
@@ -155,23 +175,7 @@ quantizeButton = 96;
 quantizeColor = 8;
 quantized = false;
 
-//bottom left is 00
-noteToInd = {|x|
-    var row = 7 - (x / 16).asInt;
-    var col = x % 16;
-    var retVal = -1;
-    if(col < 8, {retVal = row*10 + col});
-    retVal
-}; //convert note to pad index
 
-indToNote = {|x|
-    var note = -1;
-    var col = x % 10;
-    var row = ((x - col)/10).asInt;
-    var midiRow = (7-row) * 16;
-    if((col < 8) && (row < 8), {note = midiRow + col});
-    note;
-};
 
 
 //TODO: this feature isn't triggerable
@@ -233,7 +237,7 @@ padOn = {|vel, note, chan, port|
         setLight.(note, green_LIGHT);
     });
 
-    if((chan == 0) && (~lightIndex[launchpadIndex] == lightIndex) && (noteToInd.(note) > -1), {
+    if((chan == 0) && (~lightIndex[launchpadIndex] == lightIndex) && (noteToProInd.(note) > -1), {
         if(bankSet.includes(note), {
             var thisBank = bankMap[note];
             if((recordingState == 3) ,{
@@ -254,9 +258,9 @@ padOn = {|vel, note, chan, port|
 
                     playingBanks.add(note);
                     ["NEW BANK", thisBank].postln;
-                    pythonOSCport.sendMsg("/saveLoop", thisBank[0], if(thisBank[2] == 17, "senselLoop", thisBank[4]), note, thisBank[1]); //TODO - sensel loop string larger than 1 OSC message maxSize
-                    masterClockOSCport.sendMsg("/saveLoop", thisBank[0], if(thisBank[2] == 17, "senselLoop", thisBank[4]), note, thisBank[1]);
-                    masterClockOSCport.sendMsg("/metaInfoSaveRequest", thisBank[0], thisBank[2]);
+                    pythonOSCport.sendMsg("/saveLoop", noteToProInd(thisBank[0]), if(thisBank[2] == 17, "senselLoop", thisBank[4]), note, thisBank[1]); //TODO - sensel loop string larger than 1 OSC message maxSize
+                    masterClockOSCport.sendMsg("/saveLoop", noteToProInd(thisBank[0]), if(thisBank[2] == 17, "senselLoop", thisBank[4]), note, thisBank[1]);
+                    masterClockOSCport.sendMsg("/metaInfoSaveRequest", noteToProInd(thisBank[0]), thisBank[2]);
 
                     numSavedLoops = numSavedLoops + 1;
 
@@ -275,7 +279,7 @@ padOn = {|vel, note, chan, port|
                         //set recivedAlgTask[chanInd][bankNum] = null
                         //if the python func crashes, this remains null and can be checked for
                         if(algOrderList.size > 0, {
-                            pythonOSCport.sendMsg("/algRequest",  thisBank[1], thisBank[0],
+                            pythonOSCport.sendMsg("/algRequest",  thisBank[1], noteToProInd(thisBank[0]),
                                 roots[thisBank[1]], scales[thisBank[1]].join(","), thisBank[4])
                         });
                         if(playMode == 0, {
@@ -342,11 +346,11 @@ turnOnBank = {|thisBank, note|
     switch(thisBank[5],
         \midi, {thisBank[3].start},
         \cc, {thisBank[3].start},
-        \sample, {maxPort.sendMsg("/samplerControl", thisBank[0], "playStart", 0)}
+        \sample, {maxPort.sendMsg("/samplerControl", noteToProInd(thisBank[0]), "playStart", 0)}
     );
     thisBank[2] = true;
     playingBanks.add(note);
-    pythonOSCport.sendMsg("/loopPlay", thisBank[1], thisBank[0], 1); //mark python loop-info as playing
+    pythonOSCport.sendMsg("/loopPlay", thisBank[1], noteToProInd(thisBank[0]), 1); //mark python loop-info as playing
 };
 
 turnOffBank = {|thisBank, note|
@@ -355,13 +359,13 @@ turnOffBank = {|thisBank, note|
     switch(thisBank[5],
         \midi, {thisBank[3].stop},
         \cc, {thisBank[3].stop},
-        \sample, {maxPort.sendMsg("/samplerControl", thisBank[0], "playStop", 0)}
+        \sample, {maxPort.sendMsg("/samplerControl", noteToProInd(thisBank[0]), "playStop", 0)}
     );
     thisBank[6] = nil;
     thisBank[2] = false;
     setLight.(note, switch(thisBank[5], \midi, {color1[thisBank[1]]}, \cc, {colorCC}, \sample, {audioClipColor}));
     playingBanks.remove(note);
-    pythonOSCport.sendMsg("/loopPlay", thisBank[1], thisBank[0], 0); //mark python loop-info as stopped
+    pythonOSCport.sendMsg("/loopPlay", thisBank[1], noteToProInd(thisBank[0]), 0); //mark python loop-info as stopped
 
 };
 
@@ -775,10 +779,11 @@ playScene = {|bankMapInstance, sceneInd|
                 });
                 ["SCENE f sceneBuilder", padInd].postln;
             });
-            (81..88).do({|key|
+            //stuff relating to loop sequencer
+            /*(81..88).do({|key|
                 var thisBank = bankMap[key];
                 masterClockOSCport.sendMsg("/saveLoop", thisBank[0], thisBank[4], key, thisBank[1]);
-            });
+            });*/
             sceneIsOnDeck = false;
             //pythonOSCport.sendMsg("/scenePlayed", sceneInd); what is this for?
             nil;
@@ -795,6 +800,84 @@ stringToBuf = {|melString|
     buf
 };
 
+
+receiveScene = {|msg, time, addr, recvPort|
+    ["RECIEVED SCENE", msg[2], msg[1]].postln;
+    if(msg[1].asSymbol != \none,
+        {
+            //set roots and scales
+            var count = 0;
+            var bankMapInstance = bankMap.deepCopy;
+
+            ["SCENE IS NON NULL", msg[2], tempoClock.queue.size, bankMapInstance.keys.size].postln;
+            bankMapInstance.keys.do({|button|
+                var bank = bankMapInstance[button];
+                var stopFunc = {
+                    //["STOP FUNC NOW", bank[3].isNil].postln;
+                    if(bank[3].isNil.not, {
+                        bank[2] = false;
+                        bank[3].stop;
+                        bank[3].free;
+                        midiOut.allNotesOff(bank[1]);
+                        bank[1] = -1;
+                        bank[3] = nil;
+                        bank[4] = nil;
+                        bank[5] = nil;
+                        bank[6] = "";
+                        setLight.(button, 0);
+                    });
+                    nil;
+                };
+                tempoClock.sched(tempoClock.timeToNextBeat-0.01, stopFunc);
+            });
+
+            ["ALL LOOPS STOPPED FOR SCENE", msg[2], tempoClock.queue.size].postln;
+
+            //split string and set banks
+            msg[1].asString.split($:).do({|bankStr|
+                if(bankStr.asSymbol != \none,
+                    {
+                        var split, bankInfo;
+                        split = bankStr.split($ );
+                        ["bankCount", count, split[0]].postln;
+                        count = count+1;
+                        bankInfo = [proIndToNote.(split[0].asInt), split[1], (split[2].asInt == 1)];
+                        ["setBankMelodyArgs", bankInfo[0], bankInfo[2], bankInfo[1]].postln;
+                        setBankMelody.(bankInfo[0], bankInfo[1], bankInfo[2], bankMapInstance);
+                    }
+                );
+            });
+            scenes[msg[2].asInt] = bankMapInstance.deepCopy;
+            setLight.(20+msg[2], sceneColor); //todo - change when SCENE PAGES are implemented
+        },
+        {
+            scenes[msg[2].asInt] = nil;
+            setLight.(20+msg[2], 0); //todo - change when SCENE PAGES are implemented
+        }
+    );
+};
+OSCFunc(receiveScene, "/sendScene");
+
+
+
+
+////midiNote -> [bankInd, bankChan, isOn, loopTask/nil, loopString, loopType, playType]
+setBankMelody = {|button, hitString, playing, bankMapInstance|
+
+    //todo - enable this to minimize latency?
+    //melodyTask = createRecordedTask.(stringToBuf.(hitString));
+
+    var bank = bankMapInstance[button];
+    var buf = stringToBuf.(hitString);
+    bank[1] = calculateMajorityChannel.(buf);
+    bank[2] = playing;
+    bank[3] = createRecordedTask.(buf);
+    bank[4] = hitString;
+    bank[5] = \midi;
+    bank[6] = "";
+    setLight.(button, color1[bank[1]]);
+    ["bank melody set for", button, bank].postln;
+};
 
 
 /*
