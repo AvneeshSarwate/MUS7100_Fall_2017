@@ -103,6 +103,7 @@ lightIndex = if(~lightIndexes[launchpadIndex].size == 0,
 
 
 
+(0..127).do({|i| setLight.(i, 0)});
 
 //OPTIONS
 preRecordLength = 0;
@@ -171,7 +172,6 @@ z = bankMap;
 bankSet.do({|i| setLight.(i, 0)});
 playingBanks = Set.new();
 
-quantizeButton = 96;
 quantizeColor = 8;
 quantized = false;
 
@@ -223,7 +223,7 @@ launchPad = ~getMidiIn.("Launchpad Mini", "Launchpad Mini"); //~getLaunchpadIn.(
 instrumentInput = ~getMidiIn.("QuNexus", "Port 1"); //MIDIClient.sources.select({|elem| (elem.name == "Bus 7") && (elem.device == "IAC Driver")})[0];
 [launchPad, MIDIClient.sources[2]].postln;
 padOn = {|vel, note, chan, port|
-
+    ["PRO IND", note, noteToProInd.(note)].postln;
     if((note == tapTempoSetButton) && (vel == 127), {
         var now = TempoClock.beats;
         if((now - lastTap) < 2, {masterClockOSCport.sendMsg("/uploadTempo", now - lastTap, alignTempo)});
@@ -258,9 +258,9 @@ padOn = {|vel, note, chan, port|
 
                     playingBanks.add(note);
                     ["NEW BANK", thisBank].postln;
-                    pythonOSCport.sendMsg("/saveLoop", noteToProInd(thisBank[0]), if(thisBank[2] == 17, "senselLoop", thisBank[4]), note, thisBank[1]); //TODO - sensel loop string larger than 1 OSC message maxSize
-                    masterClockOSCport.sendMsg("/saveLoop", noteToProInd(thisBank[0]), if(thisBank[2] == 17, "senselLoop", thisBank[4]), note, thisBank[1]);
-                    masterClockOSCport.sendMsg("/metaInfoSaveRequest", noteToProInd(thisBank[0]), thisBank[2]);
+                    pythonOSCport.sendMsg("/saveLoop", noteToProInd.(thisBank[0]), if(thisBank[2] == 17, "senselLoop", thisBank[4]), note, thisBank[1]); //TODO - sensel loop string larger than 1 OSC message maxSize
+                    masterClockOSCport.sendMsg("/saveLoop", noteToProInd.(thisBank[0]), if(thisBank[2] == 17, "senselLoop", thisBank[4]), note, thisBank[1]);
+                    masterClockOSCport.sendMsg("/metaInfoSaveRequest", noteToProInd.(thisBank[0]), thisBank[2]);
 
                     numSavedLoops = numSavedLoops + 1;
 
@@ -279,7 +279,7 @@ padOn = {|vel, note, chan, port|
                         //set recivedAlgTask[chanInd][bankNum] = null
                         //if the python func crashes, this remains null and can be checked for
                         if(algOrderList.size > 0, {
-                            pythonOSCport.sendMsg("/algRequest",  thisBank[1], noteToProInd(thisBank[0]),
+                            pythonOSCport.sendMsg("/algRequest",  thisBank[1], noteToProInd.(thisBank[0]),
                                 roots[thisBank[1]], scales[thisBank[1]].join(","), thisBank[4])
                         });
                         if(playMode == 0, {
@@ -305,7 +305,7 @@ padOn = {|vel, note, chan, port|
 
         });
         if(scenePads.includes(note), {
-            var sceneInd = note-96; //todo - change when SCENE PAGES are implemented
+            var sceneInd = note-(96-1); //todo - change when SCENE PAGES are implemented
             if(recordingScene,
                 {
                     scenes[sceneInd] = bankMap.deepCopy;
@@ -346,11 +346,11 @@ turnOnBank = {|thisBank, note|
     switch(thisBank[5],
         \midi, {thisBank[3].start},
         \cc, {thisBank[3].start},
-        \sample, {maxPort.sendMsg("/samplerControl", noteToProInd(thisBank[0]), "playStart", 0)}
+        \sample, {maxPort.sendMsg("/samplerControl", noteToProInd.(thisBank[0]), "playStart", 0)}
     );
     thisBank[2] = true;
     playingBanks.add(note);
-    pythonOSCport.sendMsg("/loopPlay", thisBank[1], noteToProInd(thisBank[0]), 1); //mark python loop-info as playing
+    pythonOSCport.sendMsg("/loopPlay", thisBank[1], noteToProInd.(thisBank[0]), 1); //mark python loop-info as playing
 };
 
 turnOffBank = {|thisBank, note|
@@ -359,13 +359,13 @@ turnOffBank = {|thisBank, note|
     switch(thisBank[5],
         \midi, {thisBank[3].stop},
         \cc, {thisBank[3].stop},
-        \sample, {maxPort.sendMsg("/samplerControl", noteToProInd(thisBank[0]), "playStop", 0)}
+        \sample, {maxPort.sendMsg("/samplerControl", noteToProInd.(thisBank[0]), "playStop", 0)}
     );
     thisBank[6] = nil;
     thisBank[2] = false;
     setLight.(note, switch(thisBank[5], \midi, {color1[thisBank[1]]}, \cc, {colorCC}, \sample, {audioClipColor}));
     playingBanks.remove(note);
-    pythonOSCport.sendMsg("/loopPlay", thisBank[1], noteToProInd(thisBank[0]), 0); //mark python loop-info as stopped
+    pythonOSCport.sendMsg("/loopPlay", thisBank[1], noteToProInd.(thisBank[0]), 0); //mark python loop-info as stopped
 
 };
 
@@ -765,19 +765,17 @@ playScene = {|bankMapInstance, sceneInd|
                 var bank = bankMap[padInd];
                 //turn on/off light
                 setLight.(padInd, bank[3].isNil.if(0, color1[bank[1]]));
-                ["SCENE d sceneBuilder a", padInd, bank].postln;
-                ["SCENE da",  if(bank[4].isNil.not, {stringToBuf.(bank[4])}, "")];
-                ["SCENE db"];
+                // ["SCENE d sceneBuilder a", padInd, bank].postln;
                 //recreate task from string (maybe there's closure issues when trying to play the old task?)
                 if(bank[4].isNil.not, { bank[3] = createRecordedTask.(stringToBuf.(bank[4])) });
-                ["SCENE e sceneBuilder", padInd].postln;
+                // ["SCENE e sceneBuilder", padInd].postln;
                 //play and add to playing banks
                 if(bank[2], {
                     //TODO sceneBuilder - recreate task?
                     bank[3].play;
                     playingBanks.add(padInd);
                 });
-                ["SCENE f sceneBuilder", padInd].postln;
+                // ["SCENE f sceneBuilder", padInd].postln;
             });
             //stuff relating to loop sequencer
             /*(81..88).do({|key|
@@ -813,7 +811,7 @@ receiveScene = {|msg, time, addr, recvPort|
             bankMapInstance.keys.do({|button|
                 var bank = bankMapInstance[button];
                 var stopFunc = {
-                    //["STOP FUNC NOW", bank[3].isNil].postln;
+                    ["STOP FUNC NOW", button, bank[3].isNil].postln;
                     if(bank[3].isNil.not, {
                         bank[2] = false;
                         bank[3].stop;
@@ -848,11 +846,11 @@ receiveScene = {|msg, time, addr, recvPort|
                 );
             });
             scenes[msg[2].asInt] = bankMapInstance.deepCopy;
-            setLight.(20+msg[2], sceneColor); //todo - change when SCENE PAGES are implemented
+            setLight.(96-1+msg[2], sceneColor); //todo - change when SCENE PAGES are implemented
         },
         {
             scenes[msg[2].asInt] = nil;
-            setLight.(20+msg[2], 0); //todo - change when SCENE PAGES are implemented
+            setLight.(96-1+msg[2], 0); //todo - change when SCENE PAGES are implemented
         }
     );
 };
