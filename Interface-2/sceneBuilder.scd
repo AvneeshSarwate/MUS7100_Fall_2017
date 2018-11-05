@@ -654,7 +654,7 @@ OSCFunc({|msg, time, addr, recvPort|
     tempoClock = TempoClock.new(1/msg[1], 0, queueSize:2056);
     ~sceneBuilderClock = tempoClock;
     tempoClock.schedAbs(1, metronomeFunc);
-    "MULTILOOP ONE SHOT".postln;
+    "SCENE BUILDER ONE SHOT".postln;
 }, "/masterClockBeat").oneShot;
 masterClockBeatHandler = {|msg, time, addr, recvPort|
     //["MULTILOOP BEAT", tempoClock.beats].postln;

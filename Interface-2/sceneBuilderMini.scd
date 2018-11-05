@@ -258,9 +258,9 @@ padOn = {|vel, note, chan, port|
 
                     playingBanks.add(note);
                     ["NEW BANK", thisBank].postln;
-                    pythonOSCport.sendMsg("/saveLoop", noteToProInd.(thisBank[0]), if(thisBank[2] == 17, "senselLoop", thisBank[4]), note, thisBank[1]); //TODO - sensel loop string larger than 1 OSC message maxSize
-                    masterClockOSCport.sendMsg("/saveLoop", noteToProInd.(thisBank[0]), if(thisBank[2] == 17, "senselLoop", thisBank[4]), note, thisBank[1]);
-                    masterClockOSCport.sendMsg("/metaInfoSaveRequest", noteToProInd.(thisBank[0]), thisBank[2]);
+                    pythonOSCport.sendMsg("/saveLoop", thisBank[0], if(thisBank[2] == 17, "senselLoop", thisBank[4]), noteToProInd.(note), thisBank[1]); //TODO - sensel loop string larger than 1 OSC message maxSize
+                    masterClockOSCport.sendMsg("/saveLoop", thisBank[0], if(thisBank[2] == 17, "senselLoop", thisBank[4]), noteToProInd.(note), thisBank[1]);
+                    masterClockOSCport.sendMsg("/metaInfoSaveRequest", thisBank[0], thisBank[2]);
 
                     numSavedLoops = numSavedLoops + 1;
 
@@ -279,7 +279,7 @@ padOn = {|vel, note, chan, port|
                         //set recivedAlgTask[chanInd][bankNum] = null
                         //if the python func crashes, this remains null and can be checked for
                         if(algOrderList.size > 0, {
-                            pythonOSCport.sendMsg("/algRequest",  thisBank[1], noteToProInd.(thisBank[0]),
+                            pythonOSCport.sendMsg("/algRequest",  thisBank[1], thisBank[0],
                                 roots[thisBank[1]], scales[thisBank[1]].join(","), thisBank[4])
                         });
                         if(playMode == 0, {
@@ -346,11 +346,11 @@ turnOnBank = {|thisBank, note|
     switch(thisBank[5],
         \midi, {thisBank[3].start},
         \cc, {thisBank[3].start},
-        \sample, {maxPort.sendMsg("/samplerControl", noteToProInd.(thisBank[0]), "playStart", 0)}
+        \sample, {maxPort.sendMsg("/samplerControl", thisBank[0], "playStart", 0)}
     );
     thisBank[2] = true;
     playingBanks.add(note);
-    pythonOSCport.sendMsg("/loopPlay", thisBank[1], noteToProInd.(thisBank[0]), 1); //mark python loop-info as playing
+    pythonOSCport.sendMsg("/loopPlay", thisBank[1], thisBank[0], 1); //mark python loop-info as playing
 };
 
 turnOffBank = {|thisBank, note|
@@ -359,13 +359,13 @@ turnOffBank = {|thisBank, note|
     switch(thisBank[5],
         \midi, {thisBank[3].stop},
         \cc, {thisBank[3].stop},
-        \sample, {maxPort.sendMsg("/samplerControl", noteToProInd.(thisBank[0]), "playStop", 0)}
+        \sample, {maxPort.sendMsg("/samplerControl", thisBank[0], "playStop", 0)}
     );
     thisBank[6] = nil;
     thisBank[2] = false;
     setLight.(note, switch(thisBank[5], \midi, {color1[thisBank[1]]}, \cc, {colorCC}, \sample, {audioClipColor}));
     playingBanks.remove(note);
-    pythonOSCport.sendMsg("/loopPlay", thisBank[1], noteToProInd.(thisBank[0]), 0); //mark python loop-info as stopped
+    pythonOSCport.sendMsg("/loopPlay", thisBank[1], thisBank[0], 0); //mark python loop-info as stopped
 
 };
 
