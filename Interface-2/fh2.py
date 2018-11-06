@@ -204,13 +204,14 @@ class FH2:
 
     def setCurrentScene(self, sceneTuple):
         self.loops, self.loopInfo, self.roots, self.scales, self.faderBanks, self.currentFaderVals = sceneTuple
+        # print self.loops, sceneTuple[0]
 
     def playScene(self, ind):
         c = copy.deepcopy
         self.sceneStack.append(map(c, self.getScene()))
         self.loadMetaInfo(ind)
         self.setCurrentScene(c(self.scenes[ind]))
-        self.sendCurrentScene()
+        # self.sendCurrentScene()
 
     def undoScenePlay(self):
         self.setCurrentScene(self.sceneStack.pop())

@@ -747,6 +747,7 @@ OSCFunc(masterClockTempoHandler, "/masterClockTempo");
 
 
 playScene = {|bankMapInstance, sceneInd|
+    pythonOSCport.sendMsg("/playScene", sceneInd);
     if(sceneIsOnDeck.not, {
         sceneIsOnDeck = true;
         tempoClock.sched(tempoClock.timeToNextBeat, {
