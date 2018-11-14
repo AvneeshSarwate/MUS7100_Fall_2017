@@ -46,27 +46,49 @@ OSCFunc({|msg, time, addr, recvPort|
     MIDIOut.new(ind);
 };
 
-)
+~bounceMidi = {|midiIn, midiOut|
+    var onFunc, offFunc, ccFunc;
+    midiOut.latency = 0;
 
+    onFunc = MIDIFunc.noteOn({|vel, note, chan, port|
+        midiOut.noteOn(chan, note, vel);
+    }, nil, nil, midiIn.uid);
 
-(
-var lp;
-~getMidiOut = {|device, name|
-    var ind = MIDIClient.destinations.collect({|elem, ind| (device: elem.device, name: elem.name, idx: ind)}).select({|elem| (elem.device == device) && (elem.name == name)})[0].idx;
-    ind.postln;
-    MIDIOut.new(ind);
+    offFunc = MIDIFunc.noteOff({|vel, note, chan, port|
+        midiOut.noteOff(chan, note, vel);
+    }, nil, nil, midiIn.uid);
+
+    ccFunc = MIDIFunc.cc({|vel, note, chan, port|
+        midiOut.control(chan, note, vel);
+    }, nil, nil, midiIn.uid);
+    [onFunc, offFunc, ccFunc]
 };
-lp = ~getMidiOut.("Launchpad Mini", "Launchpad Mini");
-lp.noteOn(0, 8, 3);
+
+
+~bounceMidi.(~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge"), ~getMidiOut.("IAC Driver", "Bus 2"))
+
 )
 
-(
-var noteToInd = {|x|
-	var row = 7 - (x / 16).asInt;
-	var col = x % 16;
-	var retVal = -1;
-	if(col < 8, {retVal = row*10 + col});
-	retVal
-}; //convert note to pad index
-noteToInd.
-)
+
+
+// (
+// var lp;
+// ~getMidiOut = {|device, name|
+//     var ind = MIDIClient.destinations.collect({|elem, ind| (device: elem.device, name: elem.name, idx: ind)}).select({|elem| (elem.device == device) && (elem.name == name)})[0].idx;
+//     ind.postln;
+//     MIDIOut.new(ind);
+// };
+// lp = ~getMidiOut.("Launchpad Mini", "Launchpad Mini");
+// lp.noteOn(0, 8, 3);
+// )
+//
+/*(
+var noteToProInd = {|x|
+    var row = 7 - (x / 16).asInt + 1;
+    var col = (x % 16) + 1;
+    var retVal = -1;
+    if(col < 9, {retVal = row*10 + col});
+    retVal
+};
+noteToProInd.(88)
+)*/
