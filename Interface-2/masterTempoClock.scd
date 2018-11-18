@@ -36,6 +36,12 @@ OSCFunc({|msg, time, addr, recvPort|
 
 
 
+
+
+
+
+
+
 ~getMidiIn = {|device, name|
     MIDIClient.sources.select({|elem| (elem.device == device) && (elem.name == name)})[0]
 };
@@ -63,10 +69,6 @@ OSCFunc({|msg, time, addr, recvPort|
     }, nil, nil, midiIn.uid);
     [onFunc, offFunc, ccFunc]
 };
-
-
-~bounceMidi.(~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge"), ~getMidiOut.("IAC Driver", "Bus 2"))
-
 )
 
 

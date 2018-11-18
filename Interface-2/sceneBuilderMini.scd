@@ -220,7 +220,7 @@ loopToAlgs = false;
 numSavedLoops = 1;
 
 launchPad = ~getMidiIn.("Launchpad Mini", "Launchpad Mini"); //~getLaunchpadIn.(launchpadIndex);
-instrumentInput = ~getMidiIn.("QuNexus", "Port 1"); //MIDIClient.sources.select({|elem| (elem.name == "Bus 7") && (elem.device == "IAC Driver")})[0];
+instrumentInput = ~getMidiIn.("IAC Driver", "Bus 7"); //MIDIClient.sources.select({|elem| (elem.name == "Bus 7") && (elem.device == "IAC Driver")})[0];
 [launchPad, MIDIClient.sources[2]].postln;
 padOn = {|vel, note, chan, port|
     ["PRO IND", note, noteToProInd.(note)].postln;
@@ -326,6 +326,18 @@ padOn = {|vel, note, chan, port|
 };
 padOnFunc = MIDIFunc.noteOn(padOn, nil, nil, launchPad.uid);
 
+
+MIDIFunc.cc({|vel, note, chan, port|
+    if((note == recordButton) && (vel == 127),
+        {
+            recordButtonFunc.();
+        },
+        {
+            midiOut.control(chan, note, vel);
+            if(recordingMetronome, {recordBuffer.add([tempoClock.beats, note, vel, chan, "cc"])})
+        }
+    );
+}, nil, nil, instrumentInput.uid);
 
 turnOnBank = {|thisBank, note|
     ["TURNING ON", note, tempoClock.beats].postln;
@@ -611,7 +623,10 @@ createRecordedTask = {|oldRecBuf, isChannelTask=false, channelInd = -1|
                     {
                         if(hit[4] == "on", {midiOut.noteOn(hit[3], hit[1], hit[2]);});
                         if(hit[4] == "off", {midiOut.noteOff(hit[3], hit[1], hit[2])});
-                        if(hit[4] == "cc", {midiOut.control(hit[3], hit[1], hit[2])});
+                        if(hit[4] == "cc", {
+                            midiOut.control(hit[3], hit[1], hit[2]);
+                            if(~fwdTouchOSCLights, {~touchOSCBridge.control(hit[3], hit[1], hit[2])});
+                        });
                         if(hit[1].isString && {hit[1][0].asSymbol == '/'}, {
                             // ["sensel", hit].postln;
                             masterClockOSCport.sendRaw(hit[1..].asArray.asRawOSC);

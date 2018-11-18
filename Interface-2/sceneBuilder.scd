@@ -14,7 +14,6 @@ recorded short you don't roll-over and play the starting bit twice. )
 3. need to handle pad interaction edge cases of hitting other/same pads while in intermediate recording states
 4. need to handle various ways of "clearing" loops when overwriting new loop to same pad.
 */
-
 (
 var launchpadOut, padTL, padBL, padTR, padBR, colorBL1, colorBR1, colorTL1, colorTR1, colorBL2, colorBR2, colorTL2, colorTR2, colorON, colorCC, pads, padMap, madePadList, scales, roots, padOn, padOff, setPadLights, transposes, makePadList, indToNote_, indToNote, midiOut, launchPad, tempoClock, interruptLoopButtons, controlChanInd, tapTempoSetButton, tapTempoToggle, recordButton, lastTap, playMetronome, recordingMetronome, metronomeFunc, preRecordCount, preRecordLength, recordBuffer, color1, tlBanks, trBanks, blBanks, brBanks, banks, bankMap, recordingState, bankSet, bankToSaveTo, bankToRecording, recordColor, tempLoopTask, tempLoopString, createRecordedTask, playingBanks, metronomeFlashTask, recordingInterim, resetRecordingState, interruptLooping, controlChanButton, arrowButtons, color2, up, down, left, right, padsByChannel, recordingStartBeat, recordingEndBeat, truncateLoop, quantize, algOrderList, pythonOSCport, algResponseHandler, algButtons, quantizationLevels, algBanks, liveCodeHandler, newKeyButton, masterClockOSCport, masterClockTempoHandler, onDeckBuffers, algChannelsInfo, recieveBuffer, startChannel, stringToBuf, stopChannel, rootScaleHandler, newKeysTransposes, newKeysPadIndToNote, newKeysSetPadLights, playingNewKeys, newKeysChan, hitListToNoteList, noteListToHitList, quantizeButton, quantizeColor, quantized, controlHandler, masterClockBeatHandler, setBankMelody, receiveScene, tempoalignTempoButton, alignTempo, buttonForwarding, buttonForwardingButton, metronomeOut, padIndToColor, moduleLights, controlHandlerWrapper, processPort, isBankPad, isScenePad, calculateMajorityChannel, instrumentInput, scenes, scenePads, recordingScene, sceneRecordButton, sceneIsOnDeck, sceneColor, playScene, notRecordingColor, playMode, turnOnBank, turnOffBank, audioRecordingButton, audioLoopTarget, audioRecordingTarget, audioRecordingState, maxPort, audioClipColor, recordButtonFunc, padOnFunc, tempRecordBuffer, truncateLoop_BUTTON, playMode_BUTTON, ccRecordBuffer, colorQuneoPad, loopToAlgs_BUTTON, loopToAlgs,deantoniPadColor, oscRecordBuffer, numSavedLoops, theForcePort;
 var launchpadIndex = 1;
@@ -628,7 +627,10 @@ createRecordedTask = {|oldRecBuf, isChannelTask=false, channelInd = -1|
                     {
                         if(hit[4] == "on", {midiOut.noteOn(hit[3], hit[1], hit[2]);});
                         if(hit[4] == "off", {midiOut.noteOff(hit[3], hit[1], hit[2])});
-                        if(hit[4] == "cc", {midiOut.control(hit[3], hit[1], hit[2])});
+                        if(hit[4] == "cc", {
+                            midiOut.control(hit[3], hit[1], hit[2]);
+                            if(~fwdTouchOSCLights, {~touchOSCBridge.control(hit[3], hit[1], hit[2])});
+                        });
                         if(hit[1].isString && {hit[1][0].asSymbol == '/'}, {
                             // ["sensel", hit].postln;
                             masterClockOSCport.sendRaw(hit[1..].asArray.asRawOSC);
