@@ -1,15 +1,18 @@
 (
 
-var sliderVals, sliderBanks, record_BUTTON, recordButton_COLOR, bank_COLOR, launchpadIndex, launchpad, slidersIn, slidersOut, launchpadIn, launchpadOut, rampStartValues, rampEndValues, isRecording, rampTask, slideSpeed;
+var sliderVals, sliderBanks, record_BUTTON, record_COLOR, bank_COLOR, launchpadIndex, launchpad, slidersIn, slidersOut, launchpadIn, launchpadOut, rampStartValues, rampEndValues, isRecording, rampTask, slideSpeed, touchOSCOut;
 
-launchpadIndex = 0;
+launchpadIndex = 1;
 launchpadOut = ~getLaunchpadOut.(launchpadIndex);
 launchpadOut.latency = 0;
-launchadIn = ~getLaunchpadIn.(launchpadIndex);
+launchpadIn = ~getLaunchpadIn.(launchpadIndex);
 
 slidersIn = ~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge");
 slidersOut = ~getMidiOut.("IAC Driver", "Bus 7");
 slidersOut.latency = 0;
+
+touchOSCOut = ~getMidiOut.("TouchOSC Bridge", "TouchOSC Bridge");
+touchOSCOut.latency = 0;
 
 sliderVals = List.fill(4, {0});
 sliderBanks = List.fill(88, {0});
@@ -23,6 +26,9 @@ bank_COLOR = 3;
 
 rampTask = Task({});
 slideSpeed = 0.5;
+
+
+(0..99).do({|i| launchpadOut.noteOn(0, i, 0)});
 
 MIDIFunc.cc({|vel, note, chan, port|
     if(note < 4, {
@@ -41,9 +47,9 @@ MIDIFunc.cc({|vel, note, chan, port|
 }, nil, nil, slidersIn.uid);
 
 MIDIFunc.cc({|vel, note, chan, port|
-    if(note == record_BUTTON, {
+    if((note == record_BUTTON) && (vel == 127), {
         isRecording = isRecording.not;
-        launcpadOut.noteOn(0, record_BUTTON, if(isRecording, recordButton_COLOR, 0));
+        launchpadOut.noteOn(0, record_BUTTON, if(isRecording, record_COLOR, 0));
     });
 }, nil, nil, launchpadIn.uid);
 
@@ -53,22 +59,28 @@ MIDIFunc.noteOn({|vel, note, chan, port|
     if(isRecording,
         {
             sliderBanks[note] = sliderVals.deepCopy;
-            launcpadOut.noteOn(0, note, bank_COLOR);
+            launchpadOut.noteOn(0, note, bank_COLOR);
             sliderBanks.postln;
         },
         {
             if(sliderBanks[note] != 0, {
+                ["Play button", note].postln;
                 rampStartValues = sliderVals.deepCopy;
                 rampEndValues = sliderBanks[note].deepCopy;
                 rampTask.stop;
                 rampTask.clear;
-                rampTask = new Task({
+                rampTask = Task({
                     var elapsedTime = 0;
                     var totalTime = vel/127 * 4;
-                    while({elapsedTime < totalTime}, {
+                    ["play task started", note].postln;
+                    while({elapsedTime < (totalTime * slideSpeed)}, {
                         var a = elapsedTime / (totalTime * slideSpeed);
-                        sliderVals = (max(a, 1)*rampEndValues) + (min(1-a, 0)*rampStartValues);
+                        sliderVals = (min(a, 1)*rampEndValues) + (max(1-a, 0)*rampStartValues);
+                        [a, sliderVals].postln;
                         sliderVals.do({|v, i| slidersOut.control(0, i, v)});
+                        sliderVals.do({|v, i| touchOSCOut.control(0, i, v)});
+                        elapsedTime = elapsedTime + 0.01;
+                        0.01.wait;
                     });
                 });
                 rampTask.play;
