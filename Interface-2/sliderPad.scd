@@ -1,6 +1,6 @@
 (
 
-var sliderVals, sliderBanks, record_BUTTON, record_COLOR, bank_COLOR, launchpadIndex, launchpad, slidersIn, slidersOut, launchpadIn, launchpadOut, rampStartValues, rampEndValues, isRecording, rampTask, slideSpeed, touchOSCOut;
+var sliderVals, sliderBanks, record_BUTTON, record_COLOR, bank_COLOR, launchpadIndex, launchpad, slidersIn, slidersOut, launchpadIn, launchpadOut, rampStartValues, rampEndValues, isRecording, rampTask, slideSpeed, touchOSCOut, sliderToggles;
 
 launchpadIndex = 1;
 launchpadOut = ~getLaunchpadOut.(launchpadIndex);
@@ -16,6 +16,7 @@ touchOSCOut.latency = 0;
 
 sliderVals = List.fill(4, {0});
 sliderBanks = List.fill(88, {0});
+sliderToggles = List.fill(4, {true});
 
 ~setSliderBanks = {|vals| sliderBanks = vals};
 
@@ -38,11 +39,16 @@ MIDIFunc.cc({|vel, note, chan, port|
 
 
 MIDIFunc.cc({|vel, note, chan, port|
-    if(note < 4, {
-        sliderVals[note] = vel;
+    if(chan == 0,  {
+        if(note < 4, {
+            sliderVals[note] = vel;
+        });
+        if(note == 7, {
+            slideSpeed = (127-vel+1)/127;
+        });
     });
-    if(note == 7, {
-        slideSpeed = (127-vel+1)/127;
+    if(chan == 1,  {
+        sliderToggles[note] = vel == 127;
     });
 }, nil, nil, slidersIn.uid);
 
@@ -77,8 +83,8 @@ MIDIFunc.noteOn({|vel, note, chan, port|
                         var a = elapsedTime / (totalTime * slideSpeed);
                         sliderVals = (min(a, 1)*rampEndValues) + (max(1-a, 0)*rampStartValues);
                         [a, sliderVals].postln;
-                        sliderVals.do({|v, i| slidersOut.control(0, i, v)});
-                        sliderVals.do({|v, i| touchOSCOut.control(0, i, v)});
+                        sliderVals.do({|v, i| if(sliderToggles[i], slidersOut.control(0, i, v))});
+                        sliderVals.do({|v, i| if(sliderToggles[i], touchOSCOut.control(0, i, v))});
                         elapsedTime = elapsedTime + 0.01;
                         0.01.wait;
                     });
