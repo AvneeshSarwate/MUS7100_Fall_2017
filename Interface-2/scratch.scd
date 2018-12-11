@@ -63,3 +63,23 @@ p.play
 p.reset
 
 10.rand
+
+(
+var footPedal, midiOut;
+MIDIClient.init;
+
+footPedal = MIDIClient.sources.select({|elem| (elem.name == "Port 1")
+    && (elem.device == ("FBV Express Mk II"))})[0];
+midiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
+footPedal.postln;
+MIDIFunc.cc({|vel, note, chan, port|
+    Task({
+        midiOut.noteOn(0, note, vel);
+        0.01.wait;
+        midiOut.noteOff(0, note, 0);
+    }).play;
+    [note, vel].postln;
+}, nil, nil, footPedal.uid)
+
+
+)
