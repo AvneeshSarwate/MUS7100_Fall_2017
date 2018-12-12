@@ -1,6 +1,6 @@
 (
 
-var sliderVals, sliderBanks, record_BUTTON, record_COLOR, bank_COLOR, launchpadIndex, launchpad, slidersIn, slidersOut, launchpadIn, launchpadOut, rampStartValues, rampEndValues, isRecording, rampTask, slideSpeed, touchOSCOut, sliderToggles, sliderLoopIn, numSliders;
+var sliderVals, sliderBanks, record_BUTTON, record_COLOR, bank_COLOR, launchpadIndex, launchpad, slidersIn, slidersOut, launchpadIn, launchpadOut, rampStartValues, rampEndValues, isRecording, rampTask, slideSpeed, touchOSCOut, sliderToggles, sliderLoopIn, numSliders, graphicsOut, rand;
 
 launchpadIndex = 0;
 launchpadOut = ~getLaunchpadOut.(launchpadIndex);
@@ -14,6 +14,9 @@ slidersOut.latency = 0;
 
 touchOSCOut = ~getMidiOut.("TouchOSC Bridge", "TouchOSC Bridge");
 touchOSCOut.latency = 0;
+
+graphicsOut = ~getMidiOut.("IAC Driver", "Bus 2");
+graphicsOut.latency = 0;
 
 numSliders = ~numSliderToggles;
 sliderVals = List.fill(numSliders, {0});
@@ -77,7 +80,6 @@ MIDIFunc.cc({|vel, note, chan, port|
 }, nil, nil, launchpadIn.uid);
 
 
-
 MIDIFunc.noteOn({|vel, note, chan, port|
     if(isRecording,
         {
@@ -93,6 +95,8 @@ MIDIFunc.noteOn({|vel, note, chan, port|
                 rampTask.stop;
                 rampTask.clear;
                 rampTask = Task({
+                    var rampStartPos = rampStartValues.collect({|v| ~rand.(v)});
+                    var rampEndPos = rampEndValues.collect({|v| ~rand.(v)});
                     var elapsedTime = 0;
                     var totalTime = (128-vel)/127 * 4;
                     var sliderValsCopy = sliderVals.deepCopy;
@@ -100,13 +104,27 @@ MIDIFunc.noteOn({|vel, note, chan, port|
                     while({elapsedTime < (totalTime * slideSpeed)}, {
                         var a = elapsedTime / (totalTime * slideSpeed);
                         sliderVals = (min(a, 1)*rampEndValues) + (max(1-a, 0)*rampStartValues); //todo - don't interpolate/saved non-toggle melodiesbbb
-                        sliderVals.do({|v, i| if(sliderToggles[i],
-                            {slidersOut.control(0, i, v); 0.001.wait},
-                            {sliderVals[i] = sliderValsCopy[i]; 0.001.wait}
-                        )});
+                        sliderVals.do({|v, i|
+                            if(sliderToggles[i],
+                                {slidersOut.control(0, i, v)},
+                                {sliderVals[i] = sliderValsCopy[i]}
+                            );
+                            0.001.wait
+                        });
                         // [a, sliderVals].postln;
                         sliderVals.do({|v, i| if(sliderToggles[i], touchOSCOut.control(0, i, v)); 0.001.wait});
-                        elapsedTime = elapsedTime + 0.018;
+                        (0..(numSliders-1)).do({|i|
+                            var xInterp = (min(a, 1)*rampEndPos) + (max(1-a, 0)*rampStartPos);
+                            var yStartPos = rampStartPos.collect({|v| ~rand.(v+5)});
+                            var yEndPos = rampEndPos.collect({|v| ~rand.(v+5)});
+                            var yInterp = (min(a, 1)*yEndPos) + (max(1-a, 0)*yStartPos);
+
+                            if(sliderToggles[i], {graphicsOut.control(0, 80+i, (xInterp[i]*128).floor)});
+                            0.001.wait;
+                            if(sliderToggles[i], {graphicsOut.control(0, 80+(i*2)+1, (yInterp[i]*128).floor)});
+                            0.001.wait;
+                        });
+                        elapsedTime = elapsedTime + 0.02;
                         0.01.wait;
                     });
                     rampEndValues.do({|v, i| if(sliderToggles[i],
@@ -120,6 +138,5 @@ MIDIFunc.noteOn({|vel, note, chan, port|
         }
     );
 }, nil, nil, launchpadIn.uid);
-
 
 )
