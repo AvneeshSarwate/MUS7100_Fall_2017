@@ -39,7 +39,10 @@ OSCFunc({|msg, time, addr, recvPort|
 
 
 
-
+~rand = {|n|
+    var sinn = sin(n * 1000);
+    sinn - sinn.floor()
+};
 
 
 ~getMidiIn = {|device, name|
