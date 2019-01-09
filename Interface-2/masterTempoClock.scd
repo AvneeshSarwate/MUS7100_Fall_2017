@@ -40,7 +40,7 @@ OSCFunc({|msg, time, addr, recvPort|
 
 
 ~rand = {|n|
-    var sinn = sin(n * 1000);
+    var sinn = sin(n * 1001);
     sinn - sinn.floor()
 };
 

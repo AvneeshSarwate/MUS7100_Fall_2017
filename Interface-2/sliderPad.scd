@@ -1,9 +1,10 @@
 (
 
-var sliderVals, sliderBanks, record_BUTTON, record_COLOR, bank_COLOR, launchpadIndex, launchpad, slidersIn, slidersOut, launchpadIn, launchpadOut, rampStartValues, rampEndValues, isRecording, rampTask, slideSpeed, touchOSCOut, sliderToggles, sliderLoopIn, numSliders, graphicsOut, rand;
+var sliderVals, sliderBanks, record_BUTTON, record_COLOR, bank_COLOR, launchpadIndex, launchpad, slidersIn, slidersOut, launchpadIn, launchpadOut, rampStartValues, rampEndValues, isRecording, rampTask, slideSpeed, touchOSCOut, sliderToggles, sliderLoopIn, numSliders, graphicsOut, rand, padAutomateIn, noteOnFunc;
 
-launchpadIndex = 0;
+launchpadIndex = 1;
 launchpadOut = ~getLaunchpadOut.(launchpadIndex);
+padAutomateIn = ~getMidiIn.("IAC Driver", "Bus 1");
 launchpadOut.latency = 0;
 launchpadIn = ~getLaunchpadIn.(launchpadIndex);
 
@@ -24,7 +25,10 @@ sliderBanks = List.fill(88, {0});
 sliderToggles = List.fill(numSliders, {true});
 
 ~sliderBanks = sliderBanks;
-~setSliderBanks = {|vals| sliderBanks = vals};
+~setSliderBanks = {|vals|
+    sliderBanks = vals ++ List.fill(88, {0});
+    (0..88).do({|i| if(sliderBanks[i] != 0, {launchpadOut.noteOn(0, i, bank_COLOR)})});
+};
 
 isRecording = false;
 record_BUTTON = 89;
@@ -80,7 +84,7 @@ MIDIFunc.cc({|vel, note, chan, port|
 }, nil, nil, launchpadIn.uid);
 
 
-MIDIFunc.noteOn({|vel, note, chan, port|
+noteOnFunc = {|vel, note, chan, port|
     if(isRecording,
         {
             sliderBanks[note] = sliderVals.deepCopy;
@@ -137,6 +141,10 @@ MIDIFunc.noteOn({|vel, note, chan, port|
             });
         }
     );
-}, nil, nil, launchpadIn.uid);
+};
+
+MIDIFunc.noteOn(noteOnFunc, nil, nil, launchpadIn.uid);
+MIDIFunc.noteOn(noteOnFunc, nil, nil, padAutomateIn.uid);
 
 )
+
