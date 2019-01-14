@@ -1,4 +1,4 @@
-inlets = 5;
+inlets = 1;
 outlets = 1;
 
 var templateMatrix = new JitterMatrix(jsarguments[1]);
