@@ -1,7 +1,7 @@
 
 
 
-(
+// (
 //future feature:
 //type functions
 // -- there can be different "types" of waves (like pydal pattern types). each type has a certain format of meta-info associated with it as well as several functions
@@ -9,7 +9,7 @@
 // ------ one that is executed for each value emitted for the wave
 // ------ one that is executed when the wave is stopped
 
-)
+// )
 
 (
 var midiOut, channelMap, startWaveHandler, stopWaveHandler, startWave, stopWave, masterTempoClock, maxOSCport, scPort, waveNotes, waveNotesHandler;
@@ -172,86 +172,86 @@ stopWaveHandler = OSCFunc(stopWave, "/stopWave");
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-5
-
-
-
-
-
-(
-var val = 65;
-var waveNotes = [5, 8, 10];
-var lowestC = ((val/12).floor * 12) - 12;
-var chordNotes = (lowestC + waveNotes) ++ ((lowestC+12)+waveNotes) ++ ((lowestC+24)+waveNotes);
-chordNotes.postln;
-(chordNotes-val).abs.minIndex
-)
-
-
-
-
-
-(
-v = 81;
-~debugf = ~chanDebugMap[v][0];
-~chanDebugMap[v][1].postln;
-(0..500).collect({|i| ~debugf.(i*0.02)}).plot;
-k = 1000;
-(k..(k+500)).collect({|i| ~debugf.(i*0.02)}).plot;
-)
-
-5.mtof
-(
-var midiOut, channelMap, startWaveHandler, stopWaveHandler, startWave, stopWave, masterTempoClock;
-var sinwav = {|fr,ph,am,sh, time| (sin((pi*fr*time)+ph)*am)+sh};
-var coswav = {|fr,ph,am,sh, time| (cos((pi*fr*time)+ph)*am)+sh};
-
-var sqr = {|time| var tm = time%2; if(tm<1, 1, -1)};
-var sqrwav = {|fr,ph,am,sh, time| (sqr.((fr*time)+ph)*am)+sh};
-
-var saw = {|time| var tm = time%2; tm-1};
-var sawwav = {|fr,ph,am,sh, time| (saw.((fr*time)+ph)*am)+sh};
-
-var tri = {|time| var tm = time%2; case {tm<0.5} {2*tm} {tm<1.5} {2-(2*tm)} {tm>=1.5} {2*tm-4}};
-var triwav = {|fr,ph,am,sh, time| (tri.((fr*time)+ph)*am)+sh};
-
-var calcStr = ~chanDebugMap[v][1];
-
-var createCalcFunc = {|calcString|
-    var prepFunc = ("{|sinwav, coswav, sqrwav, sawwav, triwav| {|time|" + calcString + "}};").interpret;
-    prepFunc.(sinwav, coswav, sqrwav, sawwav, triwav);
-};
-
-var func = createCalcFunc.(calcStr);
-var early = (0..500).collect({|i| func.(i*0.02)});
-var late = (3000..3500).collect({|i| func.(i*0.02)});
-[early == late, early.mean, late.mean, early.maxItem, late.maxItem, early.minItem, late.minItem].postln;
-early.collect({|i| func.(i*0.02)}).plot;
-late.collect({|i| func.(i*0.02)}).plot;
-func.(0.5);
-
-)
-
-(
-d = Dictionary.new;
-d[5]
-)
-
-{ PinkNoise.ar(0.2) + SinOsc.ar(440, 0, 0.2) + Saw.ar(660, 0.2) }.scope;
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
+// 5
+//
+//
+//
+//
+//
+// (
+// var val = 65;
+// var waveNotes = [5, 8, 10];
+// var lowestC = ((val/12).floor * 12) - 12;
+// var chordNotes = (lowestC + waveNotes) ++ ((lowestC+12)+waveNotes) ++ ((lowestC+24)+waveNotes);
+// chordNotes.postln;
+// (chordNotes-val).abs.minIndex
+// )
+//
+//
+//
+//
+//
+// (
+// v = 81;
+// ~debugf = ~chanDebugMap[v][0];
+// ~chanDebugMap[v][1].postln;
+// (0..500).collect({|i| ~debugf.(i*0.02)}).plot;
+// k = 1000;
+// (k..(k+500)).collect({|i| ~debugf.(i*0.02)}).plot;
+// )
+//
+// 5.mtof
+// (
+// var midiOut, channelMap, startWaveHandler, stopWaveHandler, startWave, stopWave, masterTempoClock;
+// var sinwav = {|fr,ph,am,sh, time| (sin((pi*fr*time)+ph)*am)+sh};
+// var coswav = {|fr,ph,am,sh, time| (cos((pi*fr*time)+ph)*am)+sh};
+//
+// var sqr = {|time| var tm = time%2; if(tm<1, 1, -1)};
+// var sqrwav = {|fr,ph,am,sh, time| (sqr.((fr*time)+ph)*am)+sh};
+//
+// var saw = {|time| var tm = time%2; tm-1};
+// var sawwav = {|fr,ph,am,sh, time| (saw.((fr*time)+ph)*am)+sh};
+//
+// var tri = {|time| var tm = time%2; case {tm<0.5} {2*tm} {tm<1.5} {2-(2*tm)} {tm>=1.5} {2*tm-4}};
+// var triwav = {|fr,ph,am,sh, time| (tri.((fr*time)+ph)*am)+sh};
+//
+// var calcStr = ~chanDebugMap[v][1];
+//
+// var createCalcFunc = {|calcString|
+//     var prepFunc = ("{|sinwav, coswav, sqrwav, sawwav, triwav| {|time|" + calcString + "}};").interpret;
+//     prepFunc.(sinwav, coswav, sqrwav, sawwav, triwav);
+// };
+//
+// var func = createCalcFunc.(calcStr);
+// var early = (0..500).collect({|i| func.(i*0.02)});
+// var late = (3000..3500).collect({|i| func.(i*0.02)});
+// [early == late, early.mean, late.mean, early.maxItem, late.maxItem, early.minItem, late.minItem].postln;
+// early.collect({|i| func.(i*0.02)}).plot;
+// late.collect({|i| func.(i*0.02)}).plot;
+// func.(0.5);
+//
+// )
+//
+// (
+// d = Dictionary.new;
+// d[5]
+// )
+//
+// { PinkNoise.ar(0.2) + SinOsc.ar(440, 0, 0.2) + Saw.ar(660, 0.2) }.scope;
