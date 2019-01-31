@@ -1,0 +1,65 @@
+{
+	"pattrstorage" : 	{
+		"name" : "u288011638",
+		"slots" : 		{
+			"1" : 			{
+				"id" : 1,
+				"data" : 				{
+					"fractalizr::interp_mode" : [ 1.0 ],
+					"fractalizr::tint_mode" : [ 0.0 ],
+					"fractalizr::horiz" : [ 0.0 ],
+					"fractalizr::vert" : [ 0.0 ],
+					"scramblr::prob" : [ 100.0 ],
+					"scramblr::probmono" : [ 0.0 ],
+					"scramblr::horiz" : [ 0.0 ],
+					"scramblr::vert" : [ 0.0 ],
+					"zamplr::horizontal" : [ 1.0 ],
+					"zamplr::vertical" : [ 1.0 ],
+					"zamplr::mode[1]" : [ 0.0 ],
+					"2toner::color1" : [ 0.0, 0.0, 0.0, 1.0, 0.478723404255319, 1.0, 0.0 ],
+					"2toner::color12" : [ 1.0, 1.0, 1.0, 1.0, 0.659574468085106, 1.0, 1.0 ],
+					"2toner::saturation1" : [ 1.0 ],
+					"2toner::saturation2[1]" : [ 1.0 ],
+					"brcosr::contrast-val" : [ 0.0 ],
+					"brcosr::bright-mult" : [ 0 ],
+					"brcosr::cont-mult" : [ 1 ],
+					"brcosr::sat-mult" : [ 0 ],
+					"brcosr::saturation-val" : [ 1.0 ],
+					"brcosr::brighness-val" : [ 1.0 ]
+				}
+
+			}
+,
+			"2" : 			{
+				"id" : 2,
+				"data" : 				{
+					"fractalizr::interp_mode" : [ 1.0 ],
+					"fractalizr::tint_mode" : [ 0.0 ],
+					"fractalizr::horiz" : [ 0.31496062992126 ],
+					"fractalizr::vert" : [ 0.0 ],
+					"scramblr::prob" : [ 50.0 ],
+					"scramblr::probmono" : [ 50.0 ],
+					"scramblr::horiz" : [ 4.251968503937008 ],
+					"scramblr::vert" : [ 0.0 ],
+					"zamplr::horizontal" : [ 0.598425196850394 ],
+					"zamplr::vertical" : [ 0.566929133858268 ],
+					"zamplr::mode[1]" : [ 0.0 ],
+					"2toner::color1" : [ 0.275870282599266, 0.0, 0.682415962219238, 1.0, 0.734042553191489, 1.0, 0.341207981109619 ],
+					"2toner::color12" : [ 0.376860406663683, 0.0, 0.0, 1.0, 1.0, 1.0, 0.188430203331841 ],
+					"2toner::saturation1" : [ 1.0 ],
+					"2toner::saturation2[1]" : [ 1.0 ],
+					"brcosr::contrast-val" : [ 0.565375255750512 ],
+					"brcosr::bright-mult" : [ 0 ],
+					"brcosr::cont-mult" : [ 1 ],
+					"brcosr::sat-mult" : [ 0 ],
+					"brcosr::saturation-val" : [ 1.0 ],
+					"brcosr::brighness-val" : [ 1.0 ]
+				}
+
+			}
+
+		}
+
+	}
+
+}

@@ -1,0 +1,65 @@
+{
+	"pattrstorage" : 	{
+		"name" : "u256004647",
+		"slots" : 		{
+			"1" : 			{
+				"id" : 1,
+				"data" : 				{
+					"fractalizr::interp_mode" : [ 1.0 ],
+					"fractalizr::tint_mode" : [ 0.0 ],
+					"fractalizr::horiz" : [ 0.0 ],
+					"fractalizr::vert" : [ 0.0 ],
+					"scramblr::prob" : [ 100.0 ],
+					"scramblr::probmono" : [ 0.0 ],
+					"scramblr::horiz" : [ 0.0 ],
+					"scramblr::vert" : [ 0.0 ],
+					"zamplr::horizontal" : [ 1.0 ],
+					"zamplr::vertical" : [ 1.0 ],
+					"zamplr::mode[1]" : [ 0.0 ],
+					"2toner::color1" : [ 0.0, 0.0, 0.0, 1.0, 0.478723404255319, 1.0, 0.0 ],
+					"2toner::color12" : [ 1.0, 1.0, 1.0, 1.0, 0.659574468085106, 1.0, 1.0 ],
+					"2toner::saturation1" : [ 1.0 ],
+					"2toner::saturation2[1]" : [ 1.0 ],
+					"brcosr::contrast-val" : [ 0.0 ],
+					"brcosr::bright-mult" : [ 0 ],
+					"brcosr::cont-mult" : [ 1 ],
+					"brcosr::sat-mult" : [ 0 ],
+					"brcosr::saturation-val" : [ 1.0 ],
+					"brcosr::brighness-val" : [ 1.0 ]
+				}
+
+			}
+,
+			"2" : 			{
+				"id" : 2,
+				"data" : 				{
+					"fractalizr::interp_mode" : [ 1.0 ],
+					"fractalizr::tint_mode" : [ 0.0 ],
+					"fractalizr::horiz" : [ 0.25 ],
+					"fractalizr::vert" : [ 0.0 ],
+					"scramblr::prob" : [ 50.0 ],
+					"scramblr::probmono" : [ 50.0 ],
+					"scramblr::horiz" : [ 3.0 ],
+					"scramblr::vert" : [ 0.0 ],
+					"zamplr::horizontal" : [ 0.976377952755906 ],
+					"zamplr::vertical" : [ 0.662992 ],
+					"zamplr::mode[1]" : [ 0.0 ],
+					"2toner::color1" : [ 1.0, 0.557057895728834, 0.256489983863301, 1.0, 0.067375893922562, 1.0, 0.62824499193165 ],
+					"2toner::color12" : [ 0.525008480581972, 0.268089570720193, 0.0, 1.0, 0.085106425462885, 1.0, 0.262504240290986 ],
+					"2toner::saturation1" : [ 1.0 ],
+					"2toner::saturation2[1]" : [ 1.0 ],
+					"brcosr::contrast-val" : [ 0.5625 ],
+					"brcosr::bright-mult" : [ 0 ],
+					"brcosr::cont-mult" : [ 1 ],
+					"brcosr::sat-mult" : [ 0 ],
+					"brcosr::saturation-val" : [ 1.0 ],
+					"brcosr::brighness-val" : [ 1.0 ]
+				}
+
+			}
+
+		}
+
+	}
+
+}
