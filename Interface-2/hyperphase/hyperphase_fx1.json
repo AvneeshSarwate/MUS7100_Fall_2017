@@ -1,20 +1,20 @@
 {
 	"pattrstorage" : 	{
-		"name" : "u893014083",
+		"name" : "u679000906",
 		"slots" : 		{
 			"1" : 			{
 				"id" : 1,
 				"data" : 				{
 					"fractalizr::interp_mode" : [ 1.0 ],
 					"fractalizr::tint_mode" : [ 0.0 ],
-					"fractalizr::horiz" : [ 0.25 ],
+					"fractalizr::horiz" : [ 0.0 ],
 					"fractalizr::vert" : [ 0.0 ],
-					"scramblr::prob" : [ 50.0 ],
-					"scramblr::probmono" : [ 50.0 ],
-					"scramblr::horiz" : [ 3.0 ],
-					"scramblr::vert" : [ 4.0 ],
-					"zamplr::horizontal" : [ 0.976377952755906 ],
-					"zamplr::vertical" : [ 0.662992 ],
+					"scramblr::prob" : [ 100.0 ],
+					"scramblr::probmono" : [ 0.0 ],
+					"scramblr::horiz" : [ 0.0 ],
+					"scramblr::vert" : [ 0.0 ],
+					"zamplr::horizontal" : [ 1.0 ],
+					"zamplr::vertical" : [ 1.0 ],
 					"zamplr::mode[1]" : [ 0.0 ],
 					"2toner::color1" : [ 0.0, 0.0, 0.0, 1.0, 0.478723404255319, 1.0, 0.0 ],
 					"2toner::color12" : [ 1.0, 1.0, 1.0, 1.0, 0.659574468085106, 1.0, 1.0 ],
