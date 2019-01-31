@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 145.0, 79.0, 1515.0, 1065.0 ],
+		"rect" : [ 366.0, 79.0, 1520.0, 1065.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -1650,7 +1650,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 163.0, 919.0, 50.0, 62.0 ],
-					"text" : "jit_gl_texture u828012442"
+					"text" : "jit_gl_texture u894006292"
 				}
 
 			}
@@ -1721,7 +1721,7 @@
 						}
 ,
 						"classnamespace" : "box",
-						"rect" : [ 34.0, 162.0, 1374.0, 909.0 ],
+						"rect" : [ 165.0, 185.0, 1374.0, 909.0 ],
 						"bglocked" : 0,
 						"openinpresentation" : 0,
 						"default_fontsize" : 12.0,
@@ -1748,8 +1748,101 @@
 						"tags" : "",
 						"style" : "",
 						"subpatcher_template" : "",
-						"visible" : 1,
 						"boxes" : [ 							{
+								"box" : 								{
+									"id" : "obj-15",
+									"linecount" : 3,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 874.0, 780.0, 150.0, 47.0 ],
+									"text" : "multiply resonator mix by resonator freq parameter for input to brcosr"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-7",
+									"linecount" : 3,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 344.0, 312.0, 150.0, 47.0 ],
+									"text" : "can ignore vertical (or just have it be an arbitrary thing mapped to it) "
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-21",
+									"linecount" : 2,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 278.0, 753.0, 150.0, 33.0 ],
+									"text" : "contrast scaled 1-8\n.5625 + val*7.4375"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"annotation" : "## Change a videos brightness/contrast/separation ##",
+									"bgmode" : 1,
+									"border" : 0,
+									"clickthrough" : 0,
+									"enablehscroll" : 0,
+									"enablevscroll" : 0,
+									"id" : "obj-35",
+									"lockeddragscroll" : 0,
+									"maxclass" : "bpatcher",
+									"name" : "vz.brcosr.maxpat",
+									"numinlets" : 7,
+									"numoutlets" : 1,
+									"offset" : [ 0.0, 0.0 ],
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 480.0, 735.0, 208.0, 130.0 ],
+									"prototypename" : "pixl",
+									"varname" : "brcosr",
+									"viewvisibility" : 1
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-16",
+									"linecount" : 7,
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 349.0, 143.0, 150.0, 100.0 ],
+									"text" : "offset is 1, tiling 0, at 0% mix, bring to 50/50 for 100%\n\nkeep horizontal and vertical values < 0.05 for good fx"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-13",
+									"maxclass" : "comment",
+									"numinlets" : 1,
+									"numoutlets" : 0,
+									"patching_rect" : [ 358.0, 462.0, 150.0, 20.0 ],
+									"text" : "both vals are 1 at 0% mix"
+								}
+
+							}
+, 							{
+								"box" : 								{
+									"id" : "obj-6",
+									"maxclass" : "message",
+									"numinlets" : 2,
+									"numoutlets" : 1,
+									"outlettype" : [ "" ],
+									"patching_rect" : [ 893.0, 389.0, 147.0, 22.0 ],
+									"text" : "read hyperphase_fx1.json"
+								}
+
+							}
+, 							{
 								"box" : 								{
 									"format" : 6,
 									"id" : "obj-14",
@@ -1825,26 +1918,18 @@
 , 							{
 								"box" : 								{
 									"active" : 									{
-										"fractalizr" : 0,
-										"fractalizr::interp_mode" : 0,
-										"fractalizr::tint_mode" : 0,
 										"fractalizr::horiz" : 0,
-										"fractalizr::vert" : 0,
-										"scramblr" : 0,
 										"scramblr::prob" : 0,
 										"scramblr::probmono" : 0,
 										"scramblr::horiz" : 0,
-										"scramblr::vert" : 0,
 										"zamplr" : 0,
 										"zamplr::horizontal" : 0,
 										"zamplr::vertical" : 0,
 										"zamplr::mode[1]" : 0,
-										"primr" : 0,
-										"primr::bgcolor" : 0,
-										"primr[1]" : 0,
-										"primr[1]::bgcolor" : 0
+										"brcosr::contrast-val" : 0
 									}
 ,
+									"autorestore" : "hyperphase_fx1.json",
 									"id" : "obj-3",
 									"maxclass" : "newobj",
 									"numinlets" : 1,
@@ -1852,14 +1937,14 @@
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 891.0, 617.0, 73.0, 22.0 ],
 									"saved_object_attributes" : 									{
-										"client_rect" : [ 637, 425, 1593, 974 ],
+										"client_rect" : [ 332, 300, 1288, 849 ],
 										"parameter_enable" : 0,
 										"parameter_mappable" : 0,
 										"storage_rect" : [ 583, 69, 1034, 197 ]
 									}
 ,
 									"text" : "pattrstorage",
-									"varname" : "u444013731"
+									"varname" : "u644006669"
 								}
 
 							}
@@ -2023,8 +2108,15 @@
 							}
 , 							{
 								"patchline" : 								{
-									"destination" : [ "obj-2", 0 ],
+									"destination" : [ "obj-35", 0 ],
 									"source" : [ "obj-33", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-2", 0 ],
+									"source" : [ "obj-35", 0 ]
 								}
 
 							}
@@ -2060,6 +2152,13 @@
 								"patchline" : 								{
 									"destination" : [ "obj-33", 0 ],
 									"source" : [ "obj-56", 0 ]
+								}
+
+							}
+, 							{
+								"patchline" : 								{
+									"destination" : [ "obj-3", 0 ],
+									"source" : [ "obj-6", 0 ]
 								}
 
 							}
@@ -3097,10 +3196,12 @@
 			"obj-14::obj-117::obj-93" : [ "swatch[9]", "swatch", 0 ],
 			"obj-15::obj-92::obj-117" : [ "textbutton[6]", "textbutton[1]", 0 ],
 			"obj-153::obj-56::obj-16" : [ "range[4]", "range", 0 ],
+			"obj-153::obj-35::obj-121" : [ "brightness[1]", "brightness", 0 ],
 			"obj-14::obj-51::obj-107" : [ "pictctrl[55]", "pictctrl[1]", 0 ],
 			"obj-14::obj-33::obj-54" : [ "pictctrl[6]", "pictctrl[1]", 0 ],
 			"obj-15::obj-51::obj-8" : [ "FreqMode[10]", "FreqMode", 0 ],
 			"obj-153::obj-50::obj-41" : [ "pictctrl[43]", "pictctrl[1]", 0 ],
+			"obj-153::obj-35::obj-129" : [ "contrast", "contrast", 0 ],
 			"obj-14::obj-33::obj-73" : [ "pictctrl[95]", "pictctrl[1]", 0 ],
 			"obj-15::obj-92::obj-85" : [ "pictctrl[123]", "pictctrl[1]", 0 ],
 			"obj-14::obj-51::obj-14" : [ "range[3]", "range", 0 ],
@@ -3111,6 +3212,7 @@
 			"obj-153::obj-33::obj-27" : [ "swatch[1]", "swatch[1]", 0 ],
 			"obj-14::obj-117::obj-37" : [ "pictctrl[19]", "pictctrl[1]", 0 ],
 			"obj-153::obj-51::obj-116" : [ "tilingprob[1]", "tiling probatility", 0 ],
+			"obj-153::obj-35::obj-120" : [ "range", "range", 0 ],
 			"obj-15::obj-117::obj-37" : [ "pictctrl[113]", "pictctrl[1]", 0 ],
 			"obj-14::obj-51::obj-13" : [ "pictctrl[52]", "pictctrl[1]", 0 ],
 			"obj-14::obj-92::obj-37" : [ "pictctrl[104]", "pictctrl[1]", 0 ],
@@ -3119,6 +3221,7 @@
 			"obj-153::obj-51::obj-68" : [ "horizontal[3]", "horizontal", 0 ],
 			"obj-14::obj-50::obj-2" : [ "range[27]", "range", 0 ],
 			"obj-15::obj-50::obj-41" : [ "pictctrl[136]", "pictctrl[1]", 0 ],
+			"obj-153::obj-35::obj-104" : [ "pictctrl[137]", "pictctrl[1]", 0 ],
 			"obj-14::obj-92::obj-82" : [ "pictctrl[103]", "pictctrl[1]", 0 ],
 			"obj-15::obj-56::obj-16" : [ "range[12]", "range", 0 ],
 			"obj-153::obj-33::obj-49" : [ "pictctrl[92]", "pictctrl[1]", 0 ],
@@ -3134,6 +3237,7 @@
 			"obj-14::obj-33::obj-28" : [ "swatch", "swatch", 0 ],
 			"obj-15::obj-92::obj-37" : [ "pictctrl[119]", "pictctrl[1]", 0 ],
 			"obj-153::obj-51::obj-110" : [ "pictctrl[9]", "pictctrl[1]", 0 ],
+			"obj-153::obj-35::obj-127" : [ "contrast[1]", "contrast", 0 ],
 			"obj-14::obj-51::obj-115" : [ "pictctrl[54]", "pictctrl[1]", 0 ],
 			"obj-15::obj-51::obj-115" : [ "pictctrl[132]", "pictctrl[1]", 0 ],
 			"obj-14::obj-33::obj-27" : [ "swatch[8]", "swatch[1]", 0 ],
@@ -3145,9 +3249,11 @@
 			"obj-153::obj-51::obj-14" : [ "range[5]", "range", 0 ],
 			"obj-15::obj-50::obj-16" : [ "horizontal[11]", "horizontal", 0 ],
 			"obj-15::obj-117::obj-8" : [ "pictctrl[114]", "pictctrl[1]", 0 ],
+			"obj-153::obj-35::obj-151" : [ "pictctrl[64]", "pictctrl[1]", 0 ],
 			"obj-14::obj-92::obj-36" : [ "pictctrl[100]", "pictctrl[1]", 0 ],
 			"obj-15::obj-56::obj-79" : [ "pictctrl[126]", "pictctrl[1]", 0 ],
 			"obj-153::obj-33::obj-28" : [ "swatch[7]", "swatch", 0 ],
+			"obj-153::obj-35::obj-119" : [ "brightness", "brightness", 0 ],
 			"obj-15::obj-50::obj-17" : [ "vertical[11]", "vertical", 0 ],
 			"obj-15::obj-33::obj-45" : [ "slider[2]", "slider", 0 ],
 			"obj-15::obj-33::obj-49" : [ "pictctrl[106]", "pictctrl[1]", 0 ],
@@ -3165,14 +3271,17 @@
 			"obj-15::obj-92::obj-36" : [ "pictctrl[121]", "pictctrl[1]", 0 ],
 			"obj-14::obj-56::obj-37" : [ "umenu[1]", "umenu", 0 ],
 			"obj-15::obj-51::obj-14" : [ "range[28]", "range", 0 ],
+			"obj-153::obj-35::obj-148" : [ "pictctrl[45]", "pictctrl[1]", 0 ],
 			"obj-14::obj-33::obj-64" : [ "pictctrl[87]", "pictctrl[1]", 0 ],
 			"obj-15::obj-117::obj-276" : [ "FreqMode[8]", "FreqMode", 0 ],
+			"obj-153::obj-35::obj-128" : [ "range[14]", "range", 0 ],
 			"obj-153::obj-51::obj-115" : [ "pictctrl[72]", "pictctrl[1]", 0 ],
 			"obj-14::obj-56::obj-99" : [ "horizontal[1]", "horizontal", 0 ],
 			"obj-15::obj-117::obj-93" : [ "swatch[13]", "swatch", 0 ],
 			"obj-14::obj-92::obj-93" : [ "swatch[10]", "swatch", 0 ],
 			"obj-15::obj-56::obj-99" : [ "horizontal[9]", "horizontal", 0 ],
 			"obj-153::obj-33::obj-54" : [ "pictctrl[93]", "pictctrl[1]", 0 ],
+			"obj-153::obj-35::obj-140" : [ "saturation", "saturation", 0 ],
 			"obj-14::obj-56::obj-16" : [ "range[24]", "range", 0 ],
 			"obj-15::obj-50::obj-54" : [ "umenu[14]", "umenu", 0 ],
 			"obj-15::obj-33::obj-62" : [ "pictctrl[109]", "pictctrl[1]", 0 ],
@@ -3180,6 +3289,7 @@
 			"obj-14::obj-92::obj-31" : [ "pictctrl[101]", "pictctrl[1]", 0 ],
 			"obj-15::obj-56::obj-98" : [ "vertical[9]", "vertical", 0 ],
 			"obj-153::obj-56::obj-98" : [ "vertical[2]", "vertical", 0 ],
+			"obj-153::obj-35::obj-149" : [ "pictctrl[65]", "pictctrl[1]", 0 ],
 			"obj-15::obj-33::obj-73" : [ "pictctrl[105]", "pictctrl[1]", 0 ],
 			"obj-153::obj-50::obj-94" : [ "umenu[6]", "umenu", 0 ],
 			"obj-14::obj-117::obj-8" : [ "pictctrl[90]", "pictctrl[1]", 0 ],
@@ -3192,7 +3302,9 @@
 			"obj-153::obj-50::obj-2" : [ "range[6]", "range", 0 ],
 			"obj-14::obj-56::obj-79" : [ "pictctrl[74]", "pictctrl[1]", 0 ],
 			"obj-15::obj-92::obj-82" : [ "pictctrl[124]", "pictctrl[1]", 0 ],
+			"obj-153::obj-35::obj-142" : [ "saturation[1]", "saturation", 0 ],
 			"obj-15::obj-51::obj-68" : [ "horizontal[10]", "horizontal", 0 ],
+			"obj-153::obj-35::obj-6" : [ "range[15]", "range", 0 ],
 			"obj-14::obj-33::obj-49" : [ "pictctrl[88]", "pictctrl[1]", 0 ],
 			"obj-14::obj-51::obj-116" : [ "tilingprob", "tiling probatility", 0 ],
 			"obj-15::obj-51::obj-100" : [ "pictctrl[131]", "pictctrl[1]", 0 ],
@@ -3216,6 +3328,7 @@
 			"obj-14::obj-117::obj-85" : [ "pictctrl[98]", "pictctrl[1]", 0 ],
 			"obj-15::obj-92::obj-8" : [ "pictctrl[122]", "pictctrl[1]", 0 ],
 			"obj-153::obj-33::obj-62" : [ "pictctrl[8]", "pictctrl[1]", 0 ],
+			"obj-153::obj-35::obj-150" : [ "pictctrl[63]", "pictctrl[1]", 0 ],
 			"obj-14::obj-117::obj-276" : [ "FreqMode[4]", "FreqMode", 0 ],
 			"obj-15::obj-51::obj-107" : [ "pictctrl[128]", "pictctrl[1]", 0 ],
 			"obj-14::obj-56::obj-50" : [ "pictctrl[70]", "pictctrl[1]", 0 ],
@@ -3224,6 +3337,8 @@
 			"obj-153::obj-33::obj-3" : [ "range[1]", "range", 0 ],
 			"obj-15::obj-51::obj-116" : [ "tilingprob[3]", "tiling probatility", 0 ],
 			"obj-153::obj-51::obj-107" : [ "pictctrl[61]", "pictctrl[1]", 0 ],
+			"obj-153::obj-35::obj-141" : [ "range[2]", "range", 0 ],
+			"obj-153::obj-35::obj-147" : [ "pictctrl[46]", "pictctrl[1]", 0 ],
 			"obj-14::obj-50::obj-17" : [ "vertical[4]", "vertical", 0 ],
 			"obj-14::obj-33::obj-45" : [ "slider[1]", "slider", 0 ],
 			"obj-15::obj-117::obj-85" : [ "pictctrl[115]", "pictctrl[1]", 0 ],
@@ -3338,6 +3453,27 @@
 				"implicit" : 1
 			}
 , 			{
+				"name" : "hyperphase_fx1.json",
+				"bootpath" : "~/MUS7100_Fall_2017/Interface-2/hyperphase",
+				"patcherrelativepath" : ".",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "vz.brcosr.maxpat",
+				"bootpath" : "~/Documents/Max 8/Packages/Vizzie/patchers",
+				"patcherrelativepath" : "../../../Documents/Max 8/Packages/Vizzie/patchers",
+				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "brcosa.genjit",
+				"bootpath" : "~/Library/Application Support/Cycling '74/Max 8/Examples/jitter-examples/gen",
+				"patcherrelativepath" : "../../../Library/Application Support/Cycling '74/Max 8/Examples/jitter-examples/gen",
+				"type" : "gJIT",
+				"implicit" : 1
+			}
+, 			{
 				"name" : "vz.primr.maxpat",
 				"bootpath" : "~/Documents/Max 8/Packages/Vizzie/patchers",
 				"patcherrelativepath" : "../../../Documents/Max 8/Packages/Vizzie/patchers",
@@ -3357,10 +3493,6 @@
 			}
 , 			{
 				"name" : "OSC-route.mxo",
-				"type" : "iLaX"
-			}
-, 			{
-				"name" : "jit.!-.mxo",
 				"type" : "iLaX"
 			}
  ],

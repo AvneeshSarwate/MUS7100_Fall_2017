@@ -1,0 +1,65 @@
+{
+	"pattrstorage" : 	{
+		"name" : "u893014083",
+		"slots" : 		{
+			"1" : 			{
+				"id" : 1,
+				"data" : 				{
+					"fractalizr::interp_mode" : [ 1.0 ],
+					"fractalizr::tint_mode" : [ 0.0 ],
+					"fractalizr::horiz" : [ 0.25 ],
+					"fractalizr::vert" : [ 0.0 ],
+					"scramblr::prob" : [ 50.0 ],
+					"scramblr::probmono" : [ 50.0 ],
+					"scramblr::horiz" : [ 3.0 ],
+					"scramblr::vert" : [ 4.0 ],
+					"zamplr::horizontal" : [ 0.976377952755906 ],
+					"zamplr::vertical" : [ 0.662992 ],
+					"zamplr::mode[1]" : [ 0.0 ],
+					"2toner::color1" : [ 0.0, 0.0, 0.0, 1.0, 0.478723404255319, 1.0, 0.0 ],
+					"2toner::color12" : [ 1.0, 1.0, 1.0, 1.0, 0.659574468085106, 1.0, 1.0 ],
+					"2toner::saturation1" : [ 1.0 ],
+					"2toner::saturation2[1]" : [ 1.0 ],
+					"brcosr::contrast-val" : [ 0.0 ],
+					"brcosr::bright-mult" : [ 0 ],
+					"brcosr::cont-mult" : [ 1 ],
+					"brcosr::sat-mult" : [ 0 ],
+					"brcosr::saturation-val" : [ 1.0 ],
+					"brcosr::brighness-val" : [ 1.0 ]
+				}
+
+			}
+,
+			"2" : 			{
+				"id" : 2,
+				"data" : 				{
+					"fractalizr::interp_mode" : [ 1.0 ],
+					"fractalizr::tint_mode" : [ 0.0 ],
+					"fractalizr::horiz" : [ 0.0 ],
+					"fractalizr::vert" : [ 0.0 ],
+					"scramblr::prob" : [ 49.0 ],
+					"scramblr::probmono" : [ 51.0 ],
+					"scramblr::horiz" : [ 11.811023622047211 ],
+					"scramblr::vert" : [ 4.0 ],
+					"zamplr::horizontal" : [ 0.551181102362205 ],
+					"zamplr::vertical" : [ 0.535433070866143 ],
+					"zamplr::mode[1]" : [ 0.0 ],
+					"2toner::color1" : [ 0.0, 0.849082628885906, 0.686492338248181, 1.0, 0.468085106382979, 1.0, 0.424541314442953 ],
+					"2toner::color12" : [ 0.572030313189714, 0.0, 0.960193739997016, 1.0, 0.765957446808511, 1.0, 0.480096869998508 ],
+					"2toner::saturation1" : [ 1.0 ],
+					"2toner::saturation2[1]" : [ 1.0 ],
+					"brcosr::contrast-val" : [ 0.5625 ],
+					"brcosr::bright-mult" : [ 0 ],
+					"brcosr::cont-mult" : [ 1 ],
+					"brcosr::sat-mult" : [ 0 ],
+					"brcosr::saturation-val" : [ 1.0 ],
+					"brcosr::brighness-val" : [ 1.0 ]
+				}
+
+			}
+
+		}
+
+	}
+
+}
