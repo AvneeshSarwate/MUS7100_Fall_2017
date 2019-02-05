@@ -14,8 +14,8 @@
 (
 var midiOut, channelMap, startWaveHandler, stopWaveHandler, startWave, stopWave, masterTempoClock, maxOSCport, scPort, waveNotes, waveNotesHandler;
 //all waves have a period of 2 beats and a range of [-1, 1]
-var sinwav = {|fr,ph,am,sh, time| (sin((pi*fr*time)+ph)*am)+sh};
-var coswav = {|fr,ph,am,sh, time| (cos((pi*fr*time)+ph)*am)+sh};
+var sinwav = {|fr,ph,am,sh, time| (sin(pi*((fr*time)+ph))*am)+sh};
+var coswav = {|fr,ph,am,sh, time| (cos(pi*((fr*time)+ph))*am)+sh};
 
 var sqr = {|time| var tm = time%2; if(tm<1, 1, -1)};
 var sqrwav = {|fr,ph,am,sh, time| (sqr.((fr*time)+ph)*am)+sh};
