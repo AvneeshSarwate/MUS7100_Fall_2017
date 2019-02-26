@@ -32,29 +32,29 @@ MIDIFunc.cc({|vel, note, chan, port|
     if(sliderToInd.(note).isNil.not && (chan == 0), {
         //[chan, note, sliderToInd.(note), vel].postln;
         if(sliderToInd.(note) == 0, {td_port.sendMsg("/cameraMix", vel/127)});
-        midiOut.control(chan, 16+sliderToInd.(note), vel);
+        midiOut.control(chan, sliderToInd.(note), vel);
     });
 }, nil, nil, quneo.uid);
 
 
 )
 
-(
-var midiIn = MIDIClient.sources.select({|elem| (elem.name == "Bus 7")
-	&& (elem.device == "IAC Driver")})[0];
-
-MIDIFunc.cc({|vel, note, chan, port|
-    ["cc", chan, note, vel].postln;
-}, nil, nil, midiIn.uid);
-
-)
-
-
-(
-var midiOut = MIDIOut.newByName("IAC Driver", "Bus 7");
-
-midiOut.control(0, 0, 120)
-
-)
-
-OSCFunc.trace
+// (
+// var midiIn = MIDIClient.sources.select({|elem| (elem.name == "Bus 7")
+// && (elem.device == "IAC Driver")})[0];
+//
+// MIDIFunc.cc({|vel, note, chan, port|
+//     ["cc", chan, note, vel].postln;
+// }, nil, nil, midiIn.uid);
+//
+// )
+//
+//
+// (
+// var midiOut = MIDIOut.newByName("IAC Driver", "Bus 7");
+//
+// midiOut.control(0, 0, 120)
+//
+// )
+//
+// OSCFunc.trace

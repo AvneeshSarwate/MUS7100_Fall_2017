@@ -6,9 +6,9 @@ Task({
     "./masterTempoClock.scd".loadRelative;
     0.01.wait;
     // "./algoKeys.scd".loadRelative;
-    // 0.01.wait;
+    0.01.wait;
     // "./sceneBuilder.scd".loadRelative;
-    // 0.01.wait;
+    0.01.wait;
     // "./loopSequencer.scd".loadRelative;
     // 0.01.wait;
     // "./chordScenePad.scd".loadRelative;
@@ -17,20 +17,24 @@ Task({
     // 0.01.wait;
     // "./arpeggiator.scd".loadRelative;
     // 0.01.wait;
-    "./PydalSC.scd".loadRelative;
-    0.01.wait;
-    "./LFOFM.scd".loadRelative;
+    // "./PydalSC.scd".loadRelative;
+    // 0.01.wait;
+    // "./LFOFM.scd".loadRelative;
     // 0.01.wait;
     "./sceneBuilderMini.scd".loadRelative;
-    // 0.01.wait;
+    0.01.wait;
     // "./sliderPad.scd".loadRelative;
     // 0.01.wait;
+    "./QuneoDMX.scd".loadRelative;
+    0.01.wait;
+    "./DMXEndpoint.scd".loadRelative;
+    0.01.wait;
 
-    ~bounceMidi.(~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge"), ~getMidiOut.("IAC Driver", "Bus 7"));
+    // ~bounceMidi.(~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge"), ~getMidiOut.("IAC Driver", "Bus 7"));
     // ~bounceMidi.(~getMidiIn.("QuNexus", "Port 1"), ~getMidiOut.("IAC Driver", "Bus 7"));
-    ~touchOSCBridge = ~getMidiOut.("TouchOSC Bridge", "TouchOSC Bridge");
-    ~touchOSCBridge.latency = 0;
-    ~fwdTouchOSCLights = true;
+    // ~touchOSCBridge = ~getMidiOut.("TouchOSC Bridge", "TouchOSC Bridge");
+    // ~touchOSCBridge.latency = 0;
+    ~fwdTouchOSCLights = false;
 }).play
 )
 

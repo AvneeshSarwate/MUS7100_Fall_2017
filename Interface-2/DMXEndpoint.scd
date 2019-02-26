@@ -1,5 +1,5 @@
 (
-~deb = false;
+~deb = true;
 
 ~maxPort = NetAddr.new("127.0.0.1", 5555);
 
@@ -57,14 +57,14 @@
 ~midiCC = MIDIFunc.cc({|vel, note, chan, port|
     if((0..3).includes(note), {
         [note, 3-(0..3).indexOf(note)].postln;
-        ~blends[(0..3).indexOf(note)] = 1 - (vel/127);
+        ~blends[3-(0..3).indexOf(note)] = 1 - (vel/127);
         ~calcDMX.();
     });
     if((4..7).includes(note), {
         ~fades[(4..7).indexOf(note)] = vel/127;
         ~calcDMX.();
     });
-
+    if(~deb, {"MIDICC".postln});
 }, nil, nil, ~midiIn.uid);
 
 ~calcDMX = {
@@ -89,18 +89,19 @@
 
 )
 
-(var row=1;var col=1;
-~fades[col] * ((~blends[row]*~colors1[row]) + ((1-~blends[row])*~colors2[row]))
-)
-~midiIn.uid
-a = List.new
-
-~blends
-
-~midiOn.free
-~midiOff.free
-~midiCC.free
-
-[1, 2].collect({|a, b, c| [a, b, c].postln})
-
-[1, 1, 0] | [1, 0, 1]
+// (var row=1;var col=1;
+// ~fades[col] * ((~blends[row]*~colors1[row]) + ((1-~blends[row])*~colors2[row]))
+// )
+// ~midiIn.uid
+// a = List.new
+//
+// ~blends
+// ~buttons[0].clear()
+// ~calcDMX.()
+// ~midiOn.free
+// ~midiOff.free
+// ~midiCC.free
+//
+// [1, 2].collect({|a, b, c| [a, b, c].postln})
+//
+// [1, 1, 0] | [1, 0, 1]
