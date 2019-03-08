@@ -1,6 +1,6 @@
 {
 	"pattrstorage" : 	{
-		"name" : "u673008490",
+		"name" : "u170000659",
 		"slots" : 		{
 			"1" : 			{
 				"id" : 1,
@@ -146,11 +146,11 @@
 			"4" : 			{
 				"id" : 4,
 				"data" : 				{
-					"filtergraph~" : [ 1, 0, 3, 1, 0, 0, 246.941650390625, 2.636004447937012, 0.353318750858307 ],
-					"filtergraph~[1]" : [ 1, 0, 3, 1, 0, 0, 129.81964111328125, 1.980736136436462, 2.564571857452393 ],
-					"midires1" : [ 48 ],
+					"filtergraph~" : [ 1, 0, 3, 1, 0, 0, 246.941650390625, 3.384797811508179, 6.158157348632812 ],
+					"filtergraph~[1]" : [ 1, 0, 3, 1, 0, 0, 349.228240966796875, 2.368122577667236, 2.564571857452393 ],
+					"midires1" : [ 65 ],
 					"midires2" : [ 59 ],
-					"pitch1" : [ -300.0 ],
+					"pitch1" : [ -700.0 ],
 					"pitch2" : [ 0.0 ],
 					"vol1" : [ 0.2 ],
 					"vol2" : [ 0.1 ],
@@ -169,10 +169,10 @@
 					"Granular2::PositionCV" : [ 100.0 ],
 					"Granular2::Width" : [ 0.000629921259843 ],
 					"Granular2::live.button" : [ 0.0 ],
-					"Granular2::location-lo-hi" : [ 455, 455 ],
+					"Granular2::location-lo-hi" : [ 355, 355 ],
 					"Granular2[1]::sample" : [ "Macintosh HD:/Users/avneeshsarwate/Downloads/Beyonce - Halo (Acapella) (Full).mp3" ],
 					"Granular2[1]::CV2" : [ 0.0 ],
-					"Granular2[1]::Duration" : [ 999.0 ],
+					"Granular2[1]::Duration" : [ 949.24980000000005 ],
 					"Granular2[1]::DurationRandomAmt" : [ 100.0 ],
 					"Granular2[1]::MaxGrains" : [ 64.0 ],
 					"Granular2[1]::Mute" : [ 0.0 ],
@@ -194,8 +194,8 @@
 				"id" : 5,
 				"data" : 				{
 					"filtergraph~" : [ 1, 0, 3, 1, 0, 0, 246.941650390625, 3.384797811508179, 6.158157348632812 ],
-					"filtergraph~[1]" : [ 1, 0, 3, 1, 0, 0, 110.0, 2.368122577667236, 2.564571857452393 ],
-					"midires1" : [ 45 ],
+					"filtergraph~[1]" : [ 1, 0, 3, 1, 0, 0, 195.997711181640625, 2.368122577667236, 2.564571857452393 ],
+					"midires1" : [ 55 ],
 					"midires2" : [ 59 ],
 					"pitch1" : [ -700.0 ],
 					"pitch2" : [ 0.0 ],
@@ -214,12 +214,12 @@
 					"Granular2::PitchRandomAmt" : [ 0.0 ],
 					"Granular2::Position" : [ -1.436740157480315 ],
 					"Granular2::PositionCV" : [ 100.0 ],
-					"Granular2::Width" : [ 0.000629921259843 ],
+					"Granular2::Width" : [ 0.03 ],
 					"Granular2::live.button" : [ 0.0 ],
-					"Granular2::location-lo-hi" : [ 455, 455 ],
+					"Granular2::location-lo-hi" : [ 353, 357 ],
 					"Granular2[1]::sample" : [ "Macintosh HD:/Users/avneeshsarwate/Downloads/Beyonce - Halo (Acapella) (Full).mp3" ],
 					"Granular2[1]::CV2" : [ 0.0 ],
-					"Granular2[1]::Duration" : [ 949.197883464566871 ],
+					"Granular2[1]::Duration" : [ 949.24980000000005 ],
 					"Granular2[1]::DurationRandomAmt" : [ 100.0 ],
 					"Granular2[1]::MaxGrains" : [ 64.0 ],
 					"Granular2[1]::Mute" : [ 0.0 ],
@@ -228,11 +228,11 @@
 					"Granular2[1]::Pan" : [ 0.0 ],
 					"Granular2[1]::PanRandomAmt" : [ 50.0 ],
 					"Granular2[1]::PitchRandomAmt" : [ 0.0 ],
-					"Granular2[1]::Position" : [ -2.417259842519685 ],
+					"Granular2[1]::Position" : [ -2.183259842519685 ],
 					"Granular2[1]::PositionCV" : [ 0.0 ],
-					"Granular2[1]::Width" : [ 0.0 ],
+					"Granular2[1]::Width" : [ 0.080629921259843 ],
 					"Granular2[1]::live.button" : [ 0.0 ],
-					"Granular2[1]::location-lo-hi" : [ 258, 258 ]
+					"Granular2[1]::location-lo-hi" : [ 273, 289 ]
 				}
 
 			}

@@ -105,3 +105,52 @@
 // [1, 2].collect({|a, b, c| [a, b, c].postln})
 //
 // [1, 1, 0] | [1, 0, 1]
+
+(
+~maxPort = NetAddr.new("127.0.0.1", 5555);
+
+~dmxBuf = List.fill(36,{0}) + 255;
+
+~sendBuf = {
+    var dmxBuf = ~dmxBuf.flat.collect({|elem, ind| [ind+1, elem.asInt]}).flat;
+    ~maxPort.sendRaw((["/dmxVals"]++dmxBuf).asArray.asRawOSC);
+};
+
+~setLight = {|ind, col|
+    ~dmxBuf[(ind*3)] = col[0];
+    ~dmxBuf[(ind*3)+1] = col[1];
+    ~dmxBuf[(ind*3)+2] = col[2];
+};
+
+
+~interp = {|speed, c1, c2|
+    var clock = TempoClock.new(speed);
+    var tsk = Task({
+        {
+            var blend = (1+clock.beats.sin)/2;
+            var newCol = (c1*blend) + ((1-blend)*c2);
+            (0..11).do({|ind| ~setLight.(ind, newCol)});
+            ~sendBuf.();
+            0.01.wait;
+        }.loop;
+    });
+    tsk.play;
+    tsk
+};
+
+~blue = [0, 41, 232];
+~choc = [169, 118, 100] * 2/3;
+~spice = [151, 84, 44];
+~red = [220, 0, 0];
+)
+
+m = ~interp.(0.2, ~blue, ~choc)
+
+m.stop
+
+(
+(0..11).do({|ind| ~setLight.(ind, ~choc*0)});
+~sendBuf.()
+
+
+)
