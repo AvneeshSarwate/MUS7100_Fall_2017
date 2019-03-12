@@ -1,6 +1,6 @@
 (
 var launchpadOut, launchpad, banks, record_BUTTON, tapTempoSet_BUTTON, tapTempoToggle_BUTTON, color1, cycleLight_BUTTON, padColorState, ccLights, setLight, cycleLight, isPlaying, grid, tempoClock, columnInd, chanPerLoop, beatsPerLoop, beatNum, pythonOSCport, playColumn, masterClockOSCport, chanPerRow, lightIndex, controlHandler, controlHandlerWrapper, useLoopMidi;
-var launchpadIndex = 0;
+var launchpadIndex = 1;
 useLoopMidi = false;
 
 

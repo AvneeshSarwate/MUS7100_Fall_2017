@@ -4,7 +4,7 @@ var brushSpeed = 0;
 var brushAngle = 0;
 var maxBrushSpeed = 10;
 var jsPort = NetAddr("localhost", 5432);
-var midiIn = ~getMidiIn.("Launchpad Pro", "Standalone Port");
+var midiIn = ~getMidiIn.("QuNexus", "Port 1");
 
 ~hz = 60;
 

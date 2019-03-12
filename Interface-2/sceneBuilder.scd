@@ -1,5 +1,5 @@
 //env vars for control
-// ~truncateLoop = false;
+// ~truncateLoop = true;
 
 
 //ACTIVE TODO TAGS: audioRecording
@@ -131,7 +131,7 @@ colorON = 13;
 
 bankSet = Set.new();
 
-sliderToggles = List.fill(4, {true});
+sliderToggles = List.fill(~numSliderToggles, {true});
 
 
 //midiNote -> [bankInd, bankChan, isOn, loopTask/nil, loopString, loopType, playType]
@@ -635,7 +635,7 @@ createRecordedTask = {|oldRecBuf, isChannelTask=false, channelInd = -1|
                         if(hit[4] == "on", {midiOut.noteOn(hit[3], hit[1], hit[2]);});
                         if(hit[4] == "off", {midiOut.noteOff(hit[3], hit[1], hit[2])});
                         if(hit[4] == "cc", {
-                            if(((hit[1] < sliderToggles.size) && sliderToggles[hit1]) || (hit[1] >= sliderToggles.size), {
+                            if(((hit[1] < sliderToggles.size) && sliderToggles[hit[1]]) || (hit[1] >= sliderToggles.size), {
                                 midiOut.control(hit[3], hit[1], hit[2]);
                                 if(~fwdTouchOSCLights, {~touchOSCBridge.control(hit[3], hit[1], hit[2])});
                             });
