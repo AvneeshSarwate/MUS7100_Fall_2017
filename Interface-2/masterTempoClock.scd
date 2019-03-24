@@ -35,6 +35,8 @@ OSCFunc({|msg, time, addr, recvPort|
 }, "/uploadTempo");
 
 
+~setBPM = {|bpm| broadcastOSCport.sendMsg("/masterClockTempo", 60/bpm, false)};
+
 ~fwdTouchOSCLights = false;
 
 ~loadModules = {|modules|

@@ -59,6 +59,8 @@ Task({
     0.01.wait;
     ~miniLooperUseKeyboardChan = true;
     ~loadModules.(["algoKeys", "sceneBuilderMini"]);
+    0.1.wait;
+    ~setBPM.(160);
 }).play)
 
 

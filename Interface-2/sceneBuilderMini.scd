@@ -393,14 +393,14 @@ turnOffBank = {|thisBank, note|
 a = {|vel, note, chan, port|
     var noteChan = if(~miniLooperUseKeyboardChan, chan, looperHijackChan);
     midiOut.noteOn(noteChan, note, vel);
-    if(recordingMetronome, {recordBuffer.add([tempoClock.beats, note, vel, looperHijackChan, "on"])});
+    if(recordingMetronome, {recordBuffer.add([tempoClock.beats, note, vel, noteChan, "on"])});
 };
 MIDIFunc.noteOn(a, nil, nil, instrumentInput.uid);
 
 b = {|vel, note, chan, port|
     var noteChan = if(~miniLooperUseKeyboardChan, chan, looperHijackChan);
     midiOut.noteOff(noteChan, note, vel);
-    if(recordingMetronome, {recordBuffer.add([tempoClock.beats, note, vel, looperHijackChan, "off"])});
+    if(recordingMetronome, {recordBuffer.add([tempoClock.beats, note, vel, noteChan, "off"])});
 };
 MIDIFunc.noteOff(b, nil, nil, instrumentInput.uid);
 
