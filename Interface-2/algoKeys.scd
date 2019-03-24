@@ -437,6 +437,7 @@ controlHandler = {|vel, note, chan, port|
 	});
 	if((note == newKeyButton) && (vel == 127), {
 		//Todo newKeys - activate lighting wrt to the chan specified by controlChanButton
+        ["NEW KEY SWAP"].postln;
 		if(playingNewKeys,
 			{
 				playingNewKeys = false;

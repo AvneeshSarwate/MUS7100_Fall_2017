@@ -36,7 +36,7 @@ theForcePort = NetAddr("localhost", 7501);
 
 //----------------------------------------------
 //light switching variables
-cycleLight_BUTTON = 95;
+/*cycleLight_BUTTON = 95;
 padColorState = Dictionary.new;
 ~padColors = padColorState;
 ccLights = List.new;
@@ -96,7 +96,7 @@ lightIndex = if(~lightIndexes[launchpadIndex].size == 0,
     }
 );
 ~lightIndex[launchpadIndex] = lightIndex;
-["LIGHT INDEX SCENEBUILDER", ~lightIndex[launchpadIndex], lightIndex].postln;
+["LIGHT INDEX SCENEBUILDER", ~lightIndex[launchpadIndex], lightIndex].postln;*/
 //TODO - add ~lightIndex[launchpadIndex] == lightIndex condition to all launchpad note/cc hanlders
 //----------------------------------------------
 
@@ -391,13 +391,15 @@ turnOffBank = {|thisBank, note|
 
 
 a = {|vel, note, chan, port|
-    midiOut.noteOn(looperHijackChan, note, vel);
+    var noteChan = if(~miniLooperUseKeyboardChan, chan, looperHijackChan);
+    midiOut.noteOn(noteChan, note, vel);
     if(recordingMetronome, {recordBuffer.add([tempoClock.beats, note, vel, looperHijackChan, "on"])});
 };
 MIDIFunc.noteOn(a, nil, nil, instrumentInput.uid);
 
 b = {|vel, note, chan, port|
-    midiOut.noteOff(looperHijackChan, note, vel);
+    var noteChan = if(~miniLooperUseKeyboardChan, chan, looperHijackChan);
+    midiOut.noteOff(noteChan, note, vel);
     if(recordingMetronome, {recordBuffer.add([tempoClock.beats, note, vel, looperHijackChan, "off"])});
 };
 MIDIFunc.noteOff(b, nil, nil, instrumentInput.uid);

@@ -5,7 +5,7 @@ Task({
     ~numSliderToggles = 5;
     "./masterTempoClock.scd".loadRelative;
     0.01.wait;
-    // "./algoKeys.scd".loadRelative;
+    "./algoKeys.scd".loadRelative;
     0.01.wait;
     // "./sceneBuilder.scd".loadRelative;
     0.01.wait;
@@ -21,32 +21,86 @@ Task({
     // 0.01.wait;
     // "./LFOFM.scd".loadRelative;
     // 0.01.wait;
-    /*"./sceneBuilderMini.scd".loadRelative;
+    "./sceneBuilderMini.scd".loadRelative;
     0.01.wait;
     // "./sliderPad.scd".loadRelative;
     // 0.01.wait;
-    "./QuneoDMX.scd".loadRelative;
+    // "./QuneoDMX.scd".loadRelative;
     0.01.wait;
-    "./DMXEndpoint.scd".loadRelative;
-    0.01.wait;*/
+    // "./DMXEndpoint.scd".loadRelative;
+    0.01.wait;
     // "./triplePlayBounce.scd".loadRelative;
     0.01.wait;
 
 
     // ~bounceMidi.(~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge"), ~getMidiOut.("IAC Driver", "Bus 7"));
-    ~bounceMidi.(~getMidiIn.("QUNEO", "QUNEO"), ~getMidiOut.("IAC Driver", "Bus 2"), true);
+    // ~bounceMidi.(~getMidiIn.("QUNEO", "QUNEO"), ~getMidiOut.("IAC Driver", "Bus 2"), true);
     // ~touchOSCBridge = ~getMidiOut.("TouchOSC Bridge", "TouchOSC Bridge");
     // ~touchOSCBridge.latency = 0;
-    ~fwdTouchOSCLights = false;
+    // ~fwdTouchOSCLights = false;
 }).play
 )
 
 ~bounceMidi.(~getMidiIn.("IAC Driver", "Bus 7"), ~getMidiOut.("TouchOSC Bridge", "TouchOSC Bridge"));
 
 
+
+//basic looper
+(Task({
+    "./masterTempoClock.scd".loadRelative;
+    0.01.wait;
+    ~loadModules.(["algoKeys", "sceneBuilder"]);
+}).play)
+
+
+//mini looper - shader: responsiveVis1, loops- responsivevis1.scenes
+(Task({
+    "./masterTempoClock.scd".loadRelative;
+    0.01.wait;
+    ~miniLooperUseKeyboardChan = true;
+    ~loadModules.(["algoKeys", "sceneBuilderMini"]);
+}).play)
+
+
+//chord slider piece - responsiveVis3b
+(Task({
+    "./masterTempoClock.scd".loadRelative;
+    0.01.wait;
+    ~loadModules.(["sceneBuilder", "sliderPad"]);
+}).play)
+
+
+
+
+
+
+
+
 // ~getMidiIn = {|device, name|
 //     MIDIClient.sources.select({|elem| (elem.device == device) && (elem.name == name)})[0]
 // };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 (
