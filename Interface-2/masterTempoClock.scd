@@ -35,9 +35,16 @@ OSCFunc({|msg, time, addr, recvPort|
 }, "/uploadTempo");
 
 
+~fwdTouchOSCLights = false;
 
-
-
+~loadModules = {|modules|
+    Task({
+        modules.do({|module|
+            (module++".scd").loadRelative;
+            0.01.wait;
+        })
+    }).play
+};
 
 ~rand = {|n|
     var sinn = sin(n * 1001);
@@ -55,7 +62,7 @@ OSCFunc({|msg, time, addr, recvPort|
     MIDIOut.new(ind);
 };
 
-~bounceMidi = {|midiIn, midiOut|
+~bounceMidi = {|midiIn, midiOut, ignoreCC=false|
     var onFunc, offFunc, ccFunc;
     midiOut.latency = 0;
 
@@ -66,10 +73,11 @@ OSCFunc({|msg, time, addr, recvPort|
     offFunc = MIDIFunc.noteOff({|vel, note, chan, port|
         midiOut.noteOff(chan, note, vel);
     }, nil, nil, midiIn.uid);
-
-    ccFunc = MIDIFunc.cc({|vel, note, chan, port|
-        midiOut.control(chan, note, vel);
-    }, nil, nil, midiIn.uid);
+    if(ignoreCC.not, {
+        ccFunc = MIDIFunc.cc({|vel, note, chan, port|
+            midiOut.control(chan, note, vel);
+        }, nil, nil, midiIn.uid);
+    });
     [onFunc, offFunc, ccFunc]
 };
 )

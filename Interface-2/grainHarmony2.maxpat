@@ -475,7 +475,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 303.0, 34.0, 247.0, 22.0 ],
-									"text" : "/volres 0.271654 0.608303"
+									"text" : "/volres 0.570866 0.285199"
 								}
 
 							}
@@ -738,7 +738,7 @@
 									"outlettype" : [ "list", "float", "float", "float", "float", "list", "int" ],
 									"parameter_enable" : 0,
 									"patching_rect" : [ 529.0, 620.5, 360.0, 155.0 ],
-									"setfilter" : [ 0, 3, 1, 0, 0, 5965.3466796875, 1.901574730873108, 3.570274353027344, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
+									"setfilter" : [ 0, 3, 1, 0, 0, 304.240447998046875, 3.996063232421875, 3.570274353027344, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
 									"varname" : "filtergraph~[1]"
 								}
 
@@ -2038,7 +2038,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 303.0, 34.0, 247.0, 22.0 ],
-									"text" : "/volres 0.606299 0.330325"
+									"text" : "/playrate/1/11 1."
 								}
 
 							}
@@ -2301,7 +2301,7 @@
 									"outlettype" : [ "list", "float", "float", "float", "float", "list", "int" ],
 									"parameter_enable" : 0,
 									"patching_rect" : [ 529.0, 620.5, 360.0, 155.0 ],
-									"setfilter" : [ 0, 3, 1, 0, 0, 461.022735595703125, 4.244094371795654, 1.122962832450867, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
+									"setfilter" : [ 0, 3, 1, 0, 0, 121.928436279296875, 3.885826587677002, 1.122962832450867, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
 									"varname" : "filtergraph~[1]"
 								}
 
@@ -2513,8 +2513,6 @@
 									"patching_rect" : [ 131.0, 588.0, 146.0, 22.0 ],
 									"saved_object_attributes" : 									{
 										"enabled" : [ 1 ],
-										"pitchshift" : [ 0.594603557501361 ],
-										"pitchshiftcent" : [ -900 ],
 										"quality" : "best",
 										"reportlatency" : 0,
 										"usecents" : 1
@@ -3203,15 +3201,15 @@
 			"obj-1::obj-1::obj-45" : [ "DurationRandomAmt[1]", "Random", 0 ],
 			"obj-1::obj-1::obj-12" : [ "Mute[1]", "Mute", 0 ],
 			"obj-1::obj-1::obj-47" : [ "Duration[1]", "Duration", 0 ],
-			"obj-37::obj-1::obj-114" : [ "MaxGrains", "MaxGrains", 0 ],
 			"obj-37::obj-1::obj-25" : [ "CV", "CV", 0 ],
+			"obj-37::obj-1::obj-114" : [ "MaxGrains", "MaxGrains", 0 ],
 			"obj-37::obj-1::obj-3" : [ "Position", "Position", 0 ],
 			"obj-1::obj-1::obj-58" : [ "PanRandomAmt[1]", "Random", 0 ],
 			"obj-1::obj-1::obj-94" : [ "PitchRandomAmt[1]", "Random", 0 ],
 			"obj-1::obj-1::obj-114" : [ "MaxGrains[1]", "MaxGrains", 0 ],
 			"obj-37::obj-1::obj-19" : [ "CV2", "CV2", 0 ],
-			"obj-37::obj-1::obj-141" : [ "live.button", "live.button", 0 ],
 			"obj-37::obj-1::obj-58" : [ "PanRandomAmt", "Random", 0 ],
+			"obj-37::obj-1::obj-141" : [ "live.button", "live.button", 0 ],
 			"obj-37::obj-1::obj-71" : [ "Pan", "Pan", 0 ],
 			"obj-1::obj-1::obj-28" : [ "Offset[1]", "Offset", 0 ],
 			"obj-37::obj-1::obj-98::obj-2" : [ "pastebang", "pastebang", 0 ],

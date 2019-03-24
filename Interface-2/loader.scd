@@ -21,17 +21,20 @@ Task({
     // 0.01.wait;
     // "./LFOFM.scd".loadRelative;
     // 0.01.wait;
-    "./sceneBuilderMini.scd".loadRelative;
+    /*"./sceneBuilderMini.scd".loadRelative;
     0.01.wait;
     // "./sliderPad.scd".loadRelative;
     // 0.01.wait;
     "./QuneoDMX.scd".loadRelative;
     0.01.wait;
     "./DMXEndpoint.scd".loadRelative;
+    0.01.wait;*/
+    // "./triplePlayBounce.scd".loadRelative;
     0.01.wait;
 
+
     // ~bounceMidi.(~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge"), ~getMidiOut.("IAC Driver", "Bus 7"));
-    // ~bounceMidi.(~getMidiIn.("QuNexus", "Port 1"), ~getMidiOut.("IAC Driver", "Bus 7"));
+    ~bounceMidi.(~getMidiIn.("QUNEO", "QUNEO"), ~getMidiOut.("IAC Driver", "Bus 2"), true);
     // ~touchOSCBridge = ~getMidiOut.("TouchOSC Bridge", "TouchOSC Bridge");
     // ~touchOSCBridge.latency = 0;
     ~fwdTouchOSCLights = false;
