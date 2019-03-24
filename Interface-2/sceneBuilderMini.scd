@@ -36,17 +36,6 @@ theForcePort = NetAddr("localhost", 7501);
 
 //----------------------------------------------
 //light switching variables
-/*cycleLight_BUTTON = 95;
-padColorState = Dictionary.new;
-~padColors = padColorState;
-ccLights = List.new;
-(1..8).do({|i|
-    ccLights.add(i);
-    ccLights.add(90+i);
-    ccLights.add(i*10);
-    ccLights.add((i*10)+9);
-});
-
 setLight = {|note, color, lightIndexOverride=false|
     /*if((~lightIndex[launchpadIndex] == lightIndex) || lightIndexOverride, {
     if(ccLights.includes(note),
@@ -57,6 +46,16 @@ setLight = {|note, color, lightIndexOverride=false|
     padColorState[note] = color;*/
     launchpadOut.noteOn(0, note, color);
 };
+/*cycleLight_BUTTON = 95;
+padColorState = Dictionary.new;
+~padColors = padColorState;
+ccLights = List.new;
+(1..8).do({|i|
+    ccLights.add(i);
+    ccLights.add(90+i);
+    ccLights.add(i*10);
+    ccLights.add((i*10)+9);
+});
 (1..98).do({|note|
     if(ccLights.includes(note),
         {launchpadOut.control(0, note, 0)},
@@ -238,7 +237,7 @@ padOn = {|vel, note, chan, port|
         setLight.(note, green_LIGHT);
     });
 
-    if((chan == 0) && (~lightIndex[launchpadIndex] == lightIndex) && (noteToProInd.(note) > -1), {
+    if((chan == 0) && (noteToProInd.(note) > -1), {
         if(bankSet.includes(note), {
             var thisBank = bankMap[note];
             if((recordingState == 3) ,{
@@ -307,6 +306,7 @@ padOn = {|vel, note, chan, port|
         });
         if(scenePads.includes(note), {
             var sceneInd = note-(96-1); //todo - change when SCENE PAGES are implemented
+            ["SCENE BUTTON", note].postln;
             if(recordingScene,
                 {
                     scenes[sceneInd] = bankMap.deepCopy;
@@ -772,6 +772,7 @@ OSCFunc(masterClockTempoHandler, "/masterClockTempo");
 
 
 playScene = {|bankMapInstance, sceneInd|
+    ["SCENE PLAYED", sceneInd].postln;
     pythonOSCport.sendMsg("/playScene", sceneInd);
     if(sceneIsOnDeck.not, {
         sceneIsOnDeck = true;
