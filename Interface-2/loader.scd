@@ -7,7 +7,7 @@ Task({
     0.01.wait;
     "./algoKeys.scd".loadRelative;
     0.01.wait;
-    // "./sceneBuilder.scd".loadRelative;
+    "./sceneBuilder.scd".loadRelative;
     0.01.wait;
     // "./loopSequencer.scd".loadRelative;
     // 0.01.wait;
@@ -21,9 +21,9 @@ Task({
     // 0.01.wait;
     // "./LFOFM.scd".loadRelative;
     // 0.01.wait;
-    "./sceneBuilderMini.scd".loadRelative;
+    // "./sceneBuilderMini.scd".loadRelative;
     0.01.wait;
-    // "./sliderPad.scd".loadRelative;
+    "./sliderPad.scd".loadRelative;
     // 0.01.wait;
     // "./QuneoDMX.scd".loadRelative;
     0.01.wait;
@@ -64,9 +64,12 @@ Task({
 
 //chord slider piece - responsiveVis3b
 (Task({
+    ~numSliderToggles = 5;
     "./masterTempoClock.scd".loadRelative;
     0.01.wait;
-    ~loadModules.(["sceneBuilder", "sliderPad"]);
+    ~loadModules.(["algoKeys", "sceneBuilder", "spatializeKeyboard", "sliderPad"]);
+    0.1.wait;
+    ~setSliderBanks.([ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, [ 63, 63, 63, 66, 68 ], 0, 0, [ 71, 37, 63, 24, 93 ], [ 63, 104, 62, 107, 84 ], 0, [ 74, 90, 53, 90, 74 ], 0, 0, 0, [ 63, 63, 63, 63, 63 ], [ 63, 63, 63, 63, 84 ], [ 63, 47, 63, 47, 84 ], [ 63, 38, 63, 37, 84 ], [ 63, 101, 62, 100, 84 ], [ 79, 101, 62, 100, 79 ], [ 69, 90, 53, 90, 69 ], 0, 0, 0 ]);
 }).play)
 
 
