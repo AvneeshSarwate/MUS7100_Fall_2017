@@ -50,6 +50,8 @@ Task({
     "./masterTempoClock.scd".loadRelative;
     0.01.wait;
     ~loadModules.(["algoKeys", "sceneBuilder"]);
+    0.1.wait;
+    ~setBPM.(160);
 }).play)
 
 
@@ -70,6 +72,8 @@ Task({
     "./masterTempoClock.scd".loadRelative;
     0.01.wait;
     ~loadModules.(["algoKeys", "sceneBuilder", "spatializeKeyboard", "sliderPad"]);
+    0.01.wait;
+    ~bounceMidi.(~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge"), ~getMidiOut.("IAC Driver", "Bus 7"));
     0.1.wait;
     ~setSliderBanks.([ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, [ 63, 63, 63, 66, 68 ], 0, 0, [ 71, 37, 63, 24, 93 ], [ 63, 104, 62, 107, 84 ], 0, [ 74, 90, 53, 90, 74 ], 0, 0, 0, [ 63, 63, 63, 63, 63 ], [ 63, 63, 63, 63, 84 ], [ 63, 47, 63, 47, 84 ], [ 63, 38, 63, 37, 84 ], [ 63, 101, 62, 100, 84 ], [ 79, 101, 62, 100, 79 ], [ 69, 90, 53, 90, 69 ], 0, 0, 0 ]);
 }).play)
