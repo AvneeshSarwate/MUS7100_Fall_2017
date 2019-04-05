@@ -1,5 +1,5 @@
 (
-var launchpad, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, loopRecord_BUTTON, presetRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoopColor, loopRecordingState, oscHandler, oscAddrs, isRecording, recordingColor, notRecordingColor, tempRecordColor, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime;
+var launchpad, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, loopRecord_BUTTON, presetRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoopColor, loopRecordingState, oscHandler, oscAddrs, isRecording, recordingColor, notRecordingColor, tempRecordColor, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, padSavedColor, padPlayingColor;
 
 
 ipadMidiIn = ~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge");
@@ -24,6 +24,8 @@ recordEndTime = nil;
 recordingColor = 5;
 notRecordingColor = 17;
 tempRecordColor = 9;
+padSavedColor = 3;
+padPlayingColor = 18;
 
 
 (0..100).do({|i| launchpadOut.noteOff(0, i, 0)});
@@ -51,14 +53,27 @@ oscAddrs = ["/pos", "/width", "/duration", "/playrate", "/pitch", "/volres", "/q
 });
 
 createLoopPattern = {|recordBuf|
-    var playBuff, rb;
-    recordBuffer.insert(0, recordStartTime); //todo - test things
-    recordBuffer.add(recordStopTime);
-    rb = recordBuffer;
-    playBuff = (0..(rb.size-2)).collect({|i| rb[i+1][0]-rb[i][0]}).collect({|it, i| [it, rb[i][1]]}); //convert from timeStamp list to deltaTime list
+    var playBuff, rb, pat, sendOSC;
 
+    rb = recordBuf.deepCopy;
+    rb.insert(0, [recordStartTime, ["/recordingStartMessage"]]);
+    rb.add([recordEndTime, ["recordingEndMessage"]]);
 
+    //convert from timeStamp list to deltaTime list - first event - in pattern, first event plays immediately and delta is the wait afterwards
+    playBuff = (0..(rb.size-2)).collect({|i| rb[i+1][0]-rb[i][0]}).collect({|it, i| [it, rb[i][1]]});
 
+    sendOSC = {|oscArray|
+        maxOscOut.sendRaw(oscArray.asArray.asRawOSC);
+        ipadOscOut.sendRaw(oscArray.asArray.asRawOSC);
+    };
+
+    pat = Pbind(
+        \delta, Pseq(playBuff.collect({|it| it[0]}), inf),
+        \oscMsg, Pseq((0,1..100), inf, 1),
+        \play, {sendOSC.(~oscMsg.asArray.asRawOSC)}
+    ).play(tempoClock);
+
+    pat
 };
 
 MIDIFunc.cc({|vel, note, chan, port|
@@ -97,27 +112,47 @@ MIDIFunc.noteOn({|vel, note, chan, port|
         var bank = loopToPadMap[note];
         if(bank.isNil.not, {
             if(recordingState == 3, { //can't save preset if there is a tempRecording
-                if(bank[2] == 'preset',{
-                    loopToPadMap[note] = [note, 'loop', tempRecordingTask]
-                },{
+                if(bank[2] == 'loop', {
                     bank[3].stop;
                     bank[3].free;
-                    bank[3] = tempRecordingTask;
-                    tempRecordingTask = nil;
-                    //Todo lights
                 });
+                loopToPadMap[note] = [note, 'loop', tempRecordingTask];
+                tempRecordingTask = nil;
+                launchpadOut.noteOn(0, note, padPlayingColor);
             },{
                 if(bank[2] == 'loop', {
                     if(bank[3].isPlaying, {bank[3].stop; bank[3].reset},
                         {bank[3].play});
-                    //Todo lights
+                    launchpadOut.noteOn(0, note, if(bank[3].isPlaying, padPlayingColor, padSavedColor));
                 });
             })
         }{,
 
         });
+    });
 });
 
+
+)
+
+
+(
+
+var hits = [[1, 1], [3, 2], [4.4, 3]].asList;
+var recordStartTime = 0;
+var recordEndTime = 5;
+var createLoopPattern = {|recordBuf|
+    var playBuff, rb;
+
+    rb = recordBuf.deepCopy;
+    rb.insert(0, [recordStartTime, ["/recordingStartMessage"]]); //todo - test things
+    rb.add([recordEndTime, ["recordingEndMessage"]]);
+    rb.postln;
+    //convert from timeStamp list to deltaTime list - first event - in pattern, first event plays immediately and delta is the wait afterwards
+    playBuff = (0..(rb.size-2)).collect({|i| rb[i+1][0]-rb[i][0]}).collect({|it, i| [it, rb[i][1]]});
+
+};
+createLoopPattern.(hits);
 
 )
 
