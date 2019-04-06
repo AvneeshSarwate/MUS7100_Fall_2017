@@ -1,5 +1,5 @@
 (
-var launchpad, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, loopRecord_BUTTON, presetRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoopColor, loopRecordingState, oscHandler, oscAddrs, isRecording, recordingColor, notRecordingColor, tempRecordColor, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, padSavedColor, padPlayingColor;
+var launchpad, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, loopRecord_BUTTON, presetRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoopColor, loopRecordingState, oscHandler, oscAddrs, isRecording, recordingColor, notRecordingColor, tempRecordColor, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, padSavedColor, padPlayingColor, saveLoopToBank, recordingStateColors;
 
 
 ipadMidiIn = ~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge");
@@ -14,7 +14,7 @@ loopRecord_BUTTON = 89;
 presetRecord_BUTTON = 79;
 recordBuffer = List.new;
 tempRecordingTask = nil;
-loopRecordingState = 0;
+loopRecordingState = 0; //0, 1, 2 for notRecording, recording, recordedButNotSaved
 loopToPadMap = Dictionary.new; //[padInd, 'loop'/'preset', pattern/preset-array]
 paramMap = Dictionary.new;
 tempoClock = TempoClock.new;
@@ -28,6 +28,7 @@ notRecordingColor = 17;
 tempRecordColor = 9;
 padSavedColor = 3;
 padPlayingColor = 18;
+recordingStateColors = [notRecordingColor, recordingColor, tempRecordColor];
 
 
 (0..100).do({|i| launchpadOut.noteOff(0, i, 0)});
@@ -37,7 +38,7 @@ launchpadOut.noteOn(0, loopRecord_BUTTON, notRecordingColor);
 
 oscHandler = {|msg, time, addr, recvPort|
     if(isRecording, {
-        recordBuffer.add([tempoClock.beats - recordStartTime, msg]);
+        recordBuffer.add([tempoClock.beats - recordStartTime, msg]); //recording timestamps relative to recoring start
     });
     maxOscOut.sendRaw(msg.asArray.asRawOSC);
 };
@@ -57,9 +58,10 @@ oscAddrs = ["/pos", "/width", "/duration", "/playrate", "/pitch", "/volres", "/q
 createLoopPattern = {|recordBuf|
     var playBuff, rb, pat, sendOSC, timeList, msgList;
 
+    //all timestamps are relative to recording start - first event is always at 0
     rb = recordBuf.deepCopy;
-    rb.insert(0, [recordStartTime, ["/recordingStartMessage"]]);
-    rb.add([recordEndTime, ["recordingEndMessage"]]);
+    rb.insert(0, [0, ["/recordingStartMessage"]]);
+    rb.add([recordEndTime-recordStartTime, ["recordingEndMessage"]]);
 
     //convert from timeStamp list to deltaTime list - first event - in pattern, first event plays immediately and delta is the wait afterwards
     playBuff = (0..(rb.size-2)).collect({|i| rb[i+1][0]-rb[i][0]}).collect({|it, i| [it, rb[i][1]]});
@@ -91,11 +93,11 @@ MIDIFunc.cc({|vel, note, chan, port|
 
 }, ipadMidiIn.uid);
 
+
 MIDIFunc.cc({|vel, note, chan, port|
     if((note == loopRecord_BUTTON) && (vel == 127), {
-        var stateColors = [notRecordingColor, recordingColor, tempRecordColor];
         loopRecordingState = (loopRecordingState + 1) % 3;
-        launchpadOut.noteOn(0, loopRecord_BUTTON, stateColors[loopRecordingState]);
+        launchpadOut.noteOn(0, loopRecord_BUTTON, recordingStateColors[loopRecordingState]);
         if(loopRecordingState == 0, {
             tempRecordingTask.stop;
             tempRecordingTask.free;
@@ -116,27 +118,37 @@ MIDIFunc.cc({|vel, note, chan, port|
     })
 });
 
+saveLoopToBank = {|bankNote|
+    loopToPadMap[bankNote] = [bankNote, 'loop', tempRecordingTask];
+    tempRecordingTask = nil;
+    launchpadOut.noteOn(0, bankNote, padPlayingColor);
+    loopRecordingState = 0;
+    launchpadOut.noteOn(0, loopRecord_BUTTON, recordingStateColors[loopRecordingState]);
+};
+
 MIDIFunc.noteOn({|vel, note, chan, port|
     if(vel != 0,{
         var bank = loopToPadMap[note];
         if(bank.isNil.not, {
-            if(loopRecordingState == 3, { //can't save preset if there is a tempRecording
-                if(bank[2] == 'loop', {
-                    bank[3].stop;
-                    bank[3].free;
+            if(loopRecordingState == 2, { //can't save preset if there is a tempRecording
+                if(bank[1] == 'loop', {
+                    bank[2].stop;
+                    bank[2].free;
                 });
-                loopToPadMap[note] = [note, 'loop', tempRecordingTask];
-                tempRecordingTask = nil;
-                launchpadOut.noteOn(0, note, padPlayingColor);
+                saveLoopToBank.(note);
             },{
-                if(bank[2] == 'loop', {
-                    if(bank[3].isPlaying, {bank[3].stop; bank[3].reset},
-                        {bank[3].play});
-                    launchpadOut.noteOn(0, note, if(bank[3].isPlaying, padPlayingColor, padSavedColor));
+                "NO TEMP LOOP, NOT NIL".postln;
+                if(bank[1] == 'loop', {
+                    if(bank[2].isPlaying, {bank[2].stop; bank[2].reset},
+                        {bank[2].play});
+                    launchpadOut.noteOn(0, note, if(bank[2].isPlaying, padPlayingColor, padSavedColor));
                 });
             })
         },{
+            if(loopRecordingState == 2, {
+                saveLoopToBank.(note);
 
+            });
         });
     });
 });
