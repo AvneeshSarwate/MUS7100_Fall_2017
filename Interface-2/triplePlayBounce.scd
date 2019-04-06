@@ -13,9 +13,9 @@ MIDIFunc.noteOn({|vel, note, chan, port|
         midiOut.noteOff(chan, lastNoteOn[chan]);
         0.01.wait;
         midiOut.noteOn(chan, note, vel);
+        lastNoteOn[chan] = note;
         ["GUITAR FWD", note, chan].postln;
     }).play;
-    lastNoteOn[chan] = note;
 }, nil, nil, triplePlay.uid);
 
 MIDIFunc.cc({|vel, note, chan, port|
@@ -28,12 +28,15 @@ MIDIFunc.cc({|vel, note, chan, port|
         ["loop",2, vel].postln;
     });
     if((note == 18) && (vel == 127), {
-        midiOut.allNotesOff(4);
+        midiOut.allNotesOff(5);
         ["Notes off", 5].postln;
     });
     if((note == 19) && (vel == 127), {
         midiOut.allNotesOff(4);
         ["Notes off", 4].postln;
+    });
+    if((note == 7), {
+        midiOut.control(0, note, vel);
     });
 
 }, nil, nil, pedal.uid);

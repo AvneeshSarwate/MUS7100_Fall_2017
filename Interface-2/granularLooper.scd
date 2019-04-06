@@ -4,22 +4,24 @@ var launchpad, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, loopRecord_BUTTO
 
 ipadMidiIn = ~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge");
 launchpad = ~getLaunchpadIn.(0);
-launchpadOut = ~getLaunchpadOut.(0);
+launchpadOut = ~getLaunchpadOut.(1);
 launchpadOut.latency = 0;
+maxOscOut = NetAddr("127.0.0.1", 8000);
+ipadOscOut = NetAddr("10.0.0.17", 9000);
 
 
 loopRecord_BUTTON = 89;
 presetRecord_BUTTON = 79;
-maxOSCOut = NetAddr("127.0.0.1", 8000);
 recordBuffer = List.new;
 tempRecordingTask = nil;
 loopRecordingState = 0;
 loopToPadMap = Dictionary.new; //[padInd, 'loop'/'preset', pattern/preset-array]
 paramMap = Dictionary.new;
-tempoClock = tempoClock.new;
+tempoClock = TempoClock.new;
 
 recordStartTime = nil;
 recordEndTime = nil;
+isRecording = false;
 
 recordingColor = 5;
 notRecordingColor = 17;
@@ -53,7 +55,7 @@ oscAddrs = ["/pos", "/width", "/duration", "/playrate", "/pitch", "/volres", "/q
 });
 
 createLoopPattern = {|recordBuf|
-    var playBuff, rb, pat, sendOSC;
+    var playBuff, rb, pat, sendOSC, timeList, msgList;
 
     rb = recordBuf.deepCopy;
     rb.insert(0, [recordStartTime, ["/recordingStartMessage"]]);
@@ -63,14 +65,21 @@ createLoopPattern = {|recordBuf|
     playBuff = (0..(rb.size-2)).collect({|i| rb[i+1][0]-rb[i][0]}).collect({|it, i| [it, rb[i][1]]});
 
     sendOSC = {|oscArray|
+        // ["OSC ARRAY", oscArray].postln;
         maxOscOut.sendRaw(oscArray.asArray.asRawOSC);
         ipadOscOut.sendRaw(oscArray.asArray.asRawOSC);
     };
 
+    timeList = playBuff.collect({|it| it[0]});
+    msgList = playBuff.collect({|it| it[1]});
+
+    ["TIME LIST", timeList].postln;
+    ["MSG LIST", msgList].postln;
+
     pat = Pbind(
-        \delta, Pseq(playBuff.collect({|it| it[0]}), inf),
-        \oscMsg, Pseq((0,1..100), inf, 1),
-        \play, {sendOSC.(~oscMsg.asArray.asRawOSC)}
+        \delta, Pseq(timeList, inf),
+        \oscMsg, Pseq(msgList, inf),
+        \play, {sendOSC.(~oscMsg)}
     ).play(tempoClock);
 
     pat
@@ -85,20 +94,20 @@ MIDIFunc.cc({|vel, note, chan, port|
 MIDIFunc.cc({|vel, note, chan, port|
     if((note == loopRecord_BUTTON) && (vel == 127), {
         var stateColors = [notRecordingColor, recordingColor, tempRecordColor];
-        recordingState = (recordingState + 1) % 3;
-        launchpadOut.noteOn(0, loopRecordButton, stateColors[recordingState])
-        if(recordingState == 0, {
+        loopRecordingState = (loopRecordingState + 1) % 3;
+        launchpadOut.noteOn(0, loopRecord_BUTTON, stateColors[loopRecordingState]);
+        if(loopRecordingState == 0, {
             tempRecordingTask.stop;
             tempRecordingTask.free;
             tempRecordingTask = nil;
             recordBuffer = List.new;
         });
-        if(recordingState == 1, {
+        if(loopRecordingState == 1, {
             isRecording = true;
             recordStartTime = tempoClock.beats;
 
         });
-        if(recordingState == 2, {
+        if(loopRecordingState == 2, {
             isRecording = false;
             recordEndTime = tempoClock.beats;
             tempRecordingTask = createLoopPattern.(recordBuffer);
@@ -111,7 +120,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
     if(vel != 0,{
         var bank = loopToPadMap[note];
         if(bank.isNil.not, {
-            if(recordingState == 3, { //can't save preset if there is a tempRecording
+            if(loopRecordingState == 3, { //can't save preset if there is a tempRecording
                 if(bank[2] == 'loop', {
                     bank[3].stop;
                     bank[3].free;
@@ -126,7 +135,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
                     launchpadOut.noteOn(0, note, if(bank[3].isPlaying, padPlayingColor, padSavedColor));
                 });
             })
-        }{,
+        },{
 
         });
     });
@@ -136,44 +145,44 @@ MIDIFunc.noteOn({|vel, note, chan, port|
 )
 
 
-(
-
-var hits = [[1, 1], [3, 2], [4.4, 3]].asList;
-var recordStartTime = 0;
-var recordEndTime = 5;
-var createLoopPattern = {|recordBuf|
-    var playBuff, rb;
-
-    rb = recordBuf.deepCopy;
-    rb.insert(0, [recordStartTime, ["/recordingStartMessage"]]); //todo - test things
-    rb.add([recordEndTime, ["recordingEndMessage"]]);
-    rb.postln;
-    //convert from timeStamp list to deltaTime list - first event - in pattern, first event plays immediately and delta is the wait afterwards
-    playBuff = (0..(rb.size-2)).collect({|i| rb[i+1][0]-rb[i][0]}).collect({|it, i| [it, rb[i][1]]});
-
-};
-createLoopPattern.(hits);
-
-)
-
-
-n = NetAddr("127.0.0.1", 57120)
-
-n.sendMsg("/ad", 10)
-
-
-
-
-[1, 2, 3, 4].unzip
-a = [1, 2, 3,4]
-(0..(a.size-2)).collect({|i| a[i+1]-a[i]}).collect({|it, i| [it, a[i]]})
-a[(0,2..(a.size - a.size.mod(2)))]
-(0,2..(a.size - a.size.mod(2)))
-
-a.select({|item, ind|
-
-a = Dictionary.new
-a[5] = 10
-a.keys.includes(5)
-
-if(a.isNil.not && {a.asInt != 0}, {7})
+// (
+//
+// var hits = [[1, 1], [3, 2], [4.4, 3]].asList;
+// var recordStartTime = 0;
+// var recordEndTime = 5;
+// var createLoopPattern = {|recordBuf|
+//     var playBuff, rb;
+//
+//     rb = recordBuf.deepCopy;
+//     rb.insert(0, [recordStartTime, ["/recordingStartMessage"]]); //todo - test things
+//     rb.add([recordEndTime, ["recordingEndMessage"]]);
+//     rb.postln;
+//     //convert from timeStamp list to deltaTime list - first event - in pattern, first event plays immediately and delta is the wait afterwards
+//     playBuff = (0..(rb.size-2)).collect({|i| rb[i+1][0]-rb[i][0]}).collect({|it, i| [it, rb[i][1]]});
+//
+// };
+// createLoopPattern.(hits);
+//
+// )
+//
+//
+// n = NetAddr("127.0.0.1", 57120)
+//
+// n.sendMsg("/ad", 10)
+//
+//
+//
+//
+// [1, 2, 3, 4].unzip
+// a = [1, 2, 3,4]
+// (0..(a.size-2)).collect({|i| a[i+1]-a[i]}).collect({|it, i| [it, a[i]]})
+// a[(0,2..(a.size - a.size.mod(2)))]
+// (0,2..(a.size - a.size.mod(2)))
+//
+// a.select({|item, ind|
+//
+//     a = Dictionary.new
+//     a[5] = 10
+//     a.keys.includes(5)
+//
+//     if(a.isNil.not && {a.asInt != 0}, {7})
