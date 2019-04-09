@@ -1,5 +1,5 @@
 (
-var launchpad, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, loopRecord_BUTTON, presetRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoopColor, loopRecordingState, oscHandler, oscAddrs, isRecording, recordingColor, notRecordingColor, tempRecordColor, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, padSavedColor, padPlayingColor, saveLoopToBank, recordingStateColors;
+var launchpad, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, loopRecord_BUTTON, presetRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoopColor, loopRecordingState, oscHandler, oscAddrs, isRecording, recordingColor, notRecordingColor, tempRecordColor, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, padSavedColor, padPlayingColor, saveLoopToBank, recordingStateColors, interpolateParamMaps;
 
 
 ipadMidiIn = ~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge");
@@ -30,6 +30,20 @@ padSavedColor = 3;
 padPlayingColor = 18;
 recordingStateColors = [notRecordingColor, recordingColor, tempRecordColor];
 
+//TODO - find default for params and their corresponding midi values? + blast these out at start of program
+// - or set default params to both ipad and max from here
+
+interpolateParamMaps = {|map1, map2, interp|
+    var interpMap = Dictionary.new;
+    map1.keys().do({|key|
+        if(key.contains("playrate") || key.contains("pitch"), {
+
+        }, {
+
+        });
+    });
+};
+
 
 (0..100).do({|i| launchpadOut.noteOff(0, i, 0)});
 
@@ -40,6 +54,7 @@ oscHandler = {|msg, time, addr, recvPort|
     if(isRecording, {
         recordBuffer.add([tempoClock.beats - recordStartTime, msg]); //recording timestamps relative to recoring start
     });
+    paramMap[msg[0]] = msg[1..];
     maxOscOut.sendRaw(msg.asArray.asRawOSC);
 };
 
