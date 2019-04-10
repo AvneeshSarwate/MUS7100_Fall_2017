@@ -1,5 +1,5 @@
 (
-var launchpad, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, loopRecord_BUTTON, presetRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoopColor, loopRecordingState, oscHandler, oscAddrs, isRecording, recordingColor, notRecordingColor, tempRecordColor, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, padSavedColor, padPlayingColor, saveLoopToBank, recordingStateColors, interpolateParamMaps;
+var launchpad, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, padSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendOSC, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask;
 
 
 ipadMidiIn = ~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge");
@@ -11,7 +11,10 @@ ipadOscOut = NetAddr("10.0.0.17", 9000);
 
 
 loopRecord_BUTTON = 89;
-presetRecord_BUTTON = 79;
+savePreset_BUTTON = 79;
+presetVoice1_BUTTON = 69;
+presetVoice2_BUTTON = 59;
+interpSpeed_BUTTONS = (1..8);
 recordBuffer = List.new;
 tempRecordingTask = nil;
 loopRecordingState = 0; //0, 1, 2 for notRecording, recording, recordedButNotSaved
@@ -22,39 +25,91 @@ tempoClock = TempoClock.new;
 recordStartTime = nil;
 recordEndTime = nil;
 isRecording = false;
+savingParams = false;
 
-recordingColor = 5;
-notRecordingColor = 17;
-tempRecordColor = 9;
-padSavedColor = 3;
-padPlayingColor = 18;
-recordingStateColors = [notRecordingColor, recordingColor, tempRecordColor];
+
+recording_COLOR = 5;
+notRecording_COLOR = 17;
+tempRecord_COLOR = 9;
+padSaved_COLOR = 3;
+padPlaying_COLOR = 18;
+recordingStateColors = [notRecording_COLOR, recording_COLOR, tempRecord_COLOR];
 
 //TODO - find default for params and their corresponding midi values? + blast these out at start of program
 // - or set default params to both ipad and max from here
 
+//TODO - add option to only interpolate/pull up params for voice 1/2
 interpolateParamMaps = {|map1, map2, interp|
     var interpMap = Dictionary.new;
     map1.keys().do({|key|
-        if(key.contains("playrate") || key.contains("pitch"), {
+        var val = (interp*map1[key]) + ((1-interp)*map2[key]);
+        interpMap[key] = val;
+    });
+    interpMap
+};
 
-        }, {
+sendParamMap = {|params|
+    Task({
+        params.keys().do({|key|
+            var msg, val;
+            val = params[key];
+            if(key.contains("playrate") || key.contains("pitch"), {
+                msg = [key ++"/1/" ++val.round, 1];
+            }, {
+                msg = [key, val].flatten;
+            });
+            sendOSC.(msg);
 
+            0.0005.wait;
         });
+    }).play
+};
+
+saveParams = {|msg|
+    var key = msg[0];
+    if(key.contains("playrate") || key.contains("pitch"), { // store adress as as "/i/param", with value being the 1-16 range index
+        var val;
+        var splits = key.split($/);
+        key = "/"splits[1]+"/"+splits[2];
+        val = splits[4].asFloat;
+        paramMap[key] = val;
+    }, {
+        param[key] = msg[1..];             //remember that /volres will be list - use .flatten when re-sending interpolated params
     });
 };
 
+startPresetInterpolation = {|params, padNote|
+    var hz = 60;
+    var maxTime = 4;
+    var numSteps = (interpolationSpeed*maxTime*hz).round;
+    if(interpolationTask.isNil.not,
+        {interpolationTask.stop});
+    paramStart = paramMap.deepCopy;
+    paramEnd = params.deepCopy;
+    launchpadOut.noteOn(0, padNote, padPlaying_COLOR);
+    interpolationTask = Pbind(
+        \delta, 1/hz,
+        \frac, Pseq((0..numSteps)/numSteps)
+        \play, {
+            sendParamMap.(interpolateParamMaps.(paramStart, paramEnd, ~frac));
+            if(~frac == 1, {launchpadOut.noteOn(0, padNote, padSaved_COLOR)})
+        }
+    ).play;
+};
 
 (0..100).do({|i| launchpadOut.noteOff(0, i, 0)});
 
 
-launchpadOut.noteOn(0, loopRecord_BUTTON, notRecordingColor);
+launchpadOut.noteOn(0, loopRecord_BUTTON, notRecording_COLOR);
+launchpadOut.noteOn(0, savePreset_BUTTON, notRecording_COLOR);
+launchpadOut.noteOn(0, presetVoice1_BUTTON, padSaved_COLOR);
+launchpadOut.noteOn(0, presetVoice2_BUTTON, padSaved_COLOR);
 
 oscHandler = {|msg, time, addr, recvPort|
     if(isRecording, {
         recordBuffer.add([tempoClock.beats - recordStartTime, msg]); //recording timestamps relative to recoring start
     });
-    paramMap[msg[0]] = msg[1..];
+    saveParams.(msg);
     maxOscOut.sendRaw(msg.asArray.asRawOSC);
 };
 
@@ -70,8 +125,14 @@ oscAddrs = ["/pos", "/width", "/duration", "/playrate", "/pitch", "/volres", "/q
     });
 });
 
+sendOSC = {|oscArray|
+    // ["OSC ARRAY", oscArray].postln;
+    maxOscOut.sendRaw(oscArray.asArray.asRawOSC);
+    ipadOscOut.sendRaw(oscArray.asArray.asRawOSC);
+};
+
 createLoopPattern = {|recordBuf|
-    var playBuff, rb, pat, sendOSC, timeList, msgList;
+    var playBuff, rb, pat, timeList, msgList;
 
     //all timestamps are relative to recording start - first event is always at 0
     rb = recordBuf.deepCopy;
@@ -80,12 +141,6 @@ createLoopPattern = {|recordBuf|
 
     //convert from timeStamp list to deltaTime list - first event - in pattern, first event plays immediately and delta is the wait afterwards
     playBuff = (0..(rb.size-2)).collect({|i| rb[i+1][0]-rb[i][0]}).collect({|it, i| [it, rb[i][1]]});
-
-    sendOSC = {|oscArray|
-        // ["OSC ARRAY", oscArray].postln;
-        maxOscOut.sendRaw(oscArray.asArray.asRawOSC);
-        ipadOscOut.sendRaw(oscArray.asArray.asRawOSC);
-    };
 
     timeList = playBuff.collect({|it| it[0]});
     msgList = playBuff.collect({|it| it[1]});
@@ -130,13 +185,27 @@ MIDIFunc.cc({|vel, note, chan, port|
             tempRecordingTask = createLoopPattern.(recordBuffer);
             recordBuffer = List.new;
         });
-    })
+    });
+    if(interpSpeed_BUTTONS.includes(note) && (vel == 127), {
+        interpolationSpeed = note/8;
+        interpSpeed_BUTTONS.do({launchpadOut.noteOn(0, note, 0)});
+        launchpadOut.noteOn(0, note, padSaved_COLOR);
+    });
+    if((note == savePreset_BUTTON) && (), {
+        if(vel == 127, {
+            savingParams = true;
+            launchpadOut.noteOn(0, note, recording_COLOR);
+        }, {
+            savingParams = false;
+            launchpadOut.noteOn(0, note, notRecording_COLOR);
+        });
+    });
 });
 
 saveLoopToBank = {|bankNote|
     loopToPadMap[bankNote] = [bankNote, 'loop', tempRecordingTask];
     tempRecordingTask = nil;
-    launchpadOut.noteOn(0, bankNote, padPlayingColor);
+    launchpadOut.noteOn(0, bankNote, padPlaying_COLOR);
     loopRecordingState = 0;
     launchpadOut.noteOn(0, loopRecord_BUTTON, recordingStateColors[loopRecordingState]);
 };
@@ -156,14 +225,25 @@ MIDIFunc.noteOn({|vel, note, chan, port|
                 if(bank[1] == 'loop', {
                     if(bank[2].isPlaying, {bank[2].stop; bank[2].reset},
                         {bank[2].play});
-                    launchpadOut.noteOn(0, note, if(bank[2].isPlaying, padPlayingColor, padSavedColor));
+                    launchpadOut.noteOn(0, note, if(bank[2].isPlaying, padPlaying_COLOR, padSaved_COLOR));
+                });
+
+                if(bank[1] == 'preset', {
+                    if(savingParams, {
+                        loopToPadMap[note] = [note, 'preset', paramMap.deepCopy];
+                    }, {
+                        startPresetInterpolation.(bank[2]);
+                    );
                 });
             })
         },{
-            if(loopRecordingState == 2, {
+            if(loopRecordingState == 2, {//can't save preset if there is a tempRecording
                 saveLoopToBank.(note);
-
-            });
+            }, {
+                if(savingParams, {
+                    loopToPadMap[note] = [note, 'preset', paramMap.deepCopy];
+                });
+            );
         });
     });
 });
