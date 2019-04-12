@@ -19,6 +19,7 @@ recordBuffer = List.new;
 tempRecordingTask = nil;
 loopRecordingState = 0; //0, 1, 2 for notRecording, recording, recordedButNotSaved
 loopToPadMap = Dictionary.new; //[padInd, 'loop'/'preset', pattern/preset-array]
+~glData = loopToPadMap;
 paramMap = Dictionary.new;
 tempoClock = TempoClock.new;
 
@@ -261,6 +262,19 @@ MIDIFunc.noteOn({|vel, note, chan, port|
 
 
 )
+
+//save/load data
+// ~glData.writeArchive("~/".standardizePath ++ "/paramdict.txt")
+// g = Object.readArchive("~/".standardizePath++"paramdict.txt")
+// s = ~glData.asCompileString
+// s.interpret
+
+
+
+
+
+
+
 
 // (
 //

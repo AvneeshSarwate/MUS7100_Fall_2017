@@ -110,20 +110,18 @@ Task({
 
 
 
+s = ~glData.asCompileString
+s.interpret
 
+List[1, 2, ["comment", [3, 2]], { 1.0.rand }].postcs
 
+s = ~glData.write
 
+~glData.writeArchive("~/".standardizePath ++ "/paramdict.txt")
+g = Object.readArchive("~/".standardizePath++"paramdict.txt")
 
-
-
-
-
-
-
-
-
-
-
+"~/".standardizePath++"paramdict.txt"
+PathName.tmp
 
 
 (
