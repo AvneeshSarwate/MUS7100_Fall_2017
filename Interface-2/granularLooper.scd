@@ -1,10 +1,10 @@
 (
-var launchpad, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, padSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendOSC, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask;
+var launchpad, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendOSC, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR;
 
 
 ipadMidiIn = ~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge");
 launchpad = ~getLaunchpadIn.(0);
-launchpadOut = ~getLaunchpadOut.(1);
+launchpadOut = ~getLaunchpadOut.(0);
 launchpadOut.latency = 0;
 maxOscOut = NetAddr("127.0.0.1", 8000);
 ipadOscOut = NetAddr("10.0.0.17", 9000);
@@ -26,13 +26,15 @@ recordStartTime = nil;
 recordEndTime = nil;
 isRecording = false;
 savingParams = false;
+interpolationSpeed = 1/8;
 
 
 recording_COLOR = 5;
 notRecording_COLOR = 17;
 tempRecord_COLOR = 9;
-padSaved_COLOR = 3;
+loopSaved_COLOR = 3;
 padPlaying_COLOR = 18;
+paramSaved_COLOR = 119;
 recordingStateColors = [notRecording_COLOR, recording_COLOR, tempRecord_COLOR];
 
 //TODO - find default for params and their corresponding midi values? + blast these out at start of program
@@ -42,7 +44,7 @@ recordingStateColors = [notRecording_COLOR, recording_COLOR, tempRecord_COLOR];
 interpolateParamMaps = {|map1, map2, interp|
     var interpMap = Dictionary.new;
     map1.keys().do({|key|
-        var val = (interp*map1[key]) + ((1-interp)*map2[key]);
+        var val = ((1-interp)*map1[key]) + (interp*map2[key]) ;
         interpMap[key] = val;
     });
     interpMap
@@ -53,7 +55,7 @@ sendParamMap = {|params|
         params.keys().do({|key|
             var msg, val;
             val = params[key];
-            if(key.contains("playrate") || key.contains("pitch"), {
+            if(key.asString.contains("playrate") || key.asString.contains("pitch"), {
                 msg = [key ++"/1/" ++val.round, 1];
             }, {
                 msg = [key, val].flatten;
@@ -67,32 +69,36 @@ sendParamMap = {|params|
 
 saveParams = {|msg|
     var key = msg[0];
-    if(key.contains("playrate") || key.contains("pitch"), { // store adress as as "/i/param", with value being the 1-16 range index
+    if(key.asString.contains("playrate") || key.asString.contains("pitch"), { // store adress as as "/i/param", with value being the 1-16 range index
         var val;
         var splits = key.split($/);
-        key = "/"splits[1]+"/"+splits[2];
+        key = "/"++splits[1]++"/"++splits[2];
         val = splits[4].asFloat;
         paramMap[key] = val;
     }, {
-        param[key] = msg[1..];             //remember that /volres will be list - use .flatten when re-sending interpolated params
+        paramMap[key] = msg[1..];             //remember that /volres will be list - use .flatten when re-sending interpolated params
     });
 };
 
-startPresetInterpolation = {|params, padNote|
+//TODO - this does not cleanly handle multiple interpolations running at once - they will cross-cut eachother
+startPresetInterpolation = {|targetParams, padNote|
     var hz = 60;
     var maxTime = 4;
     var numSteps = (interpolationSpeed*maxTime*hz).round;
     if(interpolationTask.isNil.not,
         {interpolationTask.stop});
     paramStart = paramMap.deepCopy;
-    paramEnd = params.deepCopy;
+    paramEnd = targetParams.deepCopy;
     launchpadOut.noteOn(0, padNote, padPlaying_COLOR);
     interpolationTask = Pbind(
         \delta, 1/hz,
-        \frac, Pseq((0..numSteps)/numSteps)
+        \frac, Pseq((0..numSteps)/numSteps),
         \play, {
             sendParamMap.(interpolateParamMaps.(paramStart, paramEnd, ~frac));
-            if(~frac == 1, {launchpadOut.noteOn(0, padNote, padSaved_COLOR)})
+            if(~frac == 1, {
+                launchpadOut.noteOn(0, padNote, paramSaved_COLOR);
+                paramMap = paramEnd.deepCopy;
+            })
         }
     ).play;
 };
@@ -102,8 +108,9 @@ startPresetInterpolation = {|params, padNote|
 
 launchpadOut.noteOn(0, loopRecord_BUTTON, notRecording_COLOR);
 launchpadOut.noteOn(0, savePreset_BUTTON, notRecording_COLOR);
-launchpadOut.noteOn(0, presetVoice1_BUTTON, padSaved_COLOR);
-launchpadOut.noteOn(0, presetVoice2_BUTTON, padSaved_COLOR);
+launchpadOut.noteOn(0, presetVoice1_BUTTON, loopSaved_COLOR);
+launchpadOut.noteOn(0, presetVoice2_BUTTON, loopSaved_COLOR);
+launchpadOut.noteOn(0, interpSpeed_BUTTONS[0], 0);
 
 oscHandler = {|msg, time, addr, recvPort|
     if(isRecording, {
@@ -188,10 +195,10 @@ MIDIFunc.cc({|vel, note, chan, port|
     });
     if(interpSpeed_BUTTONS.includes(note) && (vel == 127), {
         interpolationSpeed = note/8;
-        interpSpeed_BUTTONS.do({launchpadOut.noteOn(0, note, 0)});
-        launchpadOut.noteOn(0, note, padSaved_COLOR);
+        interpSpeed_BUTTONS.do({|i| launchpadOut.noteOn(0, i, 0)});
+        launchpadOut.noteOn(0, note, loopSaved_COLOR);
     });
-    if((note == savePreset_BUTTON) && (), {
+    if((note == savePreset_BUTTON) && (vel == 127), {
         if(vel == 127, {
             savingParams = true;
             launchpadOut.noteOn(0, note, recording_COLOR);
@@ -225,15 +232,15 @@ MIDIFunc.noteOn({|vel, note, chan, port|
                 if(bank[1] == 'loop', {
                     if(bank[2].isPlaying, {bank[2].stop; bank[2].reset},
                         {bank[2].play});
-                    launchpadOut.noteOn(0, note, if(bank[2].isPlaying, padPlaying_COLOR, padSaved_COLOR));
+                    launchpadOut.noteOn(0, note, if(bank[2].isPlaying, padPlaying_COLOR, loopSaved_COLOR));
                 });
 
                 if(bank[1] == 'preset', {
                     if(savingParams, {
                         loopToPadMap[note] = [note, 'preset', paramMap.deepCopy];
                     }, {
-                        startPresetInterpolation.(bank[2]);
-                    );
+                        startPresetInterpolation.(bank[2], note);
+                    });
                 });
             })
         },{
@@ -241,16 +248,19 @@ MIDIFunc.noteOn({|vel, note, chan, port|
                 saveLoopToBank.(note);
             }, {
                 if(savingParams, {
+                    "SAVING PARAM TO BLANK BANK".postln;
                     loopToPadMap[note] = [note, 'preset', paramMap.deepCopy];
+                    launchpadOut.noteOn(0, note, paramSaved_COLOR);
+                    savingParams = false;
+                    launchpadOut.noteOn(0, savePreset_BUTTON, notRecording_COLOR);
                 });
-            );
+            });
         });
     });
 });
 
 
 )
-
 
 // (
 //
