@@ -72,7 +72,7 @@ saveParams = {|msg|
     var key = msg[0];
     if(key.asString.contains("playrate") || key.asString.contains("pitch"), { // store adress as as "/i/param", with value being the 1-16 range index
         var val;
-        var splits = key.split($/);
+        var splits = key.asString.split($/);
         key = "/"++splits[1]++"/"++splits[2];
         val = splits[4].asFloat;
         paramMap[key] = val;
@@ -121,13 +121,16 @@ oscHandler = {|msg, time, addr, recvPort|
     maxOscOut.sendRaw(msg.asArray.asRawOSC);
 };
 
-oscAddrs = ["/pos", "/width", "/duration", "/playrate", "/pitch", "/volres", "/q"];
+oscAddrs = ['/pos', '/width', '/duration', '/playrate', '/pitch', '/volres', '/q'];
 
 [1, 2].do({|num|
     oscAddrs.do({|addr|
         OSCFunc.new(oscHandler, "/"++num++addr);
-        if(["/playrate", "/pitch"].includes(addr), {
-            (1..16).do({|i| OSCFunc.new(oscHandler, "/"++num++addr ++ "/1/" ++i);
+        if(['/playrate', '/pitch'].includes(addr), {
+            // "AAAAAA".postln;
+            (1..16).do({|i|
+                OSCFunc.new(oscHandler, "/"++num++addr ++ "/1/" ++i);
+                // ("/"++num++addr ++ "/1/" ++i).postln;
             });
         });
     });
