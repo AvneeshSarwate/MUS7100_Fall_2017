@@ -3110,7 +3110,7 @@
 					"numoutlets" : 3,
 					"outlettype" : [ "", "", "" ],
 					"patching_rect" : [ 618.304229999999961, 407.393616000000009, 77.0, 22.0 ],
-					"restore" : [ "cherokee.aif" ],
+					"restore" : [ "beyonce_halo.mp3" ],
 					"saved_object_attributes" : 					{
 						"parameter_enable" : 0,
 						"parameter_mappable" : 0

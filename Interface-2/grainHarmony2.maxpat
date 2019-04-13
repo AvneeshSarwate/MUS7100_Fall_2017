@@ -39,13 +39,25 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-16",
+					"linecount" : 6,
+					"maxclass" : "comment",
+					"numinlets" : 1,
+					"numoutlets" : 0,
+					"patching_rect" : [ 984.0, 118.0, 233.0, 87.0 ],
+					"text" : "TODO - \n- default preset launching\n- use button to toggle dsp on/off to make show management easier\n- loading presets for a single sampler via toggle"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-6",
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 970.0, 381.0, 191.0, 22.0 ],
-					"text" : "/1/sequencer/1/1 0"
+					"text" : "/1/volres 0.23622 0.193141"
 				}
 
 			}
@@ -994,7 +1006,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 303.0, 34.0, 247.0, 22.0 ],
-									"text" : "/volres 0. 0."
+									"text" : "/volres 0. 0.386282"
 								}
 
 							}
@@ -1257,7 +1269,7 @@
 									"outlettype" : [ "list", "float", "float", "float", "float", "list", "int" ],
 									"parameter_enable" : 0,
 									"patching_rect" : [ 529.0, 620.5, 360.0, 155.0 ],
-									"setfilter" : [ 0, 3, 1, 0, 0, 22.0, 0.000099999997474, 0.445180058479309, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
+									"setfilter" : [ 0, 3, 1, 0, 0, 771.87860107421875, 0.000099999997474, 0.295791208744049, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
 									"varname" : "filtergraph~[1]"
 								}
 
@@ -3139,7 +3151,7 @@
 									"numoutlets" : 1,
 									"outlettype" : [ "" ],
 									"patching_rect" : [ 303.0, 34.0, 247.0, 22.0 ],
-									"text" : "/sequencer/1/1 0"
+									"text" : "/volres 0.23622 0.193141"
 								}
 
 							}
@@ -3402,7 +3414,7 @@
 									"outlettype" : [ "list", "float", "float", "float", "float", "list", "int" ],
 									"parameter_enable" : 0,
 									"patching_rect" : [ 529.0, 620.5, 360.0, 155.0 ],
-									"setfilter" : [ 0, 3, 1, 0, 0, 553.5345458984375, 2.397637605667114, 0.660964012145996, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
+									"setfilter" : [ 0, 3, 1, 0, 0, 130.312423706054688, 1.65354335308075, 0.186390280723572, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
 									"varname" : "filtergraph~[1]"
 								}
 
@@ -3614,8 +3626,6 @@
 									"patching_rect" : [ 131.0, 588.0, 146.0, 22.0 ],
 									"saved_object_attributes" : 									{
 										"enabled" : [ 1 ],
-										"pitchshift" : [ 1.334839854170034 ],
-										"pitchshiftcent" : [ 500 ],
 										"quality" : "best",
 										"reportlatency" : 0,
 										"usecents" : 1
