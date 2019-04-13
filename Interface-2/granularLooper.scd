@@ -1,20 +1,25 @@
 (
-var launchpad, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendOSC, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR;
+var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendOSC, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON;
 
 
 ipadMidiIn = ~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge");
-launchpad = ~getLaunchpadIn.(0);
+ipadMidiOut = ~getMidiOut.("TouchOSC Bridge", "TouchOSC Bridge");
+launchpadIn = ~getLaunchpadIn.(0);
 launchpadOut = ~getLaunchpadOut.(0);
 launchpadOut.latency = 0;
 maxOscOut = NetAddr("127.0.0.1", 8000);
 ipadOscOut = NetAddr("10.0.0.17", 9000);
 
+launchpadOut.latency = 0;
+ipadMidiOut.latency = 0;
 
 loopRecord_BUTTON = 89;
 savePreset_BUTTON = 79;
 presetVoice1_BUTTON = 69;
 presetVoice2_BUTTON = 59;
 interpSpeed_BUTTONS = (1..8);
+syncTempo_BUTTON = 29;
+syncPhase_BUTTON = 29;
 recordBuffer = List.new;
 tempRecordingTask = nil;
 loopRecordingState = 0; //0, 1, 2 for notRecording, recording, recordedButNotSaved
@@ -22,6 +27,9 @@ loopToPadMap = Dictionary.new; //[padInd, 'loop'/'preset', pattern/preset-array]
 ~glData = loopToPadMap;
 paramMap = Dictionary.new;
 tempoClock = TempoClock.new;
+~loadGranularLooperPreset = {
+
+};
 
 recordStartTime = nil;
 recordEndTime = nil;
@@ -111,7 +119,11 @@ launchpadOut.noteOn(0, loopRecord_BUTTON, notRecording_COLOR);
 launchpadOut.noteOn(0, savePreset_BUTTON, notRecording_COLOR);
 launchpadOut.noteOn(0, presetVoice1_BUTTON, loopSaved_COLOR);
 launchpadOut.noteOn(0, presetVoice2_BUTTON, loopSaved_COLOR);
-launchpadOut.noteOn(0, interpSpeed_BUTTONS[0], 0);
+launchpadOut.noteOn(0, interpSpeed_BUTTONS[0], loopSaved_COLOR);
+(0..15).do({|i|
+    ipadMidiOut.control(0, i, 127);
+    ipadMidiOut.control(1, i, 127);
+});
 
 oscHandler = {|msg, time, addr, recvPort|
     if(isRecording, {
@@ -121,7 +133,7 @@ oscHandler = {|msg, time, addr, recvPort|
     maxOscOut.sendRaw(msg.asArray.asRawOSC);
 };
 
-oscAddrs = ['/pos', '/width', '/duration', '/playrate', '/pitch', '/volres', '/q'];
+oscAddrs = ['/pos', '/width', '/duration', '/playrate', '/pitch', '/volres', '/q', '/speed'];
 
 [1, 2].do({|num|
     oscAddrs.do({|addr|
@@ -172,7 +184,7 @@ MIDIFunc.cc({|vel, note, chan, port|
     var stepVal = if(vel == 0, 0, 1);
     maxOscOut.sendMsg("/"++(chan+1)++ "/sequencer/1/"++(note+1), stepVal);
 
-}, ipadMidiIn.uid);
+}, nil, nil, ipadMidiIn.uid);
 
 
 MIDIFunc.cc({|vel, note, chan, port|
@@ -202,7 +214,7 @@ MIDIFunc.cc({|vel, note, chan, port|
         interpSpeed_BUTTONS.do({|i| launchpadOut.noteOn(0, i, 0)});
         launchpadOut.noteOn(0, note, loopSaved_COLOR);
     });
-    if((note == savePreset_BUTTON) && (vel == 127), {
+    if(note == savePreset_BUTTON, {
         if(vel == 127, {
             savingParams = true;
             launchpadOut.noteOn(0, note, recording_COLOR);
@@ -211,7 +223,13 @@ MIDIFunc.cc({|vel, note, chan, port|
             launchpadOut.noteOn(0, note, notRecording_COLOR);
         });
     });
-});
+    if((note == syncTempo_BUTTON) && (vel == 127), {
+        maxOscOut.sendMsg("/syncTempo", 1);
+    });
+    if((note == syncPhase_BUTTON) && (vel == 127), {
+        maxOscOut.sendMsg("/syncPhase", 1);
+    });
+}, nil, nil, launchpadIn.uid);
 
 saveLoopToBank = {|bankNote|
     loopToPadMap[bankNote] = [bankNote, 'loop', tempRecordingTask];
@@ -261,7 +279,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
             });
         });
     });
-});
+}, nil, nil, launchpadIn.uid);
 
 
 )

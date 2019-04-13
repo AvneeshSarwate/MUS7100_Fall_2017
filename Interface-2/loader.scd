@@ -106,9 +106,17 @@ Task({
 
 
 
+b = {5.postln}
+c = 7
+a = Dictionary.new
+a['b'] = {b.()}
+a['c'] = {c.postln}
+a.writeArchive("~/".standardizePath ++ "/SCcl0sure.txt")
+~a2 = Object.readArchive("~/".standardizePath++"SCcl0sure.txt")
+~a2['c'].()
 
-
-
+c =Dictionary.newFrom(a)
+c
 
 s = ~glData.asCompileString
 s.interpret
@@ -117,7 +125,7 @@ List[1, 2, ["comment", [3, 2]], { 1.0.rand }].postcs
 
 s = ~glData.write
 
-~glData.writeArchive("~/".standardizePath ++ "/paramdict.txt")
+~glData.writeArchive("~/".standardizePath ++ "/beyonce_2.txt")
 g = Object.readArchive("~/".standardizePath++"paramdict.txt")
 
 "~/".standardizePath++"paramdict.txt"
