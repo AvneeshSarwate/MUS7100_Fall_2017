@@ -96,72 +96,33 @@ Task({
 }).play)
 
 
+~ip = NetAddr("10.0.0.17", 9000)
+~ip.sendMsg("/2/speed", 0.1)
 
 
 
-// ~getMidiIn = {|device, name|
-//     MIDIClient.sources.select({|elem| (elem.device == device) && (elem.name == name)})[0]
-// };
+~pm.keys()
 
 
 
 
-b = {5.postln}
-c = 7
-a = Dictionary.new
-a['b'] = {b.()}
-a['c'] = {c.postln}
-a.writeArchive("~/".standardizePath ++ "/SCcl0sure.txt")
-~a2 = Object.readArchive("~/".standardizePath++"SCcl0sure.txt")
-~a2['c'].()
-
-c =Dictionary.newFrom(a)
-c
-
-s = ~glData.asCompileString
-s.interpret
-
-List[1, 2, ["comment", [3, 2]], { 1.0.rand }].postcs
-
-s = ~glData.write
-
-~glData.writeArchive("~/".standardizePath ++ "/beyonce_2.txt")
-g = Object.readArchive("~/".standardizePath++"paramdict.txt")
-
-"~/".standardizePath++"paramdict.txt"
-PathName.tmp
 
 
-(
-var qunexus, touchOSCBridge, midiOut;
 
 
-qunexus = ~getMidiIn.("QuNexus", "Port 1");
-touchOSCBridge = ~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge");
-midiOut = MIDIOut.newByName("IAC Driver", "Bus 7");
-midiOut.latency = 0;
 
-MIDIFunc.noteOn({|vel, note, chan, port|
-    "ON".postln;
-    midiOut.noteOn(chan, note, vel);
-}, nil, nil, qunexus.uid);
-"ONSET".postln;
-MIDIFunc.noteOff({|vel, note, chan, port|
-    midiOut.noteOff(chan, note, vel);
-}, nil, nil, qunexus.uid);
-"OFFSET".postln;
-MIDIFunc.cc({|vel, note, chan, port|
-    midiOut.control(chan, note, vel);
-}, nil, nil, touchOSCBridge.uid);
-)
 
-FoxDot.start
-OSCFunc.trace
-5
 
-n = NetAddr.new("127.0.0.1", 50506)
 
-n.sendMsg("/send/GD", "all", "/networkSyncHit", 1)
+a = Object.readArchive("~/".standardizePath++"SCcl0sure.txt")
+
+c = Dictionary.newFrom(a)
+
+~glData[71].writeArchive("~/".standardizePath ++ "/MUS7100_Fall_2017/Interface-2/defaultPreset.sc")
+
+d = Object.readArchive("~/".standardizePath ++ "/MUS7100_Fall_2017/Interface-2/defaultPreset.sc")
+
+d
 
 
 

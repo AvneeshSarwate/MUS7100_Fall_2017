@@ -1,5 +1,5 @@
 (
-var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendOSC, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON;
+var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendOSC, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON, dspOn, dsp_BUTTON;
 
 
 ipadMidiIn = ~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge");
@@ -19,7 +19,8 @@ presetVoice1_BUTTON = 69;
 presetVoice2_BUTTON = 59;
 interpSpeed_BUTTONS = (1..8);
 syncTempo_BUTTON = 29;
-syncPhase_BUTTON = 29;
+syncPhase_BUTTON = 19;
+dsp_BUTTON = 10;
 recordBuffer = List.new;
 tempRecordingTask = nil;
 loopRecordingState = 0; //0, 1, 2 for notRecording, recording, recordedButNotSaved
@@ -27,8 +28,8 @@ loopToPadMap = Dictionary.new; //[padInd, 'loop'/'preset', pattern/preset-array]
 ~glData = loopToPadMap;
 paramMap = Dictionary.new;
 tempoClock = TempoClock.new;
-~loadGranularLooperPreset = {
-
+~loadGranularLooperPreset = {|filename|
+    loopToPadMap = Object.readArchive("~/".standardizePath ++ "/MUS7100_Fall_2017/Interface-2/" ++ filename);
 };
 
 recordStartTime = nil;
@@ -36,6 +37,7 @@ recordEndTime = nil;
 isRecording = false;
 savingParams = false;
 interpolationSpeed = 1/8;
+dspOn = false;
 
 
 recording_COLOR = 5;
@@ -45,6 +47,8 @@ loopSaved_COLOR = 3;
 padPlaying_COLOR = 18;
 paramSaved_COLOR = 119;
 recordingStateColors = [notRecording_COLOR, recording_COLOR, tempRecord_COLOR];
+
+
 
 //TODO - find default for params and their corresponding midi values? + blast these out at start of program
 // - or set default params to both ipad and max from here
@@ -225,9 +229,16 @@ MIDIFunc.cc({|vel, note, chan, port|
     });
     if((note == syncTempo_BUTTON) && (vel == 127), {
         maxOscOut.sendMsg("/syncTempo", 1);
+        ["1 SPEED", paramMap['/1/speed']].postln;
+        ipadOscOut.sendMsg("/2/speed", paramMap['/1/speed'][0]); //TODO - all param values are lists - need a clean abstraction for sending to ipad to resolve multival, multislect, normal vals?
     });
     if((note == syncPhase_BUTTON) && (vel == 127), {
         maxOscOut.sendMsg("/syncPhase", 1);
+    });
+    if((note == dsp_BUTTON) && (vel == 127), {
+        dspOn = dspOn.not;
+        launchpadOut.noteOn(0, dsp_BUTTON, if(dspOn, loopSaved_COLOR, 0));
+        maxOscOut.sendMsg("/dspStatus", if(dspOn, 1, 0));
     });
 }, nil, nil, launchpadIn.uid);
 
@@ -281,6 +292,12 @@ MIDIFunc.noteOn({|vel, note, chan, port|
     });
 }, nil, nil, launchpadIn.uid);
 
+
+
+paramMap = Object.readArchive("~/".standardizePath ++ "/MUS7100_Fall_2017/Interface-2/defaultPreset.sc")[2];
+paramMap.postln;
+~pm = paramMap;
+sendParamMap.(paramMap);
 
 )
 
