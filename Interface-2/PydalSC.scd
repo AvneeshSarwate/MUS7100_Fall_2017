@@ -4,6 +4,7 @@
 midiOut = MIDIOut.newByName("IAC Driver", "Bus 3");
 instrumentMidiOut = MIDIOut.newByName("IAC Driver", "Bus 2");
 midiOut.latency = 0;
+instrumentMidiOut.latency = 0;
 
 //endpoints for various applications that I control using Pydal
 pythonOSCport = NetAddr("localhost", 34345);

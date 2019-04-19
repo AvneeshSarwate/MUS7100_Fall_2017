@@ -136,6 +136,7 @@ oscHandler = {|msg, time, addr, recvPort|
     });
     saveParams.(msg);
     maxOscOut.sendRaw(msg.asArray.asRawOSC);
+    visalsOscOut.sendRaw(msg.asArray.asRawOSC);
 };
 
 oscAddrs = ['/pos', '/width', '/duration', '/playrate', '/pitch', '/volres', '/q', '/speed'];
@@ -157,6 +158,7 @@ sendOSC = {|oscArray|
     // ["OSC ARRAY", oscArray].postln;
     maxOscOut.sendRaw(oscArray.asArray.asRawOSC);
     ipadOscOut.sendRaw(oscArray.asArray.asRawOSC);
+    visalsOscOut.sendRaw(oscArray.asArray.asRawOSC);
 };
 
 createLoopPattern = {|recordBuf|
