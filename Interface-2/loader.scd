@@ -96,6 +96,87 @@ Task({
 }).play)
 
 
+
+
+
+(
+~testEnvVar = "SHOULD BE FINE";
+Task({
+    "./masterTempoClock.scd".loadRelative;
+    0.01.wait;
+
+    //initialize specific values for env varis AFTER masterTempoClock, because that will set their default values;
+    ~numSliderToggles = 5;
+    ~miniLooperUseKeyboardChan = true;
+    ~fwdTouchOSCLights=true;
+    ~touchOSCBridge = ~getMidiOut.("TouchOSC Bridge", "TouchOSC Bridge");
+    ~touchOSCBridge.latency = 0;
+
+
+    "./algoKeys.scd".loadRelative;
+    0.01.wait;
+    "./sceneBuilder.scd".loadRelative;
+    0.01.wait;
+
+   "./spatializeKeyboard.scd".loadRelative;
+    0.01.wait;
+    "./sliderPad.scd".loadRelative;
+    0.01.wait;
+    ~bounceMidi.(~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge"), ~getMidiOut.("IAC Driver", "Bus 7"));
+    0.1.wait;
+    ~setSliderBanks.([ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, [ 63, 63, 63, 66, 68 ], 0, 0, [ 71, 37, 63, 24, 93 ], [ 63, 104, 62, 107, 84 ], 0, [ 74, 90, 53, 90, 74 ], 0, 0, 0, [ 63, 63, 63, 63, 63 ], [ 63, 63, 63, 63, 84 ], [ 63, 47, 63, 47, 84 ], [ 63, 38, 63, 37, 84 ], [ 63, 101, 62, 100, 84 ], [ 79, 101, 62, 100, 79 ], [ 69, 90, 53, 90, 69 ], 0, 0, 0 ]);
+
+    "./PydalSC.scd".loadRelative;
+    0.01.wait;
+    "./LFOFM.scd".loadRelative;
+    0.01.wait;
+
+    /* "./triplePlayBounce.scd".loadRelative;
+    0.01.wait;
+
+    "./granularLooper.scd".loadRelative;
+    0.01.wait;*/
+    0.5.wait;
+    ~setBPM.(160);
+
+}).play
+)
+
+
+
+
+
+
+
+
+(
+"./masterTempoClock.scd".loadRelative;
+m = ~getMidiOut.("IAC Driver", "Bus 2");
+n = NetAddr("localhost", 57120);
+)
+
+
+(
+f = {
+    var midiIn = ~getMidiIn.("IAC Driver", "Bus 2");
+    MIDIFunc.noteOn({|vel, note, chan, port|
+        ["AYY", vel, note, chan].postln;
+    }, nil, nil, midiIn.uid);
+    OSCFunc({|msg, time, addr, recvPort|
+        msg.postln
+    }, "/testmsg");
+};
+f.()
+)
+
+
+
+
+
+m.noteOn(5, 24, 52)
+n.sendMsg("/testmsg", 5)
+
+
 ~ip = NetAddr("10.0.0.17", 9000)
 ~ip.sendMsg("/2/speed", 0.1)
 
@@ -103,14 +184,11 @@ Task({
 
 ~pm.keys()
 
+MIDIFunc.reset
 
 
 
-
-
-
-
-
+this.functionCompileContext
 
 
 
