@@ -131,10 +131,10 @@ Task({
     "./LFOFM.scd".loadRelative;
     0.01.wait;
 
-    /* "./triplePlayBounce.scd".loadRelative;
+    "./triplePlayBounce.scd".loadRelative;
     0.01.wait;
 
-    "./granularLooper.scd".loadRelative;
+    /* "./granularLooper.scd".loadRelative;
     0.01.wait;*/
     0.5.wait;
     ~setBPM.(160);

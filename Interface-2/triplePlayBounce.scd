@@ -1,6 +1,6 @@
 (
 
-var triplePlay, midiOut, pedal, quneo, jsPort, brushSpeeds, brushAngles, maxBrushSpeed;
+var triplePlay, midiOut, pedal, quneo, jsPort, brushSpeeds, brushAngles, maxBrushSpeed, controlChannel;
 
 triplePlay = ~getMidiIn.("Fishman TriplePlay", "TP Guitar");
 pedal = ~getMidiIn.("FBV Express Mk II", "Port 1");
@@ -9,6 +9,7 @@ midiOut = ~getMidiOut.("IAC Driver", "Bus 2");
 jsPort = NetAddr("localhost", 5432);
 
 midiOut.latency = 0;
+controlChannel = 7;
 
 //TODO: for 4 notes
 brushSpeeds = [0, 0, 0, 0];
@@ -94,9 +95,9 @@ MIDIFunc.noteOn({|vel, note, chan, port|
     if([44, 45, 48, 49, 36, 37, 40, 41].includes(note), {
 
         Task({
-            midiOut.noteOn(7, note, vel);
+            midiOut.noteOn(controlChannel, note, vel);
             0.1.wait;
-            midiOut.noteOn(7, note, 0);
+            midiOut.noteOn(controlChannel, note, 0);
             ["QUNEO NOTE", note, chan, 5].postln;
         }).play;
     })
@@ -104,11 +105,11 @@ MIDIFunc.noteOn({|vel, note, chan, port|
 
 MIDIFunc.cc({|vel, note, chan, port|
     if((note == 16), {
-        midiOut.noteOn(0, 1, vel);
+        midiOut.noteOn(controlChannel, 1, vel);
         ["loop",1, vel].postln;
     });
     if((note == 17), {
-        midiOut.noteOn(0, 2, vel);
+        midiOut.noteOn(controlChannel, 2, vel);
         ["loop",2, vel].postln;
     });
     if((note == 18) && (vel == 127), {
