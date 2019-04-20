@@ -1,6 +1,6 @@
 (
 
-var triplePlay, midiOut, pedal, quneo, jsPort, brushSpeed, brushAngle, maxBrushSpeed;
+var triplePlay, midiOut, pedal, quneo, jsPort, brushSpeeds, brushAngles, maxBrushSpeed;
 
 triplePlay = ~getMidiIn.("Fishman TriplePlay", "TP Guitar");
 pedal = ~getMidiIn.("FBV Express Mk II", "Port 1");
@@ -11,26 +11,26 @@ jsPort = NetAddr("localhost", 5432);
 midiOut.latency = 0;
 
 //TODO: for 4 notes
-brushSpeed = 0;
-brushAngle = 0;
+brushSpeeds = [0, 0, 0, 0];
+brushAngles = [0, 0, 0, 0];
 
 maxBrushSpeed = 10;
 
 
 ~hz = 60;
 
-~noteQueue = List.fill(1, {0}); //TODO: for 4 notes
+~noteQueue = List.fill(4, {List.fill(1, {0})}); //TODO: for 4 notes
 
 //attack-decay envelope
 //TODO: for 4 notes - add index
-~speedEnv = {|attackRatio, time, peak|
+~speedEnv = {|attackRatio, time, peak, brushInd|
     var numSteps = time * ~hz;
     var aRamp = List.fill((attackRatio*numSteps).floor, {peak})/(attackRatio*numSteps).floor;
     var dRamp = List.fill(((1-attackRatio)*numSteps).ceil, {-1*peak})/((1-attackRatio)*numSteps).ceil;
     var pat = Pbind(
         \delta, 1/~hz,
         \increment, Pseq(aRamp++dRamp),
-        \play, {brushSpeed = brushSpeed + ~increment} //TODO: for 4 notes - add index
+        \play, {brushSpeeds[brushInd] = brushSpeeds[brushInd] + ~increment} //TODO: for 4 notes - add index
     );
     pat.play;
     pat
@@ -39,31 +39,31 @@ maxBrushSpeed = 10;
 //TODO: for 4 notes - map speed array through bounding function
 ~sendSpeedPat = Pbind(
     \delta, Pseq([1/60], inf),
-    \play, {jsPort.sendMsg("/brushSpeed", min(max(brushSpeed, -1*maxBrushSpeed), maxBrushSpeed))}
+    \play, {jsPort.sendRaw((["/brushSpeeds"]++ brushSpeeds.collect({|speed| min(max(speed, -1*maxBrushSpeed), maxBrushSpeed)})).asArray.asRawOSC)}
 );
 ~sendSpeedPat.play;
 
 //TODO: for 4 notes
 ~sendAnglePat = Pbind(
     \delta, Pseq([1/60], inf),
-    \play, {jsPort.sendMsg("/brushAngle", brushAngle)}
+    \play, {jsPort.sendRaw( (["/brushAngles"]++brushAngles.flat).asArray.asRawOSC);}
 );
 ~sendAnglePat.play;
 
 //TODO: for 4 notes - add index
-~angleEnv = {|time, maxAngle, maxInterval|
-    var interval = ~noteQueue.wrapAt(-1) - ~noteQueue.wrapAt(-2);
+~angleEnv = {|time, maxAngle, maxInterval, brushInd|
+    var interval = ~noteQueue[brushInd].wrapAt(-1) - ~noteQueue[brushInd].wrapAt(-2);
     var clippedInterval = min(maxInterval, abs(interval)) * sign(interval);
     var angle = (clippedInterval/maxInterval) * maxAngle;
     var pat = Pbind(
         \delta, 1/~hz,
-        \increment, Pseq(List.fill((time*~hz).floor, {angle})/(time*~hz).floor),
-        \play, {brushAngle = brushAngle + ~increment; brushAngle.postln} //TODO: for 4 notes - add index
+        \increment, Pseq(List.fill((time*~hz).floor, {angle/(time*~hz).floor})),
+        \play, {brushAngles[brushInd] = brushAngles[brushInd] + ~increment; [brushInd, ~increment, brushAngles].postln; } //TODO: for 4 notes - add index
     );
+    // ["THE INCREMENT", List.fill((time*~hz).floor, {angle/(time*~hz).floor}), "angle", angle, "time", time, "numSteps", (time*~hz).floor].postln;
     pat.play;
     pat
 };
-
 
 //TODO - and envelope for fadeout on noteoff
 
@@ -71,10 +71,11 @@ maxBrushSpeed = 10;
 MIDIFunc.noteOn({|vel, note, chan, port|
     if(chan < 4, {
         var noteTime = 0.5;
+        var brushInd = chan;
         //TODO: for 4 notes - add index by chan
-        ~noteQueue.add(note);
-        ~speedEnv.(0.1, noteTime, 10);
-        ~angleEnv.(0.5/5, pi/2, 5);
+        ~noteQueue[brushInd].add(note);
+        ~speedEnv.(0.1, noteTime, 10, brushInd);
+        ~angleEnv.(0.5/5, pi/2, 5, brushInd);
         [vel, note, chan, port].postln;
         //Todo - send noteOn event and velocity
 
