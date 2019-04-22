@@ -91,13 +91,37 @@ MIDIFunc.noteOn({|vel, note, chan, port|
     })
 }, nil, nil, triplePlay.uid);
 
+
+/*MIDIFunc.noteOff({|vel, note, chan, port|
+    if(chan < 4, {
+        var noteTime = 0.5;
+        var brushInd = chan;
+        //TODO: for 4 notes - add index by chan
+        ~noteQueue[brushInd].add(note);
+        ~speedEnv.(0.1, noteTime, 10, brushInd);
+        ~angleEnv.(0.5/5, pi/2, 5, brushInd);
+        [vel, note, chan, port].postln;
+        //Todo - send noteOn event and velocity
+
+    }, {
+        Task({
+            ["GUITAR OFF", chan].postln;
+            midiOut.allNotesOff(chan);
+            0.01.wait;
+            midiOut.noteOn(chan, note, vel);
+            ["GUITAR ON", note, chan].postln;
+        }).play;
+    })
+}, nil, nil, triplePlay.uid);*/
+
+
 MIDIFunc.noteOn({|vel, note, chan, port|
     if([44, 45, 48, 49, 36, 37, 40, 41].includes(note), {
-
+        ["QUNEOP PAD", note].postln;
         Task({
             midiOut.noteOn(controlChannel, note, vel);
             0.1.wait;
-            midiOut.noteOn(controlChannel, note, 0);
+            midiOut.noteOff(controlChannel, note, 0);
             ["QUNEO NOTE", note, chan, 5].postln;
         }).play;
     })
