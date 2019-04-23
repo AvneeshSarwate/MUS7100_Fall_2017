@@ -131,6 +131,12 @@ MIDIFunc.noteOn({|vel, note, chan, port|
     })
 }, nil, nil, quneo.uid);
 
+
+numLoopsPlaying = 0;
+numLoopsSaved = 0;
+looperState = 'stopped'; //vs playing, recording
+undoState = 'nothing'; //vs undoable or redoable - only 'nothing' at start, after first record, or after undoing a clear
+
 MIDIFunc.cc({|vel, note, chan, port|
     if((note == 16), {
         midiOut.noteOn(controlChannel, 1, vel);
@@ -151,6 +157,35 @@ MIDIFunc.cc({|vel, note, chan, port|
     if((note == 7), {
         midiOut.control(0, note, vel);
     });
+
+
+    /*if((note == 16), { //Bot Left
+        midiOut.noteOn(controlChannel, 1, vel);
+        ["loop",1, vel].postln;
+        //if !stopped: state = stop, loopsPlaying = 0
+        //if stopped: loopCountStack.push, loopsSaved = 0;
+    });
+    if((note == 17), { //Bot Right
+        midiOut.noteOn(controlChannel, 2, vel);
+        ["loop",2, vel].postln;
+        //play button - overdubs when playing, plays when stopped
+        //if playing: state = recording, else state = playing
+        //if recording: loopCountStack.push, numLoopsSaved++, loopState = playing, loopState=undoable
+        //numLoopsPlaying = numLoopsSaved
+    });
+    if((note == 18) && (vel == 127), { //Top Left
+        midiOut.allNotesOff(5);
+        ["Notes off", 5].postln;
+        //undo/redo
+    });
+    if((note == 19) && (vel == 127), { //Top Right
+        midiOut.allNotesOff(4);
+        ["Notes off", 4].postln;
+        //turn off notes for all drones
+    });
+    if((note == 7), {
+        midiOut.control(0, note, vel);
+    });*/
 
 }, nil, nil, pedal.uid);
 
