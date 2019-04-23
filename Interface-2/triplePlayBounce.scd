@@ -136,6 +136,9 @@ numLoopsPlaying = 0;
 numLoopsSaved = 0;
 looperState = 'stopped'; //vs playing, recording
 undoState = 'nothing'; //vs undoable or redoable - only 'nothing' at start, after first record, or after undoing a clear
+recordingCount = 0;
+loopCountUndoStack = List.new;
+loopCountRedoStack = List.new;
 
 MIDIFunc.cc({|vel, note, chan, port|
     if((note == 16), {
@@ -162,21 +165,24 @@ MIDIFunc.cc({|vel, note, chan, port|
     /*if((note == 16), { //Bot Left
         midiOut.noteOn(controlChannel, 1, vel);
         ["loop",1, vel].postln;
+      //if recordingCount > 0
         //if !stopped: state = stop, loopsPlaying = 0
-        //if stopped: loopCountStack.push, loopsSaved = 0;
+        //if stopped: loopCountUndoStack.push, loopsSaved = 0; loopstate = cleared
     });
     if((note == 17), { //Bot Right
         midiOut.noteOn(controlChannel, 2, vel);
         ["loop",2, vel].postln;
         //play button - overdubs when playing, plays when stopped
         //if playing: state = recording, else state = playing
-        //if recording: loopCountStack.push, numLoopsSaved++, loopState = playing, loopState=undoable
+        //if recording: loopCountUndoStack.push, numLoopsSaved++, loopState = playing, recordingCount++,  ifRecordingCount>1: loopState=undoable,
         //numLoopsPlaying = numLoopsSaved
     });
     if((note == 18) && (vel == 127), { //Top Left
         midiOut.allNotesOff(5);
         ["Notes off", 5].postln;
-        //undo/redo
+        //undo/redo -
+        //if undoable - loopCountRedoStack.push(loopCount), loopCount = loopCountUndoStack.pop, loopState = redoable
+        //reverse of ^
     });
     if((note == 19) && (vel == 127), { //Top Right
         midiOut.allNotesOff(4);
