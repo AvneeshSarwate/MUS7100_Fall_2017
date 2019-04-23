@@ -1,6 +1,6 @@
 (
 var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendOSC, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON, dspOn, dsp_BUTTON, visalsOscOut;
-var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON, launchpadIndex, controlHandler, controlHandlerWrapper;
+var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON, launchpadIndex, controlHandler, controlHandlerWrapper, masterClockOSCport;
 
 launchpadIndex = 0;
 ipadMidiIn = ~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge");
@@ -11,6 +11,7 @@ launchpadOut.latency = 0;
 maxOscOut = NetAddr("127.0.0.1", 8000);
 ipadOscOut = NetAddr("10.0.0.17", 9000);
 visalsOscOut = NetAddr("127.0.0.1", 5432);
+masterClockOSCport = NetAddr("localhost", 57120);
 
 launchpadOut.latency = 0;
 ipadMidiOut.latency = 0;
@@ -51,7 +52,7 @@ setLight = {|note, color, lightIndexOverride=false|
 cycleLight = {
     //TODO: change name of this port to something like SCOSCport
     Task({
-        ["NEW LIGHT INDEX TRIGGER FROM SLIDER PAD", ~lightIndex[launchpadIndex]].postln;
+        ["NEW LIGHT INDEX TRIGGER FROM GRANULAR LOOPER", ~lightIndex[launchpadIndex]].postln;
         masterClockOSCport.sendMsg("/lightsChange", (~lightIndex[launchpadIndex]+1)%~lightIndexes[launchpadIndex].size);
         0.01.wait;
         ~lightIndex[launchpadIndex] = (~lightIndex[launchpadIndex]+1)%~lightIndexes[launchpadIndex].size;
@@ -65,7 +66,7 @@ OSCFunc({|msg, time, addr, recvPort|
         (0..99).do({|i| colorStateLog.add(0)});
         padColorState.keys.do({|key| setLight.(key, padColorState[key], true);
             colorStateLog[key]=padColorState[key]});
-        ["CHANGING TO SLIDER PAD LIGHTS", msg[1], colorStateLog].postln;
+        ["CHANGING TO GRANULAR LOOPER LIGHTS", msg[1], colorStateLog].postln;
     });
 
 }, "/lightsChange");
@@ -80,7 +81,7 @@ lightIndex = if(~lightIndexes[launchpadIndex].size == 0,
     }
 );
 ~lightIndex[launchpadIndex] = lightIndex;
-["LIGHT INDEX SLIDER PAD", ~lightIndex[launchpadIndex], lightIndex].postln;
+["LIGHT INDEX GRANULAR LOOPER", ~lightIndex[launchpadIndex], lightIndex].postln;
 //TODO - add ~lightIndex[launchpadIndex] == lightIndex condition to all launchpad note/cc hanlders
 //----------------------------------------------
 
@@ -183,28 +184,28 @@ startPresetInterpolation = {|targetParams, padNote|
         {interpolationTask.stop});
     paramStart = paramMap.deepCopy;
     paramEnd = targetParams.deepCopy;
-    launchpadOut.noteOn(0, padNote, padPlaying_COLOR);
+    setLight.(padNote, padPlaying_COLOR);
     interpolationTask = Pbind(
         \delta, 1/hz,
         \frac, Pseq((0..numSteps)/numSteps),
         \play, {
             sendParamMap.(interpolateParamMaps.(paramStart, paramEnd, ~frac));
             if(~frac == 1, {
-                launchpadOut.noteOn(0, padNote, paramSaved_COLOR);
+                setLight.(padNote, paramSaved_COLOR);
                 paramMap = paramEnd.deepCopy;
             })
         }
     ).play;
 };
 
-(0..100).do({|i| launchpadOut.noteOff(0, i, 0)});
+(0..99).do({|i| setLight.(i, 0)});
 
 
-launchpadOut.noteOn(0, loopRecord_BUTTON, notRecording_COLOR);
-launchpadOut.noteOn(0, savePreset_BUTTON, notRecording_COLOR);
-launchpadOut.noteOn(0, presetVoice1_BUTTON, loopSaved_COLOR);
-launchpadOut.noteOn(0, presetVoice2_BUTTON, loopSaved_COLOR);
-launchpadOut.noteOn(0, interpSpeed_BUTTONS[0], loopSaved_COLOR);
+setLight.(loopRecord_BUTTON, notRecording_COLOR);
+setLight.(savePreset_BUTTON, notRecording_COLOR);
+setLight.(presetVoice1_BUTTON, loopSaved_COLOR);
+setLight.(presetVoice2_BUTTON, loopSaved_COLOR);
+setLight.(interpSpeed_BUTTONS[0], loopSaved_COLOR);
 (0..15).do({|i|
     ipadMidiOut.control(0, i, 127);
     ipadMidiOut.control(1, i, 127);
@@ -277,7 +278,7 @@ MIDIFunc.cc({|vel, note, chan, port|
 controlHandler = {|vel, note, chan, port|
     if((note == loopRecord_BUTTON) && (vel == 127), {
         loopRecordingState = (loopRecordingState + 1) % 3;
-        launchpadOut.noteOn(0, loopRecord_BUTTON, recordingStateColors[loopRecordingState]);
+        setLight.(loopRecord_BUTTON, recordingStateColors[loopRecordingState]);
         if(loopRecordingState == 0, {
             tempRecordingTask.stop;
             tempRecordingTask.free;
@@ -298,16 +299,16 @@ controlHandler = {|vel, note, chan, port|
     });
     if(interpSpeed_BUTTONS.includes(note) && (vel == 127), {
         interpolationSpeed = note/8;
-        interpSpeed_BUTTONS.do({|i| launchpadOut.noteOn(0, i, 0)});
-        launchpadOut.noteOn(0, note, loopSaved_COLOR);
+        interpSpeed_BUTTONS.do({|i| setLight.(i, 0)});
+        setLight.(note, loopSaved_COLOR);
     });
     if(note == savePreset_BUTTON, {
         if(vel == 127, {
             savingParams = true;
-            launchpadOut.noteOn(0, note, recording_COLOR);
+            setLight.(note, recording_COLOR);
         }, {
             savingParams = false;
-            launchpadOut.noteOn(0, note, notRecording_COLOR);
+            setLight.(note, notRecording_COLOR);
         });
     });
     if((note == syncTempo_BUTTON) && (vel == 127), {
@@ -320,8 +321,14 @@ controlHandler = {|vel, note, chan, port|
     });
     if((note == dsp_BUTTON) && (vel == 127), {
         dspOn = dspOn.not;
-        launchpadOut.noteOn(0, dsp_BUTTON, if(dspOn, loopSaved_COLOR, 0));
+        setLight.(dsp_BUTTON, if(dspOn, loopSaved_COLOR, 0));
         maxOscOut.sendMsg("/dspStatus", if(dspOn, 1, 0));
+    });
+    if((note == cycleLight_BUTTON) && (vel !=0), {
+        // ["MULTILOOP BUTTON CYCLE HIT", ~lightIndex[launchpadIndex], lightIndex].postln;
+        if(~cycling, {cycleLight.()})
+        // if(~truncateLoop, {setLight.(cycleLight_BUTTON, 45)}, {setLight.(cycleLight_BUTTON, 0)});
+        // ~truncateLoop = ~truncateLoop.not; //light on means NOT TRUNCATING
     });
 };
 
@@ -338,9 +345,9 @@ MIDIFunc.cc(controlHandlerWrapper, nil, nil, launchpadIn.uid);
 saveLoopToBank = {|bankNote|
     loopToPadMap[bankNote] = [bankNote, 'loop', tempRecordingTask];
     tempRecordingTask = nil;
-    launchpadOut.noteOn(0, bankNote, padPlaying_COLOR);
+    setLight.(bankNote, padPlaying_COLOR);
     loopRecordingState = 0;
-    launchpadOut.noteOn(0, loopRecord_BUTTON, recordingStateColors[loopRecordingState]);
+    setLight.(loopRecord_BUTTON, recordingStateColors[loopRecordingState]);
 };
 
 MIDIFunc.noteOn({|vel, note, chan, port|
@@ -358,7 +365,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
                 if(bank[1] == 'loop', {
                     if(bank[2].isPlaying, {bank[2].stop; bank[2].reset},
                         {bank[2].play});
-                    launchpadOut.noteOn(0, note, if(bank[2].isPlaying, padPlaying_COLOR, loopSaved_COLOR));
+                    setLight.(note, if(bank[2].isPlaying, padPlaying_COLOR, loopSaved_COLOR));
                 });
 
                 if(bank[1] == 'preset', {
@@ -376,9 +383,9 @@ MIDIFunc.noteOn({|vel, note, chan, port|
                 if(savingParams, {
                     "SAVING PARAM TO BLANK BANK".postln;
                     loopToPadMap[note] = [note, 'preset', paramMap.deepCopy];
-                    launchpadOut.noteOn(0, note, paramSaved_COLOR);
+                    setLight.(note, paramSaved_COLOR);
                     savingParams = false;
-                    launchpadOut.noteOn(0, savePreset_BUTTON, notRecording_COLOR);
+                    setLight.(savePreset_BUTTON, notRecording_COLOR);
                 });
             });
         });

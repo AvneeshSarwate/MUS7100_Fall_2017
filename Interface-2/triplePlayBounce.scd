@@ -15,7 +15,7 @@ controlChannel = 7;
 brushSpeeds = [0, 0, 0, 0];
 brushAngles = [0, 0, 0, 0];
 
-maxBrushSpeed = 10;
+maxBrushSpeed = 5;
 
 
 ~hz = 60;
@@ -56,14 +56,18 @@ maxBrushSpeed = 10;
     var interval = ~noteQueue[brushInd].wrapAt(-1) - ~noteQueue[brushInd].wrapAt(-2);
     var clippedInterval = min(maxInterval, abs(interval)) * sign(interval);
     var angle = (clippedInterval/maxInterval) * maxAngle;
-    var pat = Pbind(
-        \delta, 1/~hz,
-        \increment, Pseq(List.fill((time*~hz).floor, {angle/(time*~hz).floor})),
-        \play, {brushAngles[brushInd] = brushAngles[brushInd] + ~increment; [brushInd, ~increment, brushAngles].postln; } //TODO: for 4 notes - add index
-    );
-    // ["THE INCREMENT", List.fill((time*~hz).floor, {angle/(time*~hz).floor}), "angle", angle, "time", time, "numSteps", (time*~hz).floor].postln;
-    pat.play;
-    pat
+    if(interval == 0, {
+        brushAngles[brushInd] = brushAngles[brushInd] + pi;
+    },{
+        var pat = Pbind(
+            \delta, 1/~hz,
+            \increment, Pseq(List.fill((time*~hz).floor, {angle/(time*~hz).floor})),
+            \play, {brushAngles[brushInd] = brushAngles[brushInd] + ~increment; [brushInd, ~increment, brushAngles].postln; } //TODO: for 4 notes - add index
+        );
+        // ["THE INCREMENT", List.fill((time*~hz).floor, {angle/(time*~hz).floor}), "angle", angle, "time", time, "numSteps", (time*~hz).floor].postln;
+        pat.play;
+        pat
+    });
 };
 
 //TODO - and envelope for fadeout on noteoff
@@ -75,7 +79,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
         var brushInd = chan;
         //TODO: for 4 notes - add index by chan
         ~noteQueue[brushInd].add(note);
-        ~speedEnv.(0.1, noteTime, 10, brushInd);
+        ~speedEnv.(0.1, noteTime, maxBrushSpeed, brushInd);
         ~angleEnv.(0.5/5, pi/2, 5, brushInd);
         [vel, note, chan, port].postln;
         //Todo - send noteOn event and velocity

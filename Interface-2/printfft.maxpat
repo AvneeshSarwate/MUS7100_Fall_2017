@@ -76,13 +76,13 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-120",
-					"linecount" : 22,
+					"linecount" : 14,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 789.0, 540.0, 50.0, 303.0 ],
-					"text" : "/fftValues 0 0 0 2 1 25 24 7 17 24 6 11 26 31 29 24 29 32 12 71 80 21 27 14 84 74 12 20 17 53 44 31 47 30 10 9 21 7 22 6 6 5 1 9 13 9 6 9 15 1"
+					"patching_rect" : [ 789.0, 540.0, 50.0, 196.0 ],
+					"text" : "/fftValues 0 0 0 0 0 0 1 2 0 0 1 1 0 0 0 1 1 0 0 2 3 0 1 0 1 4 4 1 1 1 0 1 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0"
 				}
 
 			}
@@ -190,7 +190,7 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "", "bang" ],
 					"parameter_enable" : 0,
-					"patching_rect" : [ 1332.5, 417.0, 132.0, 62.0 ],
+					"patching_rect" : [ 1326.0, 413.0, 132.0, 62.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 384.0, 209.0, 132.0, 62.0 ]
 				}
