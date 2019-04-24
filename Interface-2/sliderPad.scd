@@ -64,7 +64,7 @@ cycleLight = {
     //TODO: change name of this port to something like SCOSCport
     Task({
         ["NEW LIGHT INDEX TRIGGER FROM SLIDER PAD", ~lightIndex[launchpadIndex]].postln;
-        masterClockOSCport.sendMsg("/lightsChange", (~lightIndex[launchpadIndex]+1)%~lightIndexes[launchpadIndex].size);
+        masterClockOSCport.sendMsg("/lightsChange", (~lightIndex[launchpadIndex]+1)%~lightIndexes[launchpadIndex].size, launchpadIndex);
         0.01.wait;
         ~lightIndex[launchpadIndex] = (~lightIndex[launchpadIndex]+1)%~lightIndexes[launchpadIndex].size;
     }).play;
@@ -72,7 +72,7 @@ cycleLight = {
 
 //msg[1] is lightIndex
 OSCFunc({|msg, time, addr, recvPort|
-    if(msg[1].asInt == lightIndex, {
+    if((msg[1].asInt == lightIndex) && (msg[2] == launchpadIndex), {
         var colorStateLog = List.new(100);
         (0..99).do({|i| colorStateLog.add(0)});
         padColorState.keys.do({|key| setLight.(key, padColorState[key], true);
