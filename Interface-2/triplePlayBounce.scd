@@ -90,6 +90,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
             0.01.wait;
             midiOut.noteOn(chan, note, vel);
             ["GUITAR ON", note, chan].postln;
+            jsPort.sendMsg("/droneNotes", chan-4, note);
         }).play;
     })
 }, nil, nil, triplePlay.uid);
@@ -236,6 +237,8 @@ MIDIFunc.cc({|vel, note, chan, port|
         if((note == 19), { //Top Right
             midiOut.allNotesOff(4);
             midiOut.allNotesOff(5);
+            jsPort.sendMsg("/droneNotes", 0, -1);
+            jsPort.sendMsg("/droneNotes", 1, -1);
             ["Notes off", 4, 5].postln;
             //turn off notes for all drones
         });

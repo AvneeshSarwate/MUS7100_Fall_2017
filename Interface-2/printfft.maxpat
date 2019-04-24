@@ -76,13 +76,13 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-120",
-					"linecount" : 14,
+					"linecount" : 15,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 789.0, 540.0, 50.0, 196.0 ],
-					"text" : "/fftValues 0 0 0 0 0 0 1 2 0 0 1 1 0 0 0 1 1 0 0 2 3 0 1 0 1 4 4 1 1 1 0 1 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0"
+					"patching_rect" : [ 789.0, 540.0, 55.0, 210.0 ],
+					"text" : "/fftValues 0 0 0 0 1 16 34 15 6 8 0 8 9 2 7 12 14 10 19 12 29 9 18 4 11 18 16 8 7 6 8 14 12 6 7 8 11 3 2 1 6 5 1 1 2 2 4 13 9 4"
 				}
 
 			}
@@ -141,7 +141,7 @@
 					"numinlets" : 0,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 585.0, 219.339416999999997, 86.0, 22.0 ],
+					"patching_rect" : [ 585.0, 144.339416999999997, 86.0, 22.0 ],
 					"text" : "r fftRowsBang"
 				}
 
@@ -400,16 +400,7 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-120", 1 ],
-					"order" : 1,
-					"source" : [ "obj-128", 1 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-123", 0 ],
-					"order" : 0,
 					"source" : [ "obj-128", 1 ]
 				}
 
@@ -517,13 +508,6 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-10", 0 ],
-					"source" : [ "obj-42", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-1", 0 ],
 					"order" : 1,
 					"source" : [ "obj-5", 0 ]
@@ -541,8 +525,8 @@
  ],
 		"dependency_cache" : [ 			{
 				"name" : "printfft_sub_simp.maxpat",
-				"bootpath" : "~/Dropbox",
-				"patcherrelativepath" : "../../Dropbox",
+				"bootpath" : "~/MUS7100_Fall_2017/Interface-2",
+				"patcherrelativepath" : ".",
 				"type" : "JSON",
 				"implicit" : 1
 			}
@@ -627,8 +611,8 @@
 , 			{
 				"name" : "newobjYellow-1",
 				"default" : 				{
-					"fontsize" : [ 12.059008 ],
-					"accentcolor" : [ 0.82517, 0.78181, 0.059545, 1.0 ]
+					"accentcolor" : [ 0.82517, 0.78181, 0.059545, 1.0 ],
+					"fontsize" : [ 12.059008 ]
 				}
 ,
 				"parentstyle" : "",
