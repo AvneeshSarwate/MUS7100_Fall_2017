@@ -9,7 +9,7 @@ launchpadIn = ~getLaunchpadIn.(launchpadIndex);
 launchpadOut = ~getLaunchpadOut.(launchpadIndex);
 launchpadOut.latency = 0;
 maxOscOut = NetAddr("127.0.0.1", 8000);
-ipadOscOut = NetAddr("10.0.0.17", 9000);
+ipadOscOut = NetAddr(~ipadIP[0], 9000);
 visalsOscOut = NetAddr("127.0.0.1", 5432);
 masterClockOSCport = NetAddr("localhost", 57120);
 

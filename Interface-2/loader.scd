@@ -137,8 +137,9 @@ Task({
     "./triplePlayBounce.scd".loadRelative;
     0.01.wait;
 
-    /* "./granularLooper.scd".loadRelative;
-    0.01.wait;*/
+    ~ipadIP = ["10.0.0.17", 9000];
+    "./granularLooper.scd".loadRelative;
+    0.01.wait;
     0.5.wait;
     ~setBPM.(160);
 
@@ -149,9 +150,15 @@ OSCFunc.trace
 
 
 
-
-
-
+(
+var x, z;
+a = 5;
+x = switch (a.postln
+    {5}, {a = 6},
+    {6}, {a = 5}
+  );
+x.postln;
+)
 
 (
 "./masterTempoClock.scd".loadRelative;
@@ -173,7 +180,7 @@ f = {
 f.()
 )
 
-
+OSCFunc.trace
 
 
 
@@ -181,8 +188,8 @@ m.noteOn(5, 24, 52)
 n.sendMsg("/testmsg", 5)
 
 
-~ip = NetAddr("10.0.0.17", 9000)
-~ip.sendMsg("/2/speed", 0.1)
+~ip = NetAddr("127.0.0.1", 5432)
+~ip.sendMsg("/mouthData", 0.1)
 
 
 
