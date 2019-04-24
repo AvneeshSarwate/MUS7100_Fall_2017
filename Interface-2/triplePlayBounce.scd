@@ -237,6 +237,7 @@ MIDIFunc.cc({|vel, note, chan, port|
             ["Notes off", 4, 5].postln;
             //turn off notes for all drones
         });
+        jsPort.sendMsg("/numLoopsPlaying", numLoopsPlaying);
     });
     if((note == 7), {
 
