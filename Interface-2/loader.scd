@@ -83,6 +83,20 @@ Task({
 (Task({
     "./masterTempoClock.scd".loadRelative;
     0.01.wait;
+    ~bounceMidi.(~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge"), ~getMidiOut.("IAC Driver", "Bus 7"));
+    ~fwdTouchOSCLights=true;
+    ~touchOSCBridge = ~getMidiOut.("TouchOSC Bridge", "TouchOSC Bridge");
+    ~touchOSCBridge.latency = 0;
+    0.01.wait;
+    ~loadModules.(["sceneBuilder", "PydalSC", "LFOFM"]);
+}).play)
+
+
+
+
+(Task({
+    "./masterTempoClock.scd".loadRelative;
+    0.01.wait;
     ~loadModules.(["triplePlayBounce"]);
 }).play)
 

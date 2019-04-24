@@ -39,6 +39,18 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-4",
+					"maxclass" : "message",
+					"numinlets" : 2,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 906.0, 784.0, 43.0, 22.0 ],
+					"text" : "local 1"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-19",
 					"maxclass" : "newobj",
 					"numinlets" : 1,
@@ -1317,7 +1329,7 @@
 									"outlettype" : [ "list", "float", "float", "float", "float", "list", "int" ],
 									"parameter_enable" : 0,
 									"patching_rect" : [ 529.0, 620.5, 360.0, 155.0 ],
-									"setfilter" : [ 0, 3, 1, 0, 0, 3683.40380859375, 6.366141796112061, 2.157964944839478, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
+									"setfilter" : [ 0, 3, 1, 0, 0, 1526.0823974609375, 3.059055089950562, 0.9300337433815, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
 									"varname" : "filtergraph~[1]"
 								}
 
@@ -3427,7 +3439,7 @@
 									"outlettype" : [ "list", "float", "float", "float", "float", "list", "int" ],
 									"parameter_enable" : 0,
 									"patching_rect" : [ 529.0, 620.5, 360.0, 155.0 ],
-									"setfilter" : [ 0, 3, 1, 0, 0, 2597.914794921875, 4.740157127380371, 4.165283679962158, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
+									"setfilter" : [ 0, 3, 1, 0, 0, 517.92144775390625, 4.602362155914307, 0.301921427249908, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
 									"varname" : "filtergraph~[1]"
 								}
 
@@ -4259,6 +4271,7 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-18",
+					"local" : 1,
 					"maxclass" : "ezdac~",
 					"numinlets" : 2,
 					"numoutlets" : 0,
@@ -4469,8 +4482,8 @@
 			"obj-1::obj-1::obj-115" : [ "NewGrainEvery[1]", "NewGrainEvery", 0 ],
 			"obj-37::obj-1::obj-47" : [ "Duration", "Duration", 0 ],
 			"obj-37::obj-1::obj-28" : [ "Offset", "Offset", 0 ],
-			"obj-37::obj-1::obj-71" : [ "Pan", "Pan", 0 ],
 			"obj-37::obj-1::obj-101" : [ "Width", "Width", 0 ],
+			"obj-37::obj-1::obj-71" : [ "Pan", "Pan", 0 ],
 			"obj-1::obj-1::obj-47" : [ "Duration[1]", "Duration", 0 ],
 			"obj-37::obj-1::obj-25" : [ "CV", "CV", 0 ],
 			"obj-1::obj-1::obj-28" : [ "Offset[1]", "Offset", 0 ],

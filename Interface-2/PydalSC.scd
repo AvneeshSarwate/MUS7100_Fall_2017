@@ -9,7 +9,7 @@ instrumentMidiOut.latency = 0;
 //endpoints for various applications that I control using Pydal
 pythonOSCport = NetAddr("localhost", 34345);
 python_FH_OSCport = NetAddr("localhost", 13371);
-maxPort = NetAddr("localhost", 5432);
+maxPort = NetAddr("localhost", 5435);
 ballVisualPort = NetAddr("localhost", 7400);
 lemurBouncePort = NetAddr("localhost", 7100);
 

@@ -3,7 +3,6 @@ var triplePlay, midiOut, pedal, quneo, jsPort, brushSpeeds, brushAngles, maxBrus
 
 triplePlay = ~getMidiIn.("Fishman TriplePlay", "TP Guitar");
 pedal = ~getMidiIn.("FBV Express Mk II", "Port 1");
-quneo = ~getMidiIn.("QUNEO", "QUNEO");
 midiOut = ~getMidiOut.("IAC Driver", "Bus 2");
 jsPort = NetAddr("localhost", 5432);
 
@@ -119,7 +118,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
 }, nil, nil, triplePlay.uid);*/
 
 
-MIDIFunc.noteOn({|vel, note, chan, port|
+/*MIDIFunc.noteOn({|vel, note, chan, port|
     if([44, 45, 48, 49, 36, 37, 40, 41].includes(note), {
         ["QUNEOP PAD", note].postln;
         Task({
@@ -129,7 +128,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
             ["QUNEO NOTE", note, chan, 5].postln;
         }).play;
     })
-}, nil, nil, quneo.uid);
+}, nil, nil, quneo.uid);*/
 
 
 numLoopsPlaying = 0;
