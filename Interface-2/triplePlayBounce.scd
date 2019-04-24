@@ -145,7 +145,7 @@ noteTap = {|chan, note, time|
         midiOut.noteOff(chan, note, 0);
     }).play
 };
-
+~nnn = noteTap;
 MIDIFunc.cc({|vel, note, chan, port|
     /*if((note == 16), {
         midiOut.noteOn(controlChannel, 1, vel);
@@ -167,6 +167,7 @@ MIDIFunc.cc({|vel, note, chan, port|
         midiOut.control(0, note, vel);
     });*/
 
+    //TODO - can clear, and then record a loop, but undo brings back cleared loop
     if(vel > 0, {
         if((note == 16), { //Bot Left
             if(recordingCount > 0, {
@@ -194,7 +195,7 @@ MIDIFunc.cc({|vel, note, chan, port|
             //if playing or newStart or cleared: loopCountUndoStack.push, numLoopsSaved++, loopState = recording, recordingCount++,  ifRecordingCount>1: loopState=undoable,
             //if stopped or recording: numLoopsPlaying = numLoopsSaved
 
-            noteTap.(controlChannel, 1, 0.01);
+            noteTap.(controlChannel, 3, 0.01);
 
             if(['playing', 'newStart', 'cleared'].includes(looperState), {
                 loopCountUndoStack.add(numLoopsSaved);
@@ -208,7 +209,7 @@ MIDIFunc.cc({|vel, note, chan, port|
             // numLoopsPlaying = numLoopsSaved
             numLoopsPlaying = numLoopsSaved
         });
-        if((note == 18) && (vel == 127), { //Top Left
+        if((note == 18), { //Top Left
 
             //undo/redo -
             //if undoable - loopCountRedoStack.push(loopCount), loopCount = loopCountUndoStack.pop, if state!=cleared : undoState = redoable else nothing
@@ -231,7 +232,7 @@ MIDIFunc.cc({|vel, note, chan, port|
             undoState = newUndoState;
         });
         [looperState, undoState, numLoopsSaved, numLoopsPlaying, recordingCount].postln;
-        if((note == 19) && (vel == 127), { //Top Right
+        if((note == 19), { //Top Right
             midiOut.allNotesOff(4);
             midiOut.allNotesOff(5);
             ["Notes off", 4, 5].postln;
@@ -246,3 +247,4 @@ MIDIFunc.cc({|vel, note, chan, port|
 }, nil, nil, pedal.uid);
 
 )
+// ~nnn.(7, 4, 0.01)
