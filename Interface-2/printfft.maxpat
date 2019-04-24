@@ -357,7 +357,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "signal", "" ],
-					"patching_rect" : [ 1080.5, 193.0, 168.0, 22.0 ],
+					"patching_rect" : [ 1080.5, 193.0, 166.0, 22.0 ],
 					"text" : "pfft~ printfft_sub_simp 2048 2"
 				}
 
