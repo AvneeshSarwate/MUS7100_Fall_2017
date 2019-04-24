@@ -1,5 +1,5 @@
 (
-var triplePlay, midiOut, pedal, quneo, jsPort, brushSpeeds, brushAngles, maxBrushSpeed, controlChannel, numLoopsPlaying, numLoopsSaved, looperState, undoState, recordingCount, loopCountUndoStack, loopCountRedoStack, noteTap;
+var triplePlay, midiOut, pedal, quneo, jsPort, brushSpeeds, brushAngles, maxBrushSpeed, controlChannel, numLoopsPlaying, numLoopsSaved, looperState, undoState, recordingCount, loopCountUndoStack, loopCountRedoStack, noteTap, lastLooperState;
 
 triplePlay = ~getMidiIn.("Fishman TriplePlay", "TP Guitar");
 pedal = ~getMidiIn.("FBV Express Mk II", "Port 1");
@@ -169,6 +169,7 @@ MIDIFunc.cc({|vel, note, chan, port|
 
     //TODO - can clear, and then record a loop, but undo brings back cleared loop
     if(vel > 0, {
+        lastLooperState = looperState;
         if((note == 16), { //Bot Left
             if(recordingCount > 0, {
                 if(looperState == 'stopped', {
@@ -198,8 +199,8 @@ MIDIFunc.cc({|vel, note, chan, port|
             noteTap.(controlChannel, 3, 0.01);
 
             if(['playing', 'newStart', 'cleared'].includes(looperState), {
-                loopCountUndoStack.add(numLoopsSaved);
-                numLoopsSaved = numLoopsSaved+1;
+                if(lastLooperState != 'cleared', {loopCountUndoStack.add(numLoopsSaved)});
+                numLoopsSaved = numLoopsPlaying+1;
                 looperState = 'recording';
                 recordingCount = recordingCount+1;
                 if(recordingCount > 1, {undoState = 'undoable'});
