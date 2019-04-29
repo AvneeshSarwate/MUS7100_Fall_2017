@@ -40,6 +40,7 @@ setLight = {|note, color, lightIndexOverride=false|
             {launchpadOut.noteOn(0, note, color)}
         );
     });
+    // "PADCOLORSTATE CHECK".postln;
     padColorState[note] = color;
 };
 (1..98).do({|note|
@@ -188,9 +189,11 @@ startPresetInterpolation = {|targetParams, padNote|
     interpolationTask = Pbind(
         \delta, 1/hz,
         \frac, Pseq((0..numSteps)/numSteps),
+        \lightIndex, ~lightIndex,
         \play, {
             sendParamMap.(interpolateParamMaps.(paramStart, paramEnd, ~frac));
             if(~frac == 1, {
+                ["FINISHED INTERPOLATION", padNote, paramSaved_COLOR].postln;
                 setLight.(padNote, paramSaved_COLOR);
                 paramMap = paramEnd.deepCopy;
             })
@@ -236,7 +239,7 @@ oscAddrs = ['/pos', '/width', '/duration', '/playrate', '/pitch', '/volres', '/q
 });
 
 sendOSC = {|oscArray|
-    ["OSC ARRAY", oscArray].postln;
+    // ["OSC ARRAY", oscArray].postln;
     maxOscOut.sendRaw(oscArray.asArray.asRawOSC);
     ipadOscOut.sendRaw(oscArray.asArray.asRawOSC);
     visalsOscOut.sendRaw(oscArray.asArray.asRawOSC);
@@ -363,6 +366,7 @@ MIDIFunc.noteOn({|vel, note, chan, port|
             },{
                 "NO TEMP LOOP, NOT NIL".postln;
                 if(bank[1] == 'loop', {
+                    "LOOP PLAY/STOP".postln;
                     if(bank[2].isPlaying, {bank[2].stop; bank[2].reset},
                         {bank[2].play});
                     setLight.(note, if(bank[2].isPlaying, padPlaying_COLOR, loopSaved_COLOR));
@@ -370,8 +374,10 @@ MIDIFunc.noteOn({|vel, note, chan, port|
 
                 if(bank[1] == 'preset', {
                     if(savingParams, {
+                        "SAVE PARAMS".postln;
                         loopToPadMap[note] = [note, 'preset', paramMap.deepCopy];
                     }, {
+                        "LOAD PARAMS".postln;
                         startPresetInterpolation.(bank[2], note);
                     });
                 });
