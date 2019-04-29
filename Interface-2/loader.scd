@@ -106,6 +106,7 @@ Task({
 (Task({
     "./masterTempoClock.scd".loadRelative;
     0.01.wait;
+    ~ipadIP = ["10.0.0.17", 9000];
     ~loadModules.(["granularLooper"]);
 }).play)
 
@@ -151,7 +152,7 @@ Task({
     "./triplePlayBounce.scd".loadRelative;
     0.01.wait;
 
-    ~ipadIP = ["10.0.0.17", 9000];
+    ~ipadIP = ["169.254.113.33", 9000];
     "./granularLooper.scd".loadRelative;
     0.01.wait;
     0.5.wait;

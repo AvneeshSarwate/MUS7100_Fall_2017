@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 34.0, 100.0, 1340.0, 806.0 ],
+		"rect" : [ 290.0, 146.0, 712.0, 605.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -124,12 +124,12 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-120",
-					"linecount" : 15,
+					"linecount" : 14,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 588.0, 708.0, 55.0, 210.0 ],
+					"patching_rect" : [ 588.0, 708.0, 59.0, 196.0 ],
 					"text" : "/fftValues 0 0 0 0 1 16 34 15 6 8 0 8 9 2 7 12 14 10 19 12 29 9 18 4 11 18 16 8 7 6 8 14 12 6 7 8 11 3 2 1 6 5 1 1 2 2 4 13 9 4"
 				}
 
@@ -142,20 +142,6 @@
 					"numoutlets" : 2,
 					"outlettype" : [ "jit_matrix", "" ],
 					"patching_rect" : [ 574.202393000000029, 505.0, 194.0, 87.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"fontface" : 0,
-					"fontname" : "Arial",
-					"fontsize" : 11.595186999999999,
-					"id" : "obj-100",
-					"maxclass" : "jit.fpsgui",
-					"numinlets" : 1,
-					"numoutlets" : 2,
-					"outlettype" : [ "", "" ],
-					"patching_rect" : [ -732.782165999999961, 602.142334000000005, 60.0, 34.0 ]
 				}
 
 			}
@@ -706,8 +692,8 @@
 , 			{
 				"name" : "newobjYellow-1",
 				"default" : 				{
-					"accentcolor" : [ 0.82517, 0.78181, 0.059545, 1.0 ],
-					"fontsize" : [ 12.059008 ]
+					"fontsize" : [ 12.059008 ],
+					"accentcolor" : [ 0.82517, 0.78181, 0.059545, 1.0 ]
 				}
 ,
 				"parentstyle" : "",

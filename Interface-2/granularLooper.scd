@@ -236,7 +236,7 @@ oscAddrs = ['/pos', '/width', '/duration', '/playrate', '/pitch', '/volres', '/q
 });
 
 sendOSC = {|oscArray|
-    // ["OSC ARRAY", oscArray].postln;
+    ["OSC ARRAY", oscArray].postln;
     maxOscOut.sendRaw(oscArray.asArray.asRawOSC);
     ipadOscOut.sendRaw(oscArray.asArray.asRawOSC);
     visalsOscOut.sendRaw(oscArray.asArray.asRawOSC);
