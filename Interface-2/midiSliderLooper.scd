@@ -1,5 +1,5 @@
 (
-var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendMSG, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON, dspOn, dsp_BUTTON, visalsOscOut, midiOut;
+var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendMSG, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON, dspOn, dsp_BUTTON, visalsOscOut, midiOut, numLoopsRecorded;
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON, launchpadIndex, controlHandler, controlHandlerWrapper, masterClockOSCport;
 
 launchpadIndex = 0;
@@ -95,7 +95,7 @@ lightIndex = if(~lightIndexes[launchpadIndex].size == 0,
 
 
 
-
+numLoopsRecorded = 0;
 loopRecord_BUTTON = 89;
 savePreset_BUTTON = 79;
 presetVoice1_BUTTON = 69;
@@ -225,17 +225,19 @@ oscAddrs.do({|addr|
     OSCFunc.new(oscHandler, addr);
 });
 
-sendMSG = {|msgArray|
+sendMSG = {|msgArray, loopNumber|
     // ["OSC ARRAY", oscArray].postln;
     if(msg[0].asSymbol == 'midi', {
             ipadMidiOut.control(msgArray[1], msgArray[2], msgArray[3]);
             midiOut.control(msgArray[1], msgArray[2], msgArray[3]);
     },{
-        visalsOscOut.sendRaw(msgArray.asArray.asRawOSC);
+        var msgCopy = msgArray.deepCopy;
+        msgCopy[1] = (loopNumber*16) + msgCopy[1];
+        visalsOscOut.sendRaw(msgCopy.asArray.asRawOSC);
     });
 };
 
-createLoopPattern = {|recordBuf|
+createLoopPattern = {|recordBuf, loopNumber|
     var playBuff, rb, pat, timeList, msgList;
 
     //all timestamps are relative to recording start - first event is always at 0
@@ -255,7 +257,7 @@ createLoopPattern = {|recordBuf|
     pat = Pbind(
         \delta, Pseq(timeList, inf),
         \loopMsg, Pseq(msgList, inf),
-        \play, {sendMSG.(~loopMsg)}
+        \play, {sendMSG.(~loopMsg, loopNumber)}
     ).play(tempoClock);
 
     pat
@@ -290,7 +292,8 @@ controlHandler = {|vel, note, chan, port|
         if(loopRecordingState == 2, {
             isRecording = false;
             recordEndTime = tempoClock.beats;
-            tempRecordingTask = createLoopPattern.(recordBuffer);
+            numLoopsRecorded = numLoopsRecorded + 1;
+            tempRecordingTask = createLoopPattern.(recordBuffer, numLoopsRecorded);
             recordBuffer = List.new;
         });
     });
