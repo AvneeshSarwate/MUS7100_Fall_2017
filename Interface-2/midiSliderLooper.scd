@@ -128,6 +128,12 @@ paramSaved_COLOR = 119;
 recordingStateColors = [notRecording_COLOR, recording_COLOR, tempRecord_COLOR];
 
 
+OSCFunc({|msg, time, addr, recvPort|
+    //msg[1] is the new BEAT DURATION (not tempo)
+    tempoClock = TempoClock.new(1/msg[1], 0, queueSize:2056);
+
+    "MIDI SLIDERS ONE SHOT".postln;
+}, "/masterClockBeat").oneShot;
 
 //TODO - find default for params and their corresponding midi values? + blast these out at start of program
 // - or set default params to both ipad and max from here
@@ -228,8 +234,12 @@ sendMSG = {|msgArray, loopNumber|
     },{
         if(msgArray.size > 1, {
             var msgCopy = msgArray.deepCopy;
-            msgCopy[1] = (loopNumber*16) + msgCopy[1];
-            visualsOscOut.sendRaw(msgCopy.asArray.asRawOSC);
+            var numTouches = msgArray[1];
+            if(numTouches > 0, {
+                (0..(numTouches-1)).do({|i| msgCopy[(i*4)+2] = (16*loopNumber)+msgCopy[(i*4)+2] });
+                msgCopy.postln;
+                visualsOscOut.sendRaw(msgCopy.asArray.asRawOSC);
+            });
         });
     });
 };
