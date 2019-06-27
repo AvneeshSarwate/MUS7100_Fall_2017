@@ -222,14 +222,15 @@ oscAddrs.do({|addr|
 });
 
 sendMSG = {|msgArray, loopNumber|
-    ["Loop Number", loopNumber].postln;
     if(msgArray[0].asSymbol == 'midi', {
             ipadMidiOut.control(msgArray[1], msgArray[2], msgArray[3]);
             midiOut.control(msgArray[1], msgArray[2], msgArray[3]);
     },{
-        var msgCopy = msgArray.deepCopy;
-        msgCopy[1] = (loopNumber*16) + msgCopy[1];
-        visalsOscOut.sendRaw(msgCopy.asArray.asRawOSC);
+        if(msgArray.size > 1, {
+            var msgCopy = msgArray.deepCopy;
+            msgCopy[1] = (loopNumber*16) + msgCopy[1];
+            visalsOscOut.sendRaw(msgCopy.asArray.asRawOSC);
+        });
     });
 };
 
@@ -254,7 +255,9 @@ createLoopPattern = {|recordBuf, loopNumber|
         \delta, Pseq(timeList, inf),
         \loopMsg, Pseq(msgList, inf),
         \play, {sendMSG.(~loopMsg, loopNumber)}
-    ).play(tempoClock);
+    );
+
+    tempoClock.sched(tempoClock.timeToNextBeat, {tempRecordingTask = pat.play(tempoClock); nil});
 
     pat
 };
@@ -289,7 +292,7 @@ controlHandler = {|vel, note, chan, port|
             isRecording = false;
             recordEndTime = tempoClock.beats;
             numLoopsRecorded = numLoopsRecorded + 1;
-            tempRecordingTask = createLoopPattern.(recordBuffer, numLoopsRecorded);
+            createLoopPattern.(recordBuffer, numLoopsRecorded); //assigns pattern.play() result to tempRecordingTask
             recordBuffer = List.new;
         });
     });
