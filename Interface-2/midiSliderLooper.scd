@@ -1,5 +1,6 @@
 (
 var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendMSG, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON, dspOn, dsp_BUTTON, visualsOscOut, midiOut, numLoopsRecorded;
+var lastDrawInfoSent;
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON, launchpadIndex, controlHandler, controlHandlerWrapper, masterClockOSCport;
 
 launchpadIndex = 0;
@@ -209,14 +210,19 @@ setLight.(presetVoice1_BUTTON, loopSaved_COLOR);
 setLight.(presetVoice2_BUTTON, loopSaved_COLOR);
 setLight.(interpSpeed_BUTTONS[0], loopSaved_COLOR);
 
-
+lastDrawInfoSent = 0;
 oscHandler = {|msg, time, addr, recvPort|
     if(isRecording, {
         recordBuffer.add([tempoClock.beats - recordStartTime, msg]); //recording timestamps relative to recoring start
     });
-    saveParams.(msg);
-    maxOscOut.sendRaw(msg.asArray.asRawOSC);
-    visualsOscOut.sendRaw(msg.asArray.asRawOSC);
+    if(msg[1] != 0, {
+        ["draw interval", tempoClock.beats-lastDrawInfoSent].postln;
+        lastDrawInfoSent = tempoClock.beats;
+        saveParams.(msg);
+        maxOscOut.sendRaw(msg.asArray.asRawOSC);
+        visualsOscOut.sendRaw(msg.asArray.asRawOSC);
+    });
+
 };
 
 oscAddrs = ['/senselDraw'];
@@ -235,9 +241,12 @@ sendMSG = {|msgArray, loopNumber|
         if(msgArray.size > 1, {
             var msgCopy = msgArray.deepCopy;
             var numTouches = msgArray[1];
+            [tempoClock.tempo, tempoClock.beats].postln;
+            ["draw interval", tempoClock.beats-lastDrawInfoSent].postln;
+            lastDrawInfoSent = tempoClock.beats;
             if(numTouches > 0, {
                 (0..(numTouches-1)).do({|i| msgCopy[(i*4)+2] = (16*loopNumber)+msgCopy[(i*4)+2] });
-                msgCopy.postln;
+            // msgCopy.postln;
                 visualsOscOut.sendRaw(msgCopy.asArray.asRawOSC);
             });
         });
