@@ -1,5 +1,5 @@
 (
-var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendMSG, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON, dspOn, dsp_BUTTON, visalsOscOut, midiOut, numLoopsRecorded;
+var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendMSG, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON, dspOn, dsp_BUTTON, visualsOscOut, midiOut, numLoopsRecorded;
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON, launchpadIndex, controlHandler, controlHandlerWrapper, masterClockOSCport;
 
 launchpadIndex = 0;
@@ -11,7 +11,7 @@ launchpadIn = ~getLaunchpadIn.(launchpadIndex);
 launchpadOut = ~getLaunchpadOut.(launchpadIndex);
 
 maxOscOut = NetAddr("127.0.0.1", 8000);
-visalsOscOut = NetAddr("127.0.0.1", 5432);
+visualsOscOut = NetAddr("127.0.0.1", 5432);
 masterClockOSCport = NetAddr("localhost", 57120);
 
 launchpadOut.latency = 0;
@@ -210,7 +210,7 @@ oscHandler = {|msg, time, addr, recvPort|
     });
     saveParams.(msg);
     maxOscOut.sendRaw(msg.asArray.asRawOSC);
-    visalsOscOut.sendRaw(msg.asArray.asRawOSC);
+    visualsOscOut.sendRaw(msg.asArray.asRawOSC);
 };
 
 oscAddrs = ['/senselDraw'];
@@ -229,7 +229,7 @@ sendMSG = {|msgArray, loopNumber|
         if(msgArray.size > 1, {
             var msgCopy = msgArray.deepCopy;
             msgCopy[1] = (loopNumber*16) + msgCopy[1];
-            visalsOscOut.sendRaw(msgCopy.asArray.asRawOSC);
+            visualsOscOut.sendRaw(msgCopy.asArray.asRawOSC);
         });
     });
 };
