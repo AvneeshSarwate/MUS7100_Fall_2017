@@ -5,19 +5,18 @@ var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON
 launchpadIndex = 0;
 ipadMidiIn = ~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge");
 ipadMidiOut = ~getMidiOut.("TouchOSC Bridge", "TouchOSC Bridge");
-midiOut = ~getMidiOut.("TouchOSC Bridge", "TouchOSC Bridge");
+
+midiOut = ~getMidiOut.("IAC Driver", "Bus 2");
 launchpadIn = ~getLaunchpadIn.(launchpadIndex);
 launchpadOut = ~getLaunchpadOut.(launchpadIndex);
-launchpadOut.latency = 0;
+
 maxOscOut = NetAddr("127.0.0.1", 8000);
-ipadOscOut = NetAddr(~ipadIP[0], 9000);
 visalsOscOut = NetAddr("127.0.0.1", 5432);
 masterClockOSCport = NetAddr("localhost", 57120);
 
 launchpadOut.latency = 0;
 ipadMidiOut.latency = 0;
 midiOut.latency = 0;
-
 
 
 
@@ -91,10 +90,6 @@ lightIndex = if(~lightIndexes[launchpadIndex].size == 0,
 
 
 
-
-
-
-
 numLoopsRecorded = 0;
 loopRecord_BUTTON = 89;
 savePreset_BUTTON = 79;
@@ -155,7 +150,7 @@ sendParamMap = {|params|
             if(key.asSymbol != '/senselDraw', {
                 ipadMidiOut.control(0, key, params[key]);
                 midiOut.control(0, key, params[key]);
-                0.0005.wait;
+                0.001.wait;
             })
         });
     }).play
@@ -176,7 +171,7 @@ saveParams = {|msg|
 
 //TODO - this does not cleanly handle multiple interpolations running at once - they will cross-cut eachother
 startPresetInterpolation = {|targetParams, padNote|
-    var hz = 60;
+    var hz = 20;
     var maxTime = 4;
     var numSteps = (interpolationSpeed*maxTime*hz).round;
     if(interpolationTask.isNil.not,
@@ -208,6 +203,7 @@ setLight.(presetVoice1_BUTTON, loopSaved_COLOR);
 setLight.(presetVoice2_BUTTON, loopSaved_COLOR);
 setLight.(interpSpeed_BUTTONS[0], loopSaved_COLOR);
 
+
 oscHandler = {|msg, time, addr, recvPort|
     if(isRecording, {
         recordBuffer.add([tempoClock.beats - recordStartTime, msg]); //recording timestamps relative to recoring start
@@ -226,8 +222,8 @@ oscAddrs.do({|addr|
 });
 
 sendMSG = {|msgArray, loopNumber|
-    // ["OSC ARRAY", oscArray].postln;
-    if(msg[0].asSymbol == 'midi', {
+    ["Loop Number", loopNumber].postln;
+    if(msgArray[0].asSymbol == 'midi', {
             ipadMidiOut.control(msgArray[1], msgArray[2], msgArray[3]);
             midiOut.control(msgArray[1], msgArray[2], msgArray[3]);
     },{
@@ -396,8 +392,6 @@ MIDIFunc.noteOn({|vel, note, chan, port|
 }, nil, nil, launchpadIn.uid);
 
 
-
-paramMap = Object.readArchive("~/".standardizePath ++ "/MUS7100_Fall_2017/Interface-2/defaultPreset.sc")[2];
 paramMap.postln;
 ~pm = paramMap;
 sendParamMap.(paramMap);
