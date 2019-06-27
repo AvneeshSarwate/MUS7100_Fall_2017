@@ -19,7 +19,7 @@ launchpadOut.latency = 0;
 ipadMidiOut.latency = 0;
 midiOut.latency = 0;
 
-
+lock = Semaphore.new(1);
 
 
 //----------------------------------------------
@@ -136,10 +136,7 @@ OSCFunc({|msg, time, addr, recvPort|
     "MIDI SLIDERS ONE SHOT".postln;
 }, "/masterClockBeat").oneShot;
 
-//TODO - find default for params and their corresponding midi values? + blast these out at start of program
-// - or set default params to both ipad and max from here
 
-//TODO - add option to only interpolate/pull up params for voice 1/2
 interpolateParamMaps = {|map1, map2, interp|
     var interpMap = Dictionary.new;
     map1.keys().do({|key|
@@ -219,15 +216,27 @@ oscHandler = {|msg, time, addr, recvPort|
         ["draw interval", tempoClock.beats-lastDrawInfoSent].postln;
         lastDrawInfoSent = tempoClock.beats;
         saveParams.(msg);
-        maxOscOut.sendRaw(msg.asArray.asRawOSC);
-        visualsOscOut.sendRaw(msg.asArray.asRawOSC);
+        updateTouches.(msg, 0);
     });
+});
 
 };
 
+updateTouches = {|msg, loopNum|
+    var numTouches = msg[1];
+    var msgCopy = msg.deepCopy;
+    lock.wait;
+    (0..(numTouches-1)).do({|i|
+        var touchInd = (i*4)+2;
+        msgCopy[touchInd] = (16*loopNum)+msgCopy[(i*4)+2]; //
+        activeTouches[msgCopy[touchInd]] = msgCopy[(touchInd+1)..(touchInd+3)];
+        //todo sensel - send to touch resolver
+    });
+    lock.signal;
+}
+
 oscAddrs = ['/senselDraw'];
 
-//todo
 
 oscAddrs.do({|addr|
     OSCFunc.new(oscHandler, addr);
@@ -244,14 +253,32 @@ sendMSG = {|msgArray, loopNumber|
             [tempoClock.tempo, tempoClock.beats].postln;
             ["draw interval", tempoClock.beats-lastDrawInfoSent].postln;
             lastDrawInfoSent = tempoClock.beats;
+
             if(numTouches > 0, {
-                (0..(numTouches-1)).do({|i| msgCopy[(i*4)+2] = (16*loopNumber)+msgCopy[(i*4)+2] });
-            // msgCopy.postln;
-                visualsOscOut.sendRaw(msgCopy.asArray.asRawOSC);
+                updateTouches.(msgArray, loopNumber);
             });
         });
     });
 };
+
+activeTouches = Dictionary.new;
+touchResolverLoop = Pbind(
+    \delta, Pseq([1/60], inf),
+    \play, {
+        var msgArray = List.new;
+        msgArray.add("/senselDraw");
+        lock.wait;
+        msgArray.add(activeTouches.size);
+        activeTouches.keys.do({|id|
+            msgArray.add(id);
+            msgArray.addAll(activeTouches[id]);
+        });
+        lock.signal;
+        activeTouches = Dictionary.new;
+        visualsOscOut.sendRaw(msgArray.asArray.asRawOSC)
+    }
+);
+touchResolverLoop.play;
 
 createLoopPattern = {|recordBuf, loopNumber|
     var playBuff, rb, pat, timeList, msgList;
