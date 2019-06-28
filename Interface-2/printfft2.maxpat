@@ -39,6 +39,56 @@
 		"subpatcher_template" : "",
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-36",
+					"maxclass" : "ezdac~",
+					"numinlets" : 2,
+					"numoutlets" : 0,
+					"patching_rect" : [ 235.0, 176.0, 45.0, 45.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
+					"clipheight" : 91.0,
+					"data" : 					{
+						"clips" : [ 							{
+								"absolutepath" : "/Users/avneeshsarwate/avneeshsite/static/cognitionListeningTestFiles/phial_snip.mp3",
+								"filename" : "phial_snip.mp3",
+								"filekind" : "audiofile",
+								"loop" : 1,
+								"content_state" : 								{
+									"followglobaltempo" : [ 0 ],
+									"timestretch" : [ 0 ],
+									"formantcorrection" : [ 0 ],
+									"originallengthms" : [ 0.0 ],
+									"originallength" : [ 0.0, "ticks" ],
+									"slurtime" : [ 0.0 ],
+									"pitchshift" : [ 1.0 ],
+									"speed" : [ 1.0 ],
+									"originaltempo" : [ 120.0 ],
+									"basictuning" : [ 440 ],
+									"mode" : [ "basic" ],
+									"formant" : [ 1.0 ],
+									"quality" : [ "basic" ],
+									"play" : [ 0 ],
+									"pitchcorrection" : [ 0 ]
+								}
+
+							}
+ ]
+					}
+,
+					"id" : "obj-33",
+					"maxclass" : "playlist~",
+					"numinlets" : 1,
+					"numoutlets" : 5,
+					"outlettype" : [ "signal", "signal", "signal", "", "dictionary" ],
+					"patching_rect" : [ 431.0, 60.0, 150.0, 92.0 ]
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-32",
 					"linecount" : 2,
 					"maxclass" : "comment",
@@ -200,18 +250,7 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "jit_matrix", "" ],
-					"patching_rect" : [ 574.202393000000029, 505.0, 194.0, 87.0 ]
-				}
-
-			}
-, 			{
-				"box" : 				{
-					"id" : "obj-20",
-					"maxclass" : "newobj",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 1005.0, 677.0, 53.0, 22.0 ],
-					"text" : "s fftBins"
+					"patching_rect" : [ 392.202393000000029, 471.0, 316.0, 479.0 ]
 				}
 
 			}
@@ -222,8 +261,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "jit_matrix", "" ],
-					"patching_rect" : [ 384.0, 419.339417000000026, 172.0, 22.0 ],
-					"text" : "jit.matrix FFTRows 1 char 1 50"
+					"patching_rect" : [ 384.0, 419.339417000000026, 179.0, 22.0 ],
+					"text" : "jit.matrix FFTRows 1 char 1 512"
 				}
 
 			}
@@ -269,8 +308,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 848.0, 631.0, 166.0, 22.0 ],
-					"text" : "zl.group 50 @zlmaxsize 2048"
+					"patching_rect" : [ 843.0, 637.0, 173.0, 22.0 ],
+					"text" : "zl.group 512 @zlmaxsize 2048"
 				}
 
 			}
@@ -320,7 +359,7 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "", "" ],
-					"patching_rect" : [ 829.5, 536.0, 159.0, 22.0 ],
+					"patching_rect" : [ 879.5, 512.0, 159.0, 22.0 ],
 					"text" : "zl.slice 50 @zlmaxsize 2048"
 				}
 
@@ -451,8 +490,8 @@
 					"numinlets" : 2,
 					"numoutlets" : 2,
 					"outlettype" : [ "signal", "" ],
-					"patching_rect" : [ 879.5, 361.0, 166.0, 22.0 ],
-					"text" : "pfft~ printfft_sub_simp 2048 2"
+					"patching_rect" : [ 879.5, 361.0, 173.0, 22.0 ],
+					"text" : "pfft~ printfft_sub_simp2 2048 2"
 				}
 
 			}
@@ -467,7 +506,7 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-13", 0 ],
+					"destination" : [ "obj-14", 0 ],
 					"order" : 0,
 					"source" : [ "obj-1", 1 ]
 				}
@@ -517,13 +556,6 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-14", 0 ],
-					"source" : [ "obj-13", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-15", 0 ],
 					"source" : [ "obj-14", 0 ]
 				}
@@ -552,16 +584,7 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-20", 0 ],
-					"order" : 0,
-					"source" : [ "obj-19", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-23", 0 ],
-					"order" : 1,
 					"source" : [ "obj-19", 0 ]
 				}
 
@@ -619,6 +642,37 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-1", 0 ],
+					"order" : 1,
+					"source" : [ "obj-33", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-3", 0 ],
+					"order" : 0,
+					"source" : [ "obj-33", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-36", 1 ],
+					"source" : [ "obj-33", 1 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-36", 0 ],
+					"order" : 2,
+					"source" : [ "obj-33", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-1", 1 ],
 					"source" : [ "obj-34", 0 ]
 				}
@@ -642,22 +696,6 @@
 				"patchline" : 				{
 					"destination" : [ "obj-10", 0 ],
 					"source" : [ "obj-42", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-1", 0 ],
-					"order" : 1,
-					"source" : [ "obj-5", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
-					"destination" : [ "obj-3", 0 ],
-					"order" : 0,
-					"source" : [ "obj-5", 0 ]
 				}
 
 			}
@@ -695,10 +733,17 @@
 			}
  ],
 		"dependency_cache" : [ 			{
-				"name" : "printfft_sub_simp.maxpat",
+				"name" : "printfft_sub_simp2.maxpat",
 				"bootpath" : "~/MUS7100_Fall_2017/Interface-2",
 				"patcherrelativepath" : ".",
 				"type" : "JSON",
+				"implicit" : 1
+			}
+, 			{
+				"name" : "phial_snip.mp3",
+				"bootpath" : "~/avneeshsite/static/cognitionListeningTestFiles",
+				"patcherrelativepath" : "../../avneeshsite/static/cognitionListeningTestFiles",
+				"type" : "Mp3",
 				"implicit" : 1
 			}
 , 			{
