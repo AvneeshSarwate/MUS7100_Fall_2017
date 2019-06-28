@@ -1,5 +1,5 @@
 (
-var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendMSG, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON, dspOn, dsp_BUTTON, visualsOscOut, midiOut, numLoopsRecorded;
+var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendMSG, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON, dspOn, dsp_BUTTON, visualsOscOut, midiOut, numLoopsRecorded, lock, activeTouches, touchResolverLoop, updateTouches;
 var lastDrawInfoSent;
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON, launchpadIndex, controlHandler, controlHandlerWrapper, masterClockOSCport;
 
@@ -213,13 +213,11 @@ oscHandler = {|msg, time, addr, recvPort|
         recordBuffer.add([tempoClock.beats - recordStartTime, msg]); //recording timestamps relative to recoring start
     });
     if(msg[1] != 0, {
-        ["draw interval", tempoClock.beats-lastDrawInfoSent].postln;
+        // ["draw interval", tempoClock.beats-lastDrawInfoSent].postln;
         lastDrawInfoSent = tempoClock.beats;
         saveParams.(msg);
         updateTouches.(msg, 0);
     });
-});
-
 };
 
 updateTouches = {|msg, loopNum|
@@ -233,7 +231,7 @@ updateTouches = {|msg, loopNum|
         //todo sensel - send to touch resolver
     });
     lock.signal;
-}
+};
 
 oscAddrs = ['/senselDraw'];
 
@@ -250,8 +248,8 @@ sendMSG = {|msgArray, loopNumber|
         if(msgArray.size > 1, {
             var msgCopy = msgArray.deepCopy;
             var numTouches = msgArray[1];
-            [tempoClock.tempo, tempoClock.beats].postln;
-            ["draw interval", tempoClock.beats-lastDrawInfoSent].postln;
+            // [tempoClock.tempo, tempoClock.beats].postln;
+            // ["draw interval", tempoClock.beats-lastDrawInfoSent].postln;
             lastDrawInfoSent = tempoClock.beats;
 
             if(numTouches > 0, {
@@ -274,6 +272,7 @@ touchResolverLoop = Pbind(
             msgArray.addAll(activeTouches[id]);
         });
         lock.signal;
+        // msgArray.postln;
         activeTouches = Dictionary.new;
         visualsOscOut.sendRaw(msgArray.asArray.asRawOSC)
     }
