@@ -222,8 +222,14 @@ startRampTask = {|attackRatio, time, peak, padNote|
         \index, Pseq(indexes),
         \lightIndex, ~lightIndex,
         \play, {
-            ipadMidiOut.control(0, padNote-11, (~rampVal*127).floor);
-            midiOut.control(0, padNote-11, (~rampVal*127).floor);
+            var midiCC = padNote-11;
+            var sliderVal = (~rampVal*127).floor;
+            ipadMidiOut.control(0, midiCC, sliderVal);
+            midiOut.control(0, midiCC, sliderVal);
+            if(isRecording, {
+                recordBuffer.add([tempoClock.beats - recordStartTime, ['midi', 0, midiCC, sliderVal]]); //recording timestamps relative to recoring start
+            });
+
             if(~index == (indexes.size-1), {
                 ["FINISHED RAMP", padNote].postln;
                 setLight.(padNote, paramSaved_COLOR);
