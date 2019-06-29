@@ -1,5 +1,5 @@
 (
-var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendMSG, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON, dspOn, dsp_BUTTON, visualsOscOut, midiOut, numLoopsRecorded, lock, activeTouches, touchResolverLoop, updateTouches, rampButtons;
+var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendMSG, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON, dspOn, dsp_BUTTON, visualsOscOut, midiOut, numLoopsRecorded, lock, activeTouches, touchResolverLoop, updateTouches, rampButtons, startRampTask, bankButtons;
 var lastDrawInfoSent;
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON, launchpadIndex, controlHandler, controlHandlerWrapper, masterClockOSCport;
 
@@ -212,16 +212,17 @@ startRampTask = {|attackRatio, time, peak, padNote|
     var aRamp = List.fill((attackRatio*numSteps).floor, {peak})/(attackRatio*numSteps).floor;
     var dRamp = List.fill(((1-attackRatio)*numSteps).ceil, {peak})/((1-attackRatio)*numSteps).ceil; //TODO ramps - check direction
     var indexes = (aRamp++dRamp).collect({|e, i| i});
+    var pat;
     aRamp = aRamp.collect({|e, i| e*i});
     dRamp = dRamp.collect({|e, i| peak-(e*i)});
     setLight.(padNote, padPlaying_COLOR);
-    var pat = Pbind(
+    pat = Pbind(
         \delta, 1/hz,
         \rampVal, Pseq(aRamp++dRamp),
-        \index, Pseq(indexes)
+        \index, Pseq(indexes),
         \play, {
-            ipadMidiOut.control(0, padNote-11, (rampVal*127).floor);
-            midiOut.control(0, padNote-11, (rampVal*127).floor);
+            ipadMidiOut.control(0, padNote-11, (~rampVal*127).floor);
+            midiOut.control(0, padNote-11, (~rampVal*127).floor);
             if(~index == (indexes.size-1), {
                 setLight.(padNote, paramSaved_COLOR);
             });
@@ -240,7 +241,7 @@ setLight.(savePreset_BUTTON, notRecording_COLOR);
 setLight.(presetVoice1_BUTTON, loopSaved_COLOR);
 setLight.(presetVoice2_BUTTON, loopSaved_COLOR);
 setLight.(interpSpeed_BUTTONS[0], loopSaved_COLOR);
-rampButtons.do({|e| setLight.(e, padSaved_COLOR)});
+rampButtons.do({|e| setLight.(e, paramSaved_COLOR)});
 
 lastDrawInfoSent = 0;
 oscHandler = {|msg, time, addr, recvPort|
@@ -433,10 +434,10 @@ saveLoopToBank = {|bankNote|
 MIDIFunc.noteOn({|vel, note, chan, port|
     if(vel != 0,{
         var bank = loopToPadMap[note];
-        if(rampButtons.contains(note), {
-
+        if(rampButtons.includes(note), {
+            startRampTask.(0.1, 0.3, 1, note);
         });
-        if(bank.isNil.not, {
+        if(bankButtons.includes(note) && bank.isNil.not, {
             if(loopRecordingState == 2, { //can't save preset if there is a tempRecording
                 if(bank[1] == 'loop', {
                     bank[2].stop;
