@@ -205,26 +205,29 @@ startPresetInterpolation = {|targetParams, padNote|
     ).play;
 };
 
-
 startRampTask = {|attackRatio, time, peak, padNote|
+    var indexes, pat;
     var hz = 20;
     var numSteps = time * hz;
     var aRamp = List.fill((attackRatio*numSteps).floor, {peak})/(attackRatio*numSteps).floor;
     var dRamp = List.fill(((1-attackRatio)*numSteps).ceil, {peak})/((1-attackRatio)*numSteps).ceil; //TODO ramps - check direction
-    var indexes = (aRamp++dRamp).collect({|e, i| i});
-    var pat;
     aRamp = aRamp.collect({|e, i| e*i});
     dRamp = dRamp.collect({|e, i| peak-(e*i)});
+    dRamp.add(0);
+    indexes = (aRamp++dRamp).collect({|e, i| i});
     setLight.(padNote, padPlaying_COLOR);
     pat = Pbind(
         \delta, 1/hz,
         \rampVal, Pseq(aRamp++dRamp),
         \index, Pseq(indexes),
+        \lightIndex, ~lightIndex,
         \play, {
             ipadMidiOut.control(0, padNote-11, (~rampVal*127).floor);
             midiOut.control(0, padNote-11, (~rampVal*127).floor);
             if(~index == (indexes.size-1), {
+                ["FINISHED RAMP", padNote].postln;
                 setLight.(padNote, paramSaved_COLOR);
+                ["FINISHED RAMP LIGHT", padNote].postln;
             });
         }
     );
