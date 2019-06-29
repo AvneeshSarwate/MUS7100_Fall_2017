@@ -107,7 +107,6 @@ loopToPadMap = Dictionary.new; //[padInd, 'loop'/'preset', pattern/preset-array]
 ~glData = loopToPadMap;
 paramMap = Dictionary.new;
 (0..127).do({|i| paramMap[i] = 0});
-tempoClock = TempoClock.new;
 ~loadGranularLooperPreset = {|filename|
     loopToPadMap = Object.readArchive("~/".standardizePath ++ "/MUS7100_Fall_2017/Interface-2/" ++ filename);
 };
@@ -136,6 +135,12 @@ OSCFunc({|msg, time, addr, recvPort|
     "MIDI SLIDERS ONE SHOT".postln;
 }, "/masterClockBeat").oneShot;
 
+//msg[1] is the new tempoIn BEATS PER SECOND
+//msg[2] is the phase
+OSCFunc({|msg, time, addr, recvPort|
+	tempoClock.tempo = msg[1].asFloat;
+    tempoClock.beats = tempoClock.beats.floor + msg[2].asFloat;
+}, "/masterClockLinkUpdate");
 
 interpolateParamMaps = {|map1, map2, interp|
     var interpMap = Dictionary.new;

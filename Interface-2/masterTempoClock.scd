@@ -24,6 +24,7 @@ MIDIIn.connectAll;
 };
 masterTempoClock = TempoClock.new(2);
 broadcastOSCport = NetAddr("localhost", 57120);
+~mtp = masterTempoClock;
 
 masterTempoClock.sched(0, {broadcastOSCport.sendMsg("/masterClockBeat", masterTempoClock.beatDur); 1});
 
@@ -33,6 +34,22 @@ OSCFunc({|msg, time, addr, recvPort|
 	masterTempoClock.tempo = 1/msg[1].asFloat;
 	broadcastOSCport.sendMsg("/masterClockTempo", msg[1].asFloat, msg[2].asBoolean)
 }, "/uploadTempo");
+
+//msg[1] is the new tempoIn BPM
+//msg[2] is the phase
+OSCFunc({|msg, time, addr, recvPort|
+	masterTempoClock.tempo = msg[1].asFloat/60;
+    masterTempoClock.beats = masterTempoClock.beats.floor + msg[2].asFloat;
+	broadcastOSCport.sendMsg("/masterClockLinkUpdate", msg[1].asFloat/60, msg[2].asFloat)
+}, "/linkUpdate");
+
+//msg[1] is the new tempoIn BPM
+//msg[2] is the phase
+OSCFunc({|msg, time, addr, recvPort|
+    masterTempoClock.beats = masterTempoClock.beats.ceil;
+	broadcastOSCport.sendMsg("/masterPhaseSync")
+}, "/phaseHit");
+
 
 
 ~setBPM = {|bpm| broadcastOSCport.sendMsg("/masterClockTempo", 60/bpm, false)};
@@ -84,7 +101,32 @@ OSCFunc({|msg, time, addr, recvPort|
 };
 )
 
+~mtp.tempo
+(
+var tempoClock = TempoClock.new;
+var midiOut = ~getMidiOut.("IAC Driver", "Bus 3");
 
+OSCFunc({|msg, time, addr, recvPort|
+	tempoClock.tempo = msg[1].asFloat;
+    tempoClock.beats = tempoClock.beats.floor + msg[2].asFloat;
+    "LINK UPDATE".postln;
+}, "/masterClockLinkUpdate");
+OSCFunc({|msg, time, addr, recvPort|
+    tempoClock.beats = tempoClock.beats.ceil;
+    "PHASE HIT".postln;
+}, "/masterPhaseSync");
+p = Pbind(
+    \delta, 1,
+    \val, Pseq((0..100), inf),
+    \play, {
+        midiOut.noteOn(0, 36);
+        tempoClock.sched(0.05, {midiOut.noteOff(0, 36)});
+    }
+).play(tempoClock);
+
+)
+~tp.tempo = 0.5
+~tp.beats = 600
 
 // (
 // var lp;
