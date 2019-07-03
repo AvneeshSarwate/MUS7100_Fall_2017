@@ -70,7 +70,6 @@ OSCFunc({|msg, time, addr, recvPort|
     sinn - sinn.floor()
 };
 
-
 ~getMidiIn = {|device, name|
     MIDIClient.sources.select({|elem| (elem.device == device) && (elem.name == name)})[0]
 };

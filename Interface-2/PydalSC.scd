@@ -284,7 +284,7 @@ sendSample = {|drumStr, chan, ind|
         //todo - send cc map stuff if applicable
         Task({
             midiOut.noteOn(patMidiChannel, drumType+drumInd); //maybe add velocity based on gain?
-            0.05.wait;
+            0.0001.wait;
             midiOut.noteOff(patMidiChannel, drumType+drumInd);
         }).play;
     });
@@ -312,9 +312,42 @@ sendSample = {|drumStr, chan, ind|
     if(channelTypeMap[chan] == 'funcTrigger', {
         lemurBouncePort.sendMsg("/funcTrigger", drumStr);
     });
+
     if(channelTypeMap[chan] == 'roboDrum', {
         var hitInd = ['a', 'b', 'c', 'd', 'e'].indexOf(drumStr.asSymbol);
         if(hitInd.isNil.not,  {maxPort.sendMsg("/roboDrum", hitInd)});
+    });
+
+    if(channelTypeMap[chan] == 'midi', {
+        if(drumStr.asSymbol != '~', {
+            var patMidiChannel = channelMetaInfo[chan][0];
+            var ccChannel = channelMetaInfo[chan][1];
+            var noteLen = channelMetaInfo[chan][2];
+            var digits = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0'];
+            var letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+            var noteOnFunc = {|fullNote|
+                var lastChar = drumStr.wrapAt(-1).asSymbol;
+                var vel = if(digits.includes(lastChar), {64}, {digits.indexOf(lastChar)/26*127});
+                var note = if(fullNote, drumStr.asInt, drumStr[1..].asInt); //this method will parse a valid prefix as an int and throw away the rest
+                midiOut.noteOn(patMidiChannel, note, vel);
+            };
+            if(drumStr[0].asSymbol == 'c', {
+                midiOut.control(0, ccChannel, drumStr[1..].asInt); //ignore channel for CC and just send on 0
+            });
+            if(drumStr[0].asSymbol == 'n', {
+                noteOnFunc.(false);
+            });
+            if(drumStr[0].asSymbol == 'f', {
+                midiOut.noteOff(patMidiChannel, drumStr[1..].asInt, 64);
+            });
+            if(digits.includes(drumStr[0].asSymbol), {
+                Task({
+                    noteOnFunc.(true);
+                    (noteLen/tempoClockMap[chan].tempo).wait;
+                    midiOut.noteOff(patMidiChannel, drumStr.asInt, 64);
+                }).play;
+            });
+        });
     });
 };
 ~testEnvVar.postln;

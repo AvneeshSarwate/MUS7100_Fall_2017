@@ -64,6 +64,8 @@ def isFuncTrigger(s):
     return s in 'abcdefghijklmnopqrs~' and len(s) == 1
 def isRoboDrum(s):
     return s in 'abcd~'
+def isMidiSymbol(s):
+    return re.match('^[cnf]?[0-9]+[a-z]?$', s) or s == "~"
 
 
 symbolMatchers = {}
@@ -75,6 +77,7 @@ symbolMatchers['chord'] = isChordSeqSymbol
 symbolMatchers['ballState'] = isBallState
 symbolMatchers['funcTrigger'] = isFuncTrigger
 symbolMatchers['roboDrum'] = isRoboDrum
+symbolMatchers['midi'] = isMidiSymbol
 
 
 # you can define what types of strings you use as tokens, they can
