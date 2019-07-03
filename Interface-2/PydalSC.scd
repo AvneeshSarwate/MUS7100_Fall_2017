@@ -284,7 +284,7 @@ sendSample = {|drumStr, chan, ind|
         //todo - send cc map stuff if applicable
         Task({
             midiOut.noteOn(patMidiChannel, drumType+drumInd); //maybe add velocity based on gain?
-            0.001.wait;
+            0.05.wait;
             midiOut.noteOff(patMidiChannel, drumType+drumInd);
         }).play;
     });

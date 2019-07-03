@@ -10,7 +10,7 @@
 		}
 ,
 		"classnamespace" : "box",
-		"rect" : [ 290.0, 146.0, 712.0, 605.0 ],
+		"rect" : [ 290.0, 146.0, 1531.0, 954.0 ],
 		"bglocked" : 0,
 		"openinpresentation" : 0,
 		"default_fontsize" : 12.0,
@@ -124,12 +124,12 @@
 , 			{
 				"box" : 				{
 					"id" : "obj-120",
-					"linecount" : 14,
+					"linecount" : 13,
 					"maxclass" : "message",
 					"numinlets" : 2,
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
-					"patching_rect" : [ 588.0, 708.0, 59.0, 196.0 ],
+					"patching_rect" : [ 588.0, 708.0, 62.0, 183.0 ],
 					"text" : "/fftValues 0 0 0 0 1 16 34 15 6 8 0 8 9 2 7 12 14 10 19 12 29 9 18 4 11 18 16 8 7 6 8 14 12 6 7 8 11 3 2 1 6 5 1 1 2 2 4 13 9 4"
 				}
 
@@ -568,6 +568,13 @@
 				"patchline" : 				{
 					"destination" : [ "obj-26", 0 ],
 					"source" : [ "obj-39", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-10", 0 ],
+					"source" : [ "obj-42", 0 ]
 				}
 
 			}

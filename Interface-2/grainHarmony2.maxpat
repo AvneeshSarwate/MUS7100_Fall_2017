@@ -104,8 +104,8 @@
 					"numinlets" : 1,
 					"numoutlets" : 2,
 					"outlettype" : [ "float", "bang" ],
-					"patching_rect" : [ 1131.0, 340.0, 150.0, 22.0 ],
-					"text" : "buffer~ recbuffer 600000 2"
+					"patching_rect" : [ 1131.0, 340.0, 157.0, 22.0 ],
+					"text" : "buffer~ recbuffer 1200000 2"
 				}
 
 			}
@@ -1413,7 +1413,7 @@
 									"outlettype" : [ "list", "float", "float", "float", "float", "list", "int" ],
 									"parameter_enable" : 0,
 									"patching_rect" : [ 529.0, 620.5, 360.0, 155.0 ],
-									"setfilter" : [ 0, 3, 1, 0, 0, 3446.42236328125, 2.425196886062622, 3.570274353027344, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
+									"setfilter" : [ 0, 3, 1, 0, 0, 2512.952880859375, 0.000099999997474, 1.996378540992737, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
 									"varname" : "filtergraph~[1]"
 								}
 
@@ -3523,7 +3523,7 @@
 									"outlettype" : [ "list", "float", "float", "float", "float", "list", "int" ],
 									"parameter_enable" : 0,
 									"patching_rect" : [ 529.0, 620.5, 360.0, 155.0 ],
-									"setfilter" : [ 0, 3, 1, 0, 0, 4422.54052734375, 2.287401437759399, 0.295791208744049, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
+									"setfilter" : [ 0, 3, 1, 0, 0, 710.3099365234375, 0.000099999997474, 1.871636152267456, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 ],
 									"varname" : "filtergraph~[1]"
 								}
 

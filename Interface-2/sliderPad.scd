@@ -4,7 +4,7 @@ var sliderVals, sliderBanks, record_BUTTON, record_COLOR, bank_COLOR, launchpadI
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON;
 
 
-launchpadIndex = 1;
+launchpadIndex = 0;
 launchpadOut = ~getLaunchpadOut.(launchpadIndex);
 padAutomateIn = ~getMidiIn.("IAC Driver", "Bus 1");
 launchpadOut.latency = 0;

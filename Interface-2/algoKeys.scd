@@ -373,6 +373,14 @@ OSCFunc({|msg, time, addr, recvPort|
 masterClockBeatHandler = {|msg, time, addr, recvPort|
 	//["MULTILOOP BEAT", tempoClock.beats].postln;
 };
+
+//msg[1] is the new tempoIn BEATS PER SECOND
+//msg[2] is the phase
+OSCFunc({|msg, time, addr, recvPort|
+	tempoClock.tempo = msg[1].asFloat;
+    tempoClock.beats = tempoClock.beats.floor + msg[2].asFloat;
+}, "/masterClockLinkUpdate");
+
 OSCFunc(masterClockBeatHandler, "/masterClockBeat");
 tapTempoSetButton = 5;
 tapTempoToggle = 6;

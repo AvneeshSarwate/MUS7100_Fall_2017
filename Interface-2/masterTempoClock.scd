@@ -101,8 +101,14 @@ OSCFunc({|msg, time, addr, recvPort|
 };
 )
 
-~mtp.tempo
-(
+/*~mtp.tempo*/
+
+
+
+
+
+//testing ableton link sync
+/*(
 var tempoClock = TempoClock.new;
 var midiOut = ~getMidiOut.("IAC Driver", "Bus 3");
 
@@ -126,7 +132,14 @@ p = Pbind(
 
 )
 ~tp.tempo = 0.5
-~tp.beats = 600
+~tp.beats = 600*/
+
+
+
+
+
+
+
 
 // (
 // var lp;
