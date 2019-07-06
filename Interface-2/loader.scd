@@ -113,6 +113,14 @@ Task({
 
 
 
+(Task({
+    "./masterTempoClock.scd".loadRelative;
+    0.01.wait;
+    ~loadModules.(["PydalSC", "LFOFM"]);
+}).play)
+
+
+
 /*
 Todo - bugfix for multi-launchpad app-light changing
 when sending light change messages on "/lightsChange" address, include the launchpadInd of the app sending it, and only execute change for apps with the same launchpadInd
