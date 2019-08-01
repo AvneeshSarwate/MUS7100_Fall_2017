@@ -211,8 +211,8 @@ m.noteOn(5, 24, 52)
 n.sendMsg("/testmsg", 5)
 
 
-~ip = NetAddr("127.0.0.1", 5432)
-~ip.sendMsg("/mouthData", 0.1)
+~ip = NetAddr("127.0.0.1", 8765)
+~ip.sendMsg("/message/address")
 
 
 
