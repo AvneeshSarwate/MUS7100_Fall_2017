@@ -36,7 +36,9 @@ class Pydal:
 		self.superColliderClient.send(msg)
 
 
-def read(rawStr, frac = 1.0, symbolKey = 'pydal'):
+def read(rawStr, frac = 1.0, symbolKey = 'pydal', preprocessor=None):
+	if preprocessor is not None:
+		rawStr = preprocessor.preprocess(rawStr)
 	node = parser.parse(rawStr, symbolKey)
 	node.frac = float(frac)
 	return node

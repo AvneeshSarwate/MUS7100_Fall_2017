@@ -1,6 +1,7 @@
 import OSC
 import copy
 import json
+import re
 
 
 class PydalPreprocessor:
@@ -9,9 +10,34 @@ class PydalPreprocessor:
         self.oscServer = oscServer
         self.oscServer.addMsgHandler("/pianoRollNotes", self.recievePianoRoll)
         self.pianoRollNotes = {}
+        self.preprocessingSteps = [lambda a : a]
 
 
-    def preprocess(self, inputString):
+    def preprocess(self, patternString):
+        for preprocessStep in self.preprocessingSteps:
+            patternString = preprocessStep(patternString)
+        return patternString
+
+    def chordFinder(self, patternString):
+        # [[m.start(), m.group()] for m in re.finditer("aab", "aab aab aab")] - returns [[0, 'aab'], [4, 'aab'], [8, 'aab']]
+        chordExpr = "p[0-9]+"
+        chordSymbols = [[m.start(), m.group()] for m in re.finditer(chordExpr, patternString)]
+        for cs in chordSymbols:
+            chordTime = float(cs[1][1:])
+            positionNotes = findIntersectingNotes(chordTime + 0.05) #fudging just in case mouse drags make note not exactly start at clean position
+            noteString = "[" + ",".join([str(n) for n in positionNotes])
+            # splice note into string 
+        return patternString
+
+
+    def findIntersectingNotes(self, time):
+        intersectingNotes = []
+        for note in self.pianoRollNotes:
+            if note["position"] <= time and time <= note["position"]+note["duration"]:
+                intersectingNotes.append(note["pitch"])
+        return intersectingNotes
+
+
         return inputString
 
     # stuff[0] is pianoRoll key, stuff[1] is noteState
