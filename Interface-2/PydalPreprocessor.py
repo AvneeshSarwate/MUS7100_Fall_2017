@@ -20,14 +20,19 @@ class PydalPreprocessor:
 
     def chordFinder(self, patternString):
         # [[m.start(), m.group()] for m in re.finditer("aab", "aab aab aab")] - returns [[0, 'aab'], [4, 'aab'], [8, 'aab']]
+        patternList = list(patternString)
         chordExpr = "p[0-9]+"
         chordSymbols = [[m.start(), m.group()] for m in re.finditer(chordExpr, patternString)]
+        chordSymbols.sort(cmp=lambda a, b: a[0]-b[0], reverse=True)
         for cs in chordSymbols:
             chordTime = float(cs[1][1:])
-            positionNotes = findIntersectingNotes(chordTime + 0.05) #fudging just in case mouse drags make note not exactly start at clean position
-            noteString = "[" + ",".join([str(n) for n in positionNotes])
-            # splice note into string 
-        return patternString
+            positionNotes = self.findIntersectingNotes(chordTime + 0.05) #fudging just in case mouse drags make note not exactly start at clean position
+            noteString = "[" + ",".join([str(n) for n in positionNotes]) + "]"
+
+            # splice chord string into pattern
+            del patternList[cs[0]:cs[0]+len(cs[1])]
+            patternList.insert(cs[0], noteString)
+        return "".join(patternList)
 
 
     def findIntersectingNotes(self, time):
@@ -42,5 +47,5 @@ class PydalPreprocessor:
 
     # stuff[0] is pianoRoll key, stuff[1] is noteState
     def recievePianoRoll(self, addr, tags, stuff, source):
-        self.pianoRollNotes = json.loadS(stuff[1])
+        self.pianoRollNotes = json.loads(stuff[1])
 
