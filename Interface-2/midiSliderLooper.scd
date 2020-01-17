@@ -357,10 +357,12 @@ createLoopPattern = {|recordBuf, loopNumber|
 MIDIFunc.cc({|vel, note, chan, port|
     /*var stepVal = if(vel == 0, 0, 1);
     maxOscOut.sendMsg("/"++(chan+1)++ "/sequencer/1/"++(note+1), stepVal);*/
-    midiOut.control(0, note, vel);
-    paramMap[note] = vel;
-    if(isRecording, {
-        recordBuffer.add([tempoClock.beats - recordStartTime, ['midi', chan, note, vel]]); //recording timestamps relative to recoring start
+    if(chan == 0, {
+        midiOut.control(0, note, vel);
+        paramMap[note] = vel;
+        if(isRecording, {
+            recordBuffer.add([tempoClock.beats - recordStartTime, ['midi', chan, note, vel]]); //recording timestamps relative to recoring start
+        });
     });
 
 }, nil, nil, ipadMidiIn.uid);
