@@ -1,9 +1,9 @@
 (
-var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendMSG, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON, dspOn, dsp_BUTTON, visualsOscOut, midiOut, numLoopsRecorded, lock, activeTouches, touchResolverLoop, updateTouches, rampButtons, startRampTask, bankButtons;
+var launchpadIn, launchpadOut, maxOscOut, ipadMidiIn, ipadOscOut, ipadMidiOut, loopRecord_BUTTON, recordBuffer, tempRecordingTask, tempLoop_COLOR, loopRecordingState, oscHandler, oscAddrs, isRecording, recording_COLOR, notRecording_COLOR, tempRecord_COLOR, loopToPadMap, paramMap, createLoopPattern, tempoClock, recordStartTime, recordEndTime, loopSaved_COLOR, padPlaying_COLOR, saveLoopToBank, recordingStateColors, interpolateParamMaps, saveParams, sendParamMap, sendMSG, savePreset_BUTTON, presetVoice1_BUTTON, presetVoice2_BUTTON, paramStart, paramEnd, interpolationSpeed, interpSpeed_BUTTONS, savingParams, startPresetInterpolation, interpolationTask, paramSaved_COLOR, syncTempo_BUTTON, syncPhase_BUTTON, dspOn, dsp_BUTTON, visualsOscOut, midiOut, numLoopsRecorded, lock, activeTouches, touchResolverLoop, updateTouches, rampButtons, startRampTask, bankButtons, ignoreKeys;
 var lastDrawInfoSent;
 var setLight, ccLights, padColorState, cycleLight, lightIndex, cycleLight_BUTTON, launchpadIndex, controlHandler, controlHandlerWrapper, masterClockOSCport;
 
-launchpadIndex = 0;
+launchpadIndex = 1;
 ipadMidiIn = ~getMidiIn.("TouchOSC Bridge", "TouchOSC Bridge");
 ipadMidiOut = ~getMidiOut.("TouchOSC Bridge", "TouchOSC Bridge");
 
@@ -20,7 +20,6 @@ ipadMidiOut.latency = 0;
 midiOut.latency = 0;
 
 lock = Semaphore.new(1);
-
 
 //----------------------------------------------
 //light switching variables
@@ -169,14 +168,16 @@ sendParamMap = {|params|
 
 saveParams = {|msg|
     var key = msg[0];
-    if(key.asString.contains("playrate") || key.asString.contains("pitch"), { // store adress as as "/i/param", with value being the 1-16 range index
-        var val;
-        var splits = key.asString.split($/);
-        key = "/"++splits[1]++"/"++splits[2];
-        val = splits[4].asFloat;
-        paramMap[key] = val;
-    }, {
-        paramMap[key] = msg[1..];             //remember that /volres will be list - use .flatten when re-sending interpolated params
+    if(ignoreKeys.includes(key).not, {
+        if(key.asString.contains("playrate") || key.asString.contains("pitch"), { // store adress as as "/i/param", with value being the 1-16 range index
+            var val;
+            var splits = key.asString.split($/);
+            key = "/"++splits[1]++"/"++splits[2];
+            val = splits[4].asFloat;
+            paramMap[key] = val;
+        }, {
+            paramMap[key] = msg[1..];             //remember that /volres will be list - use .flatten when re-sending interpolated params
+        });
     });
 };
 
@@ -279,6 +280,7 @@ updateTouches = {|msg, loopNum|
 };
 
 oscAddrs = ['/senselDraw'];
+ignoreKeys = [20, 21, 22, 23, 24];//todo - hack to prevent some sliders from being saved as presets but still working in loop
 
 
 oscAddrs.do({|addr|
@@ -466,6 +468,9 @@ MIDIFunc.noteOn({|vel, note, chan, port|
                     if(savingParams, {
                         "SAVE PARAMS".postln;
                         loopToPadMap[note] = [note, 'preset', paramMap.deepCopy];
+                        setLight.(note, paramSaved_COLOR);
+                        savingParams = false;
+                        setLight.(savePreset_BUTTON, notRecording_COLOR);
                     }, {
                         "LOAD PARAMS".postln;
                         startPresetInterpolation.(bank[2], note);

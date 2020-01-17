@@ -112,6 +112,12 @@ Task({
 
 
 
+(Task({
+    "./masterTempoClock.scd".loadRelative;
+    0.01.wait;
+    "../../powerPianoRoll/pianoRollPlayer.scd".loadRelative
+}).play)
+
 
 (Task({
     "./masterTempoClock.scd".loadRelative;
