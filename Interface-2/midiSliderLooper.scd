@@ -146,7 +146,7 @@ OSCFunc({|msg, time, addr, recvPort|
 interpolateParamMaps = {|map1, map2, interp|
     var interpMap = Dictionary.new;
     map1.keys().do({|key|
-        if(key.asSymbol != '/senselDraw', {
+        if((key.asSymbol != '/senselDraw') && ignoreKeys.includes(key).not, {
             var val = ((1-interp)*map1[key]) + (interp*map2[key]) ;
             interpMap[key] = val;
         });
